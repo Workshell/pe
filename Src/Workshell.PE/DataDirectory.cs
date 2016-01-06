@@ -110,13 +110,16 @@ namespace Workshell.PE
 
         public static readonly int EntrySize = Utils.SizeOf<IMAGE_DATA_DIRECTORY>();
 
-        private Dictionary<DataDirectoryType,DataDirectory> dirs;
+        private OptionalHeader header;
         private StreamLocation location;
+        private Dictionary<DataDirectoryType,DataDirectory> dirs;
+        
 
-        public DataDirectories(Dictionary<DataDirectoryType,DataDirectory> dataDirs, long dirsOffset, long dirsSize)
+        public DataDirectories(OptionalHeader optHeader, StreamLocation streamLoc, Dictionary<DataDirectoryType,DataDirectory> dataDirs)
         {
+            header = optHeader;
+            location = streamLoc;
             dirs = dataDirs;
-            location = new StreamLocation(dirsOffset,dirsSize);
         }
 
         #region Methods

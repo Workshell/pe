@@ -11,74 +11,31 @@ namespace Workshell.PE
     public class NTHeaders : ILocatable
     {
 
-        private PortableExecutable exe;
-        private FileHeader file_header;
-        private OptionalHeader optional_header;
+        public const uint PE_MAGIC_MZ = 17744;
+
+        private ExeReader reader;
         private StreamLocation location;
+        private FileHeader file_header;
+        private OptionalHeader opt_header;
 
-        internal NTHeaders(Stream stream, PortableExecutable portableExecutable)
+        internal NTHeaders(ExeReader exeReader, StreamLocation streamLoc, FileHeader fileHeader, OptionalHeader optHeader)
         {
-            exe = portableExecutable;
-
-            LoadSignature(stream);
-            
-            file_header = LoadFileHeader(stream);
-            optional_header = LoadOptionalHeader(stream,file_header);
-
-            location = new StreamLocation(exe.DOSHeader.FileAddressNewHeader,4 + file_header.Location.Size + optional_header.Location.Size);
+            reader = exeReader;
+            location = streamLoc;
+            file_header = fileHeader;
+            opt_header = optHeader;
         }
 
         #region Methods
 
-        private void LoadSignature(Stream stream)
+        public override string ToString()
         {
-            long offset = exe.DOSStub.Location.Offset + exe.DOSStub.Location.Size;
-            byte[] signature = new byte[4];
-            int sig_read = stream.Read(signature,0,signature.Length);
-
-            if (sig_read < signature.Length)
-                throw new PortableExecutableException("Could not read NT header from stream.");
-
-            if (signature[0] != 80 && signature[1] != 69)
-                throw new PortableExecutableException("Incorrect signature specified in the NT header.");
-        }
-
-        private FileHeader LoadFileHeader(Stream stream)
-        {
-            long offset = (exe.DOSStub.Location.Offset + exe.DOSStub.Location.Size) + 4;
-            FileHeader result = new FileHeader(stream,offset);
-
-            return result;
-        }
-
-        private OptionalHeader LoadOptionalHeader(Stream stream, FileHeader fileHeader)
-        {
-            long offset = fileHeader.Location.Offset + fileHeader.Location.Size;
-            OptionalHeader header;
-
-            if ((fileHeader.GetCharacteristics() & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit)
-            {
-                header = new OptionalHeader32(stream,offset);
-            }
-            else
-            {
-                header = new OptionalHeader64(stream,offset);
-            }
-
-            return header;
+            return "NT Headers";
         }
 
         #endregion
 
         #region Properties
-
-        public PortableExecutable Executable
-        {
-            get
-            {
-                return exe;
-            }
-        }
 
         public StreamLocation Location
         {
@@ -100,7 +57,7 @@ namespace Workshell.PE
         {
             get
             {
-                return optional_header;
+                return opt_header;
             }
         }
 

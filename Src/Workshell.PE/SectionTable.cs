@@ -110,11 +110,11 @@ namespace Workshell.PE
         private StreamLocation location;
         private string name;
 
-        internal SectionTableEntry(SectionTable sectionTable, long headerOffset)
+        internal SectionTableEntry(SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, long entryOffset)
         {
             table = sectionTable;
-            header = Utils.Read<IMAGE_SECTION_HEADER>(sectionTable.Executable.Stream,size);
-            location = new StreamLocation(headerOffset,size);
+            header = entryHeader;
+            location = new StreamLocation(entryOffset,size);
             name = GetName();
         }
 
@@ -348,27 +348,24 @@ namespace Workshell.PE
     public class SectionTable : IEnumerable<SectionTableEntry>, ILocatable
     {
 
-        private PortableExecutable exe;
-        private List<SectionTableEntry> table;
+        private ExeReader reader;
         private StreamLocation location;
+        private List<SectionTableEntry> table;
 
-        internal SectionTable(Stream stream, PortableExecutable portableExecutable)
+        internal SectionTable(ExeReader exeReader, StreamLocation streamLoc, List<IMAGE_SECTION_HEADER> sectionHeaders)
         {
-            exe = portableExecutable;
+            reader = exeReader;
+            location = streamLoc;
             table = new List<SectionTableEntry>();
+            
+            long offset = streamLoc.Offset;
 
-            long offset = exe.NTHeaders.Location.Offset + exe.NTHeaders.Location.Size;
-
-            for(var i = 0; i < exe.NTHeaders.FileHeader.NumberOfSections; i++)
+            foreach(IMAGE_SECTION_HEADER header in sectionHeaders)
             {
-                SectionTableEntry entry = new SectionTableEntry(this,offset + (i * SectionTableEntry.Size));
+                table.Add(new SectionTableEntry(this,header,offset));
 
-                table.Add(entry);
+                offset += SectionTableEntry.Size;
             }
-
-            long size = table.Count * SectionTableEntry.Size;
-
-            location = new StreamLocation(offset,size);
         }
 
         #region Methods
@@ -406,14 +403,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public PortableExecutable Executable
-        {
-            get
-            {
-                return exe;
-            }
-        }
 
         public StreamLocation Location
         {

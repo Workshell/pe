@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -52,15 +53,16 @@ namespace Workshell.PE
         {
             byte[] buffer = new byte[location.Size];
 
-            sections.Executable.Stream.Seek(location.Offset,SeekOrigin.Begin);
-            sections.Executable.Stream.Read(buffer,0,buffer.Length);
+            sections.Reader.Stream.Seek(location.Offset,SeekOrigin.Begin);
+            sections.Reader.Stream.Read(buffer,0,buffer.Length);
 
             return buffer;
         }
 
-        internal void AttachContent(SectionContent content)
+        internal void Attach(SectionContent content)
         {
-            contents.Add(content);
+            if (!contents.Contains(content))
+                contents.Add(content);
         }
 
         #endregion
@@ -134,38 +136,37 @@ namespace Workshell.PE
     public class Sections : IEnumerable<Section>
     {
 
-        private PortableExecutable exe;
-        private List<Section> list;
+        private ExeReader reader;
+        private SectionTable table;
+        private Dictionary<DataDirectoryType,ISectionContentProvider> content_providers;
 
-        internal Sections(PortableExecutable portableExecutable, SectionTable sectionTable)
+        internal Sections(ExeReader exeReader, SectionTable sectionTable)
         {
-            exe = portableExecutable;
-            list = new List<Section>();
+            reader = exeReader;
+            table = sectionTable;
+            content_providers = new Dictionary<DataDirectoryType,ISectionContentProvider>();
 
-            foreach(SectionTableEntry entry in sectionTable)
-            {
-                Section section = new Section(this,entry);
-
-                list.Add(section);
-            }
+            RegisterAssemblyContentProviders();
         }
 
         #region Methods
 
+        /*
         public Section RVAToSection(ulong rva)
         {
-            foreach(SectionTableEntry entry in exe.SectionTable)
+            foreach(SectionTableEntry entry in table)
             {
                 if (rva >= entry.VirtualAddress && rva < (entry.VirtualAddress + entry.SizeOfRawData))
-                    return this[entry];
+                    return CreateSection(entry);
             }
 
             return null;
         }
+        */
 
         public IEnumerator<Section> GetEnumerator()
         {
-            return list.GetEnumerator();
+            return table.Select(entry => CreateSection(entry)).GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -173,23 +174,95 @@ namespace Workshell.PE
             return GetEnumerator();
         }
 
+        public bool RegisterContentProvider(ISectionContentProvider contentProvider)
+        {
+            return RegisterContentProvider(contentProvider,false);
+        }
+
+        public bool RegisterContentProvider(ISectionContentProvider contentProvider, bool allowReplace)
+        {
+            if (content_providers.ContainsKey(contentProvider.DirectoryType))
+                return false;
+
+            content_providers[contentProvider.DirectoryType] = contentProvider;
+
+            return true;
+        }
+
+        public void UnregisterContentProvider(DataDirectoryType directoryType)
+        {
+            if (content_providers.ContainsKey(directoryType))
+                content_providers.Remove(directoryType);
+        }
+
+        public void UnregisterContentProvider(ISectionContentProvider contentProvider)
+        {
+            foreach(KeyValuePair<DataDirectoryType,ISectionContentProvider> kvp in content_providers)
+            {
+                if (kvp.Value == contentProvider)
+                {
+                    content_providers.Remove(kvp.Key);
+
+                    break;
+                }
+            }
+        }
+
+        private void RegisterAssemblyContentProviders()
+        {
+            Type iface_type = typeof(ISectionContentProvider);
+            Type[] types = Assembly.GetExecutingAssembly().GetTypes();
+
+            foreach(Type type in types)
+            {
+                Type[] type_ifaces = type.GetInterfaces();
+
+                if (type_ifaces.Contains(iface_type))
+                {
+                    ISectionContentProvider content_provider = (ISectionContentProvider)Activator.CreateInstance(type);
+
+                    RegisterContentProvider(content_provider);
+                }
+            }
+        }
+
+        private Section CreateSection(SectionTableEntry entry)
+        {
+            Section section = new Section(this,entry);
+            Dictionary<DataDirectoryType,DataDirectory> data_directories = new Dictionary<DataDirectoryType,DataDirectory>();
+
+            foreach(DataDirectory directory in reader.NTHeaders.OptionalHeader.DataDirectories)
+            {
+                if (DataDirectory.IsNullOrEmpty(directory))
+                    continue;
+
+                if (directory.VirtualAddress >= entry.VirtualAddress && directory.VirtualAddress < ((entry.VirtualAddress + entry.SizeOfRawData) - directory.Size))
+                    data_directories[directory.DirectoryType] = directory;
+            }
+
+            foreach(KeyValuePair<DataDirectoryType,ISectionContentProvider> kvp in content_providers)
+            {
+                if (!data_directories.ContainsKey(kvp.Key))
+                    continue;
+
+                DataDirectory data_directory = data_directories[kvp.Key];
+                SectionContent content = kvp.Value.Create(data_directory,section);
+
+                section.Attach(content);
+            }
+
+            return section;
+        }
+
         #endregion
 
         #region Properties
-
-        public PortableExecutable Executable
-        {
-            get
-            {
-                return exe;
-            }
-        }
 
         public int Count
         {
             get
             {
-                return list.Count;
+                return table.Count;
             }
         }
 
@@ -197,7 +270,12 @@ namespace Workshell.PE
         {
             get
             {
-                return list[index];
+                if (index < 0 || index > (table.Count - 1))
+                    return null;
+
+                SectionTableEntry entry = table[index];
+
+                return CreateSection(entry);
             }
         }
 
@@ -205,23 +283,20 @@ namespace Workshell.PE
         {
             get
             {
-                Section section = list.FirstOrDefault(item => String.Compare(sectionName,item.TableEntry.Name,StringComparison.OrdinalIgnoreCase) == 0);
+                SectionTableEntry entry = table.FirstOrDefault(e => String.Compare(sectionName,e.Name,StringComparison.OrdinalIgnoreCase) == 0);
 
-                return section;
+                if (entry == null)
+                    return null;
+
+                return CreateSection(entry);
             }
         }
 
-        public Section this[SectionTableEntry tableEntry]
+        internal ExeReader Reader
         {
             get
             {
-                foreach(Section section in list)
-                {
-                    if (section.TableEntry.Equals(tableEntry))
-                        return section;
-                }
-
-                return null;
+                return reader;
             }
         }
 

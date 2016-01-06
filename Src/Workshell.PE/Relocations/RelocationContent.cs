@@ -10,19 +10,47 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
+    internal class RelocationContentProvider : ISectionContentProvider
+    {
+
+        #region Methods
+
+        public SectionContent Create(DataDirectory directory, Section section)
+        {
+            return new RelocationContent(directory,section);
+        }
+
+        #endregion
+
+        #region Properties
+
+        public DataDirectoryType DirectoryType
+        {
+            get
+            {
+                return DataDirectoryType.BaseRelocationTable;
+            }
+        }
+
+        #endregion
+
+    }
+
     public class RelocationContent : SectionContent, IEnumerable<RelocationBlock>
     {
 
         private List<RelocationBlock> blocks;
 
-        internal RelocationContent(Stream stream, DataDirectory dataDirectory, Section owningSection) : base(dataDirectory,owningSection)
+        internal RelocationContent(DataDirectory directory, Section section) : base(directory,section)
         {
-            stream.Seek(owningSection.Location.Offset,SeekOrigin.Begin);
+            Stream stream = section.Sections.Reader.Stream;
 
             blocks = new List<RelocationBlock>();
 
-            long offset = owningSection.Location.Offset;
+            long offset = section.Location.Offset;
             long size = 0;
+
+            stream.Seek(section.Location.Offset,SeekOrigin.Begin);
 
             while (true)
             {
@@ -49,7 +77,7 @@ namespace Workshell.PE
 
                 blocks.Add(block);
 
-                if (size >= dataDirectory.Size)
+                if (size >= directory.Size)
                     break;
             }
         }

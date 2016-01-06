@@ -19,44 +19,22 @@ namespace Workshell.PE
 
         private static readonly int size = Utils.SizeOf<IMAGE_DOS_HEADER>();
 
-        private PortableExecutable exe;
+        private ExeReader reader;
         private IMAGE_DOS_HEADER header;
         private StreamLocation location;
 
-        internal DOSHeader(PortableExecutable portableExecutable, int headerOffset)
+        internal DOSHeader(ExeReader exeReader, IMAGE_DOS_HEADER dosHeader, StreamLocation streamLoc)
         {
-            exe = portableExecutable;
-            header = Utils.Read<IMAGE_DOS_HEADER>(portableExecutable.Stream,size);
-            location = new StreamLocation(headerOffset,size);
-
-            if (header.e_magic != DOSHeader.DOS_MAGIC_MZ)
-                throw new PortableExecutableException("Incorrect magic number specified in MS-DOS header.");
-
-            if (header.e_lfanew == 0)
-                throw new PortableExecutableException("No new header location specified in MS-DOS header, most likely a 16-bit executable.");
-
-            if (header.e_lfanew >= (256 * (1024 * 1024)))
-                throw new PortableExecutableException("New header location specified in MS-DOS header is beyond 256mb boundary (see RtlImageNtHeaderEx).");
-
-            if (header.e_lfanew % 4 != 0)
-                throw new PortableExecutableException("New header location specified in MS-DOS header is not properly aligned.");
-
-            if (header.e_lfanew < DOSHeader.Size)
-                throw new PortableExecutableException("New header location specified is invalid.");
+            reader = exeReader;
+            header = dosHeader;
+            location = streamLoc;
         }
 
         #region Methods
 
         public override string ToString()
         {
-            if (location == null)
-            {
-                return "MS-DOS Header";
-            }
-            else
-            {
-                return location.ToString();
-            }
+            return "MS-DOS Header";
         }
 
         public byte[] GetBytes()

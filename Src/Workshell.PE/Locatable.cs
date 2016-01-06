@@ -35,6 +35,7 @@ namespace Workshell.PE
 
     }
 
+    /*
     public sealed class GenericLocatable : Locatable
     {
 
@@ -58,5 +59,6 @@ namespace Workshell.PE
         #endregion
 
     }
+    */
 
 }

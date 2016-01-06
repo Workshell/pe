@@ -11,46 +11,39 @@ namespace Workshell.PE
     public class DOSStub : ILocatable
     {
 
-        private PortableExecutable exe;
+        private ExeReader reader;
         private StreamLocation location;
 
-        internal DOSStub(PortableExecutable portableExecutable)
+        internal DOSStub(ExeReader exeReader, StreamLocation streamLoc)
         {
-            exe = portableExecutable;
-
-            long offset = exe.DOSHeader.Location.Offset + exe.DOSHeader.Location.Size;
-            long size = exe.DOSHeader.FileAddressNewHeader - DOSHeader.Size;
-
-            location = new StreamLocation(offset,size);
-
-            long num_skipped = Utils.SkipBytes(portableExecutable.Stream,Convert.ToInt32(size));
-
-            if (num_skipped < size)
-                throw new PortableExecutableException("Could not read MS-DOS stub from stream.");
+            reader = exeReader;
+            location = streamLoc;
         }
 
         #region Methods
 
         public override string ToString()
         {
-            if (location == null)
-            {
-                return base.ToString();
-            }
-            else
-            {
-                return location.ToString();
-            }
+            return "MS-DOS Stub";
         }
 
         public byte[] GetBytes()
         {
-            byte[] buffer = new byte[location.Size];
+            long position = reader.Stream.Position;
 
-            exe.Stream.Seek(location.Offset,SeekOrigin.Begin);
-            exe.Stream.Read(buffer,0,buffer.Length);
+            try
+            {
+                byte[] buffer = new byte[location.Size];
 
-            return buffer;
+                reader.Stream.Seek(location.Offset,SeekOrigin.Begin);
+                reader.Stream.Read(buffer,0,buffer.Length);
+
+                return buffer;
+            }
+            finally
+            {
+                reader.Stream.Seek(position,SeekOrigin.Begin);
+            }
         }
 
         #endregion

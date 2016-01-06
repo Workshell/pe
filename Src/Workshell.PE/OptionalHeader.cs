@@ -84,6 +84,15 @@ namespace Workshell.PE
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
         public static readonly int Size64 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 
+        private ExeReader reader;
+        private StreamLocation location;
+
+        internal OptionalHeader(ExeReader exeReader, StreamLocation streamLoc)
+        {
+            reader = exeReader;
+            location = streamLoc;
+        }
+
         #region Methods
 
         public abstract byte[] GetBytes();
@@ -127,9 +136,12 @@ namespace Workshell.PE
 
         #region Properties
 
-        public abstract StreamLocation Location
+        public StreamLocation Location
         {
-            get;
+            get
+            {
+                return location;
+            }
         }
 
         [FieldAnnotation("Magic")]
@@ -319,13 +331,11 @@ namespace Workshell.PE
     {
 
         private IMAGE_OPTIONAL_HEADER32 header;
-        private StreamLocation location;
         private DataDirectories data_dirs;
 
-        internal OptionalHeader32(Stream stream, long headerOffset)
+        internal OptionalHeader32(ExeReader exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, StreamLocation streamLoc) : base(exeReader,streamLoc)
         {
-            header = Utils.Read<IMAGE_OPTIONAL_HEADER32>(stream,OptionalHeader.Size32);
-            location = new StreamLocation(headerOffset,OptionalHeader.Size32);
+            header = optHeader;
 
             List<DataDirectory> dirs = new List<DataDirectory>();
 
@@ -348,9 +358,9 @@ namespace Workshell.PE
             });
 
             long dir_size = 16 * DataDirectories.EntrySize;
-            long dir_offset = (location.Offset + location.Size) - dir_size;
+            StreamLocation location = new StreamLocation((streamLoc.Offset + streamLoc.Size) - dir_size,dir_size);
 
-            data_dirs = new DataDirectories(dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType),dir_offset,dir_size);
+            data_dirs = new DataDirectories(this,location,dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType));
         }
 
         #region Methods
@@ -367,14 +377,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public override StreamLocation Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         public override ushort Magic
         {
@@ -624,13 +626,11 @@ namespace Workshell.PE
     {
 
         private IMAGE_OPTIONAL_HEADER64 header;
-        private StreamLocation location;
         private DataDirectories data_dirs;
 
-        internal OptionalHeader64(Stream stream, long headerOffset)
+        internal OptionalHeader64(ExeReader exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, StreamLocation streamLoc) : base(exeReader,streamLoc)
         {
-            header = Utils.Read<IMAGE_OPTIONAL_HEADER64>(stream,OptionalHeader.Size64);
-            location = new StreamLocation(headerOffset,OptionalHeader.Size64);
+            header = optHeader;
 
             List<DataDirectory> dirs = new List<DataDirectory>();
 
@@ -653,9 +653,9 @@ namespace Workshell.PE
             });
 
             long dir_size = 16 * DataDirectories.EntrySize;
-            long dir_offset = (location.Offset + location.Size) - dir_size;
+            StreamLocation location = new StreamLocation((streamLoc.Offset + streamLoc.Size) - dir_size,dir_size);
 
-            data_dirs = new DataDirectories(dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType),dir_offset,dir_size);
+            data_dirs = new DataDirectories(this,location,dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType));
         }
 
         #region Methods
@@ -672,14 +672,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public override StreamLocation Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         public override ushort Magic
         {

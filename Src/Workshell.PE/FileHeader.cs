@@ -60,32 +60,27 @@ namespace Workshell.PE
         BytesOfWordReserved = 0x8000
     }
 
-    public class FileHeader : ILocatable
+    public class FileHeader
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_FILE_HEADER>();
   
+        private ExeReader reader;
         private IMAGE_FILE_HEADER header;
         private StreamLocation location;
 
-        internal FileHeader(Stream stream, long headerOffset)
+        internal FileHeader(ExeReader exeReader, IMAGE_FILE_HEADER fileHeader, StreamLocation streamLoc)
         {
-            header = Utils.Read<IMAGE_FILE_HEADER>(stream,size);
-            location = new StreamLocation(headerOffset,size);
+            reader = exeReader;
+            header = fileHeader;
+            location = streamLoc;
         }
 
         #region Methods
 
         public override string ToString()
         {
-            if (location == null)
-            {
-                return base.ToString();
-            }
-            else
-            {
-                return location.ToString();
-            }
+            return "File Header";
         }
 
         public byte[] GetBytes()

@@ -7,16 +7,36 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
+    public interface ISectionContentProvider
+    {
+
+        #region Methods
+
+        SectionContent Create(DataDirectory directory, Section section);
+
+        #endregion
+
+        #region Properties
+
+        DataDirectoryType DirectoryType
+        {
+            get;
+        }
+
+        #endregion
+
+    }
+
     public abstract class SectionContent
     {
 
-        private Section section;
-        private DataDirectory data_directory;
+        private DataDirectory _data_directory;
+        private Section _section;
 
-        internal SectionContent(DataDirectory dataDirectory, Section owningSection)
+        internal SectionContent(DataDirectory directory, Section section)
         {
-            section = owningSection;
-            data_directory = dataDirectory;
+            _data_directory = directory;
+            _section = section;
         }
 
         #region Properties
@@ -25,7 +45,7 @@ namespace Workshell.PE
         {
             get
             {
-                return section;
+                return _section;
             }
         }
 
@@ -33,7 +53,7 @@ namespace Workshell.PE
         {
             get
             {
-                return data_directory;
+                return _data_directory;
             }
         }
 
