@@ -151,7 +151,16 @@ namespace Workshell.PE
 
         #region Methods
 
-        /*
+        public IEnumerator<Section> GetEnumerator()
+        {
+            return table.Select(entry => CreateSection(entry)).GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
         public Section RVAToSection(ulong rva)
         {
             foreach(SectionTableEntry entry in table)
@@ -161,17 +170,6 @@ namespace Workshell.PE
             }
 
             return null;
-        }
-        */
-
-        public IEnumerator<Section> GetEnumerator()
-        {
-            return table.Select(entry => CreateSection(entry)).GetEnumerator();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         public bool RegisterContentProvider(ISectionContentProvider contentProvider)
