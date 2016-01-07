@@ -32,7 +32,7 @@ namespace Workshell.PE
         [EnumAnnotation("IMAGE_SUBSYSTEM_WINDOWS_CUI")]
         WindowsCUI = 3,
         [EnumAnnotation("IMAGE_SUBSYSTEM_OS2_CUI")]
-        OS2 = 7,
+        OS2 = 5,
         [EnumAnnotation("IMAGE_SUBSYSTEM_POSIX_CUI")]
         Posix = 7,
         [EnumAnnotation("IMAGE_SUBSYSTEM_WINDOWS_CE_GUI")]
