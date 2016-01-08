@@ -47,6 +47,8 @@ namespace Workshell.PE
 
             blocks = new List<RelocationBlock>();
 
+            return;
+
             long offset = section.Location.Offset;
             long size = 0;
 

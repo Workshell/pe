@@ -301,6 +301,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public Stream Stream
+        {
+            get
+            {
+                return _stream;
+            }
+        }
+
         public bool Is32Bit
         {
             get
@@ -399,14 +407,6 @@ namespace Workshell.PE
                     LoadSections();
 
                 return _sections;
-            }
-        }
-
-        internal Stream Stream
-        {
-            get
-            {
-                return _stream;
             }
         }
 

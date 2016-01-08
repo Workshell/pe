@@ -49,12 +49,17 @@
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
+    <Compile Include="Exports\ExportAddressTable.cs" />
+    <Compile Include="Exports\ExportDirectory.cs" />
+    <Compile Include="Exports\ExportContent.cs" />
+    <Compile Include="Exports\ExportTable.cs" />
     <Compile Include="FileHeader.cs" />
     <Compile Include="Locatable.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
     <Compile Include="Native\IMAGE_COR20_HEADER.cs" />
     <Compile Include="Native\IMAGE_DATA_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_DOS_HEADER.cs" />
+    <Compile Include="Native\IMAGE_EXPORT_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_FILE_HEADER.cs" />
     <Compile Include="Native\IMAGE_OPTIONAL_HEADER.cs" />
     <Compile Include="Native\IMAGE_SECTION_HEADER.cs" />
