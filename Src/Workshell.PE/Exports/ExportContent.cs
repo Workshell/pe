@@ -209,7 +209,7 @@ namespace Workshell.PE
             long offset = Convert.ToInt64(Section.RVAToOffset(directory.Name));
             long size = (Directory.Location.Offset + DataDirectory.Size) - offset;
             
-            name_table = new GenericLocatable(offset,size);
+            name_table = new GenericLocatable(offset,size,this);
         }
 
         private void LoadExports(Stream stream)

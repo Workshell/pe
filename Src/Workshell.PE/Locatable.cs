@@ -39,10 +39,16 @@ namespace Workshell.PE
     {
 
         private StreamLocation location;
+        private object parent;
 
-        public GenericLocatable(long offset, long size)
+        public GenericLocatable(long offset, long size) : this(offset,size,null)
+        {
+        }
+
+        public GenericLocatable(long offset, long size, object parentObj)
         {
             location = new StreamLocation(offset,size);
+            parent = parentObj;
         }
 
         #region Properties
@@ -52,6 +58,14 @@ namespace Workshell.PE
             get
             {
                 return location;
+            }
+        }
+
+        public object Parent
+        {
+            get
+            {
+                return parent;
             }
         }
 

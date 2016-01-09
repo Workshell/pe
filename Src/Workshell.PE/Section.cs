@@ -256,6 +256,15 @@ namespace Workshell.PE
 
         #region Properties
 
+        public ExeReader Reader
+        {
+            get
+            {
+                return reader;
+            }
+        }
+
+
         public int Count
         {
             get
@@ -289,15 +298,6 @@ namespace Workshell.PE
                 return CreateSection(entry);
             }
         }
-
-        internal ExeReader Reader
-        {
-            get
-            {
-                return reader;
-            }
-        }
-
         #endregion
 
     }
