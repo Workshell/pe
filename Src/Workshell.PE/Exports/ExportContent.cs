@@ -39,9 +39,9 @@ namespace Workshell.PE
     public class Export
     {
 
-        public Export(uint address, string name, int ord, string forwardName)
+        public Export(uint entryPoint, string name, int ord, string forwardName)
         {
-            EntryPoint = address;
+            EntryPoint = entryPoint;
             Name = name;
             Ordinal = ord;
             ForwardName = forwardName;
@@ -93,17 +93,23 @@ namespace Workshell.PE
 
     }
 
-    public class ExportContent : SectionContent, IEnumerable<Export>
+    public class ExportContent : SectionContent, ILocatable, IEnumerable<Export>
     {
 
+        private StreamLocation location;
         private List<Export> exports;
         private ExportDirectory directory;
         private ExportTable<uint> address_table;
         private ExportTable<uint> name_pointer_table;
         private ExportTable<ushort> ordinal_table;
+        private GenericLocatable name_table;
 
         internal ExportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
+            long offset = Convert.ToInt64(section.RVAToOffset(dataDirectory.VirtualAddress));
+
+            location = new StreamLocation(offset,dataDirectory.Size);
+
             Stream stream = Section.Sections.Reader.Stream;
 
             exports = new List<Export>();
@@ -112,6 +118,7 @@ namespace Workshell.PE
             LoadAddressTable(stream);
             LoadNamePointerTable(stream);
             LoadOrdinalTable(stream);
+            LoadNameTable(stream);
             LoadExports(stream);
         }
 
@@ -190,6 +197,14 @@ namespace Workshell.PE
             ordinal_table = new ExportTable<ushort>(this,offset,ordinals.Count * sizeof(ushort),ordinals);
         }
 
+        private void LoadNameTable(Stream stream)
+        {
+            long offset = Convert.ToInt64(Section.RVAToOffset(directory.Name));
+            long size = (Directory.Location.Offset + DataDirectory.Size) - offset;
+            
+            name_table = new GenericLocatable(offset,size);
+        }
+
         private void LoadExports(Stream stream)
         {
             uint[] function_addresses = directory.GetFunctionAddresses();
@@ -231,6 +246,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public StreamLocation Location
+        {
+            get
+            {
+                return location;
+            }
+        }
+
         public ExportDirectory Directory
         {
             get
@@ -260,6 +283,14 @@ namespace Workshell.PE
             get
             {
                 return ordinal_table;
+            }
+        }
+
+        public GenericLocatable NameTable
+        {
+            get
+            {
+                return name_table;
             }
         }
 
