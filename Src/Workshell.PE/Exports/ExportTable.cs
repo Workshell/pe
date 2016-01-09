@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,11 @@ namespace Workshell.PE
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public byte[] GetBytes()
+        {
+            return Utils.ReadBytes(content.Section.Sections.Reader.Stream,location.Offset,location.Size);
         }
 
         #endregion

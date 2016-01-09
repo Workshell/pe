@@ -49,7 +49,6 @@
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
-    <Compile Include="Exports\ExportAddressTable.cs" />
     <Compile Include="Exports\ExportDirectory.cs" />
     <Compile Include="Exports\ExportContent.cs" />
     <Compile Include="Exports\ExportTable.cs" />

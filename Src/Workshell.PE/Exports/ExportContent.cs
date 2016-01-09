@@ -39,8 +39,9 @@ namespace Workshell.PE
     public class Export
     {
 
-        public Export(uint entryPoint, string name, int ord, string forwardName)
+        internal Export(int index, uint entryPoint, string name, int ord, string forwardName)
         {
+            Index = index;
             EntryPoint = entryPoint;
             Name = name;
             Ordinal = ord;
@@ -64,6 +65,12 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public int Index
+        {
+            get;
+            private set;
+        }
 
         public uint EntryPoint
         {
@@ -227,7 +234,7 @@ namespace Workshell.PE
                     fwd_name = GetString(stream,fwd_offset);
                 }
 
-                Export export = new Export(function_address,name,Convert.ToInt32(ord + directory.Base),fwd_name);
+                Export export = new Export(i,function_address,name,Convert.ToInt32(ord + directory.Base),fwd_name);
 
                 exports.Add(export);
             }

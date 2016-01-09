@@ -170,6 +170,16 @@ namespace Workshell.PE
             return builder.ToString();
         }
 
+        public static byte[] ReadBytes(Stream stream, long offset, long size)
+        {
+            byte[] buffer = new byte[size];
+
+            stream.Seek(offset,SeekOrigin.Begin);
+            stream.Read(buffer,0,buffer.Length);
+
+            return buffer;
+        }
+
         public static void Write<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct
         {
             IntPtr ptr = Marshal.AllocHGlobal(count);
