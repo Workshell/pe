@@ -39,8 +39,9 @@ namespace Workshell.PE
     public class Export
     {
 
-        internal Export(int index, uint entryPoint, string name, int ord, string forwardName)
+        internal Export(ExportContent exportContent, int index, uint entryPoint, string name, int ord, string forwardName)
         {
+            Content = exportContent;
             Index = index;
             EntryPoint = entryPoint;
             Name = name;
@@ -65,6 +66,12 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ExportContent Content
+        {
+            get;
+            private set;
+        }
 
         public int Index
         {
@@ -139,6 +146,17 @@ namespace Workshell.PE
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public byte[] GetBytes()
+        {
+            Stream stream = Section.Sections.Reader.Stream;
+            byte[] buffer = new byte[location.Size];
+            
+            stream.Seek(location.Offset,SeekOrigin.Begin);
+            stream.Read(buffer,0,buffer.Length);
+
+            return buffer;
         }
 
         private void LoadDirectory(Stream stream)
@@ -234,7 +252,7 @@ namespace Workshell.PE
                     fwd_name = GetString(stream,fwd_offset);
                 }
 
-                Export export = new Export(i,function_address,name,Convert.ToInt32(ord + directory.Base),fwd_name);
+                Export export = new Export(this,i,function_address,name,Convert.ToInt32(ord + directory.Base),fwd_name);
 
                 exports.Add(export);
             }
