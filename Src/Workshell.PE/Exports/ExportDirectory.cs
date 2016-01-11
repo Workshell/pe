@@ -116,7 +116,7 @@ namespace Workshell.PE
 
             stream.Seek(offset,SeekOrigin.Begin);
 
-            for(int i = 0; i < directory.NumberOfFunctions; i++)
+            for(int i = 0; i < directory.NumberOfNames; i++)
             {
                 ushort ord = Utils.ReadUInt16(stream);
 
