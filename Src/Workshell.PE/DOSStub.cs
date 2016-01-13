@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class DOSStub : ILocatable
+    public class DOSStub : ILocationSupport, IRawDataSupport
     {
 
         private ExeReader reader;

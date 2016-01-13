@@ -105,7 +105,7 @@ namespace Workshell.PE
 
     }
 
-    public class DataDirectories : IEnumerable<DataDirectory>, ILocatable
+    public class DataDirectories : IEnumerable<DataDirectory>, ILocationSupport, IRawDataSupport
     {
 
         public static readonly int EntrySize = Utils.SizeOf<IMAGE_DATA_DIRECTORY>();
@@ -124,16 +124,6 @@ namespace Workshell.PE
 
         #region Methods
 
-        public bool Has(DataDirectoryType directoryType)
-        {
-            return dirs.ContainsKey(directoryType);
-        }
-
-        public bool Has(int directoryType)
-        {
-            return Has((DataDirectoryType)directoryType);
-        }
-
         public IEnumerator<DataDirectory> GetEnumerator()
         {
             return dirs.Values.GetEnumerator();
@@ -142,6 +132,21 @@ namespace Workshell.PE
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public byte[] GetBytes()
+        {
+            return Utils.ReadBytes(header.Reader.Stream,location);
+        }
+
+        public bool Has(DataDirectoryType directoryType)
+        {
+            return dirs.ContainsKey(directoryType);
+        }
+
+        public bool Has(int directoryType)
+        {
+            return Has((DataDirectoryType)directoryType);
         }
 
         #endregion

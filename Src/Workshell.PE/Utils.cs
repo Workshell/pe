@@ -180,6 +180,11 @@ namespace Workshell.PE
             return buffer;
         }
 
+        public static byte[] ReadBytes(Stream stream, StreamLocation location)
+        {
+            return ReadBytes(stream,location.Offset,location.Size);
+        }
+
         public static void Write<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct
         {
             IntPtr ptr = Marshal.AllocHGlobal(count);

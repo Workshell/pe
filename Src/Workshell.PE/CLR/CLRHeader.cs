@@ -31,7 +31,7 @@ namespace Workshell.PE
         Prefer32Bit = 0x20000
     }
 
-    public class CLRHeader : ILocatable
+    public class CLRHeader : ILocationSupport
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_COR20_HEADER>();

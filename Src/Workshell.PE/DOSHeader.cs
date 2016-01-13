@@ -12,7 +12,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class DOSHeader : ILocatable
+    public class DOSHeader : ILocationSupport, IRawDataSupport
     {
 
         public const ushort DOS_MAGIC_MZ = 23117;

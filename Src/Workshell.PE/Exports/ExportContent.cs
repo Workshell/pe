@@ -114,7 +114,7 @@ namespace Workshell.PE
 
     }
 
-    public class ExportContent : SectionContent, ILocatable, IEnumerable<Export>
+    public class ExportContent : SectionContent, ILocationSupport, IEnumerable<Export>
     {
 
         private StreamLocation location;
@@ -123,7 +123,7 @@ namespace Workshell.PE
         private ExportTable<uint> address_table;
         private ExportTable<uint> name_pointer_table;
         private ExportTable<ushort> ordinal_table;
-        private GenericLocatable name_table;
+        private GenericLocationSupport name_table;
 
         internal ExportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
@@ -234,7 +234,7 @@ namespace Workshell.PE
             long offset = Convert.ToInt64(Section.RVAToOffset(directory.Name));
             long size = (Directory.Location.Offset + DataDirectory.Size) - offset;
             
-            name_table = new GenericLocatable(offset,size,this);
+            name_table = new GenericLocationSupport(offset,size,this);
         }
 
         private void LoadExports(Stream stream)
@@ -373,7 +373,7 @@ namespace Workshell.PE
             }
         }
 
-        public GenericLocatable NameTable
+        public GenericLocationSupport NameTable
         {
             get
             {

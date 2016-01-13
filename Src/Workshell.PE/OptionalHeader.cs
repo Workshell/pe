@@ -78,7 +78,7 @@ namespace Workshell.PE
         TerminalServerAware = 0x8000
     }
 
-    public abstract class OptionalHeader : ILocatable
+    public abstract class OptionalHeader : ILocationSupport, IRawDataSupport
     {
 
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
@@ -135,6 +135,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ExeReader Reader
+        {
+            get
+            {
+                return reader;
+            }
+        }
 
         public StreamLocation Location
         {

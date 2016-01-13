@@ -11,7 +11,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ExeReader : IDisposable
+    public class ExeReader : IDisposable, IRawDataSupport
     {
 
         private bool _disposed;
@@ -155,6 +155,17 @@ namespace Workshell.PE
                     _stream.Dispose();
             
                 _disposed = true;
+            }
+        }
+
+        public byte[] GetBytes()
+        {
+            using (MemoryStream mem = new MemoryStream())
+            {
+                _stream.Seek(0,SeekOrigin.Begin);
+                _stream.CopyTo(mem,64 * 1024);
+
+                return mem.ToArray();
             }
         }
 
@@ -352,6 +363,22 @@ namespace Workshell.PE
                     result = (_nt_headers.OptionalHeader.GetMagic() == MagicType.PE32plus);
 
                 return result;
+            }
+        }
+
+        public bool IsCLR
+        {
+            get
+            {
+                if (_nt_headers == null)
+                    LoadNTHeaders();
+
+                DataDirectory directory = _nt_headers.OptionalHeader.DataDirectories[DataDirectoryType.CLRRuntimeHeader];
+
+                if (directory == null || directory.Size == 0)
+                    return false;
+
+                return true;
             }
         }
 

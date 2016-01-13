@@ -35,7 +35,7 @@ namespace Workshell.PE
         Dir64 = 10
     }
 
-    public class Relocation : ILocatable
+    public class Relocation : ILocationSupport
     {
 
         private const int size = sizeof(ushort);

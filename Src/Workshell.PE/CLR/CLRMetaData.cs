@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class CLRMetaData : ILocatable
+    public class CLRMetaData : ILocationSupport
     {
 
         private CLRContent content;

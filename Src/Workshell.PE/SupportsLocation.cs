@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public interface ILocatable
+    public interface ILocationSupport
     {
 
         #region Properties
@@ -21,7 +21,7 @@ namespace Workshell.PE
 
     }
 
-    public abstract class Locatable : ILocatable
+    public abstract class LocationSupport : ILocationSupport
     {
 
         #region Properties
@@ -35,17 +35,17 @@ namespace Workshell.PE
 
     }
 
-    public sealed class GenericLocatable : Locatable
+    public sealed class GenericLocationSupport : LocationSupport
     {
 
         private StreamLocation location;
         private object parent;
 
-        public GenericLocatable(long offset, long size) : this(offset,size,null)
+        public GenericLocationSupport(long offset, long size) : this(offset,size,null)
         {
         }
 
-        public GenericLocatable(long offset, long size, object parentObj)
+        public GenericLocationSupport(long offset, long size, object parentObj)
         {
             location = new StreamLocation(offset,size);
             parent = parentObj;

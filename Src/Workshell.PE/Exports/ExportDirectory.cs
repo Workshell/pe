@@ -12,7 +12,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ExportDirectory : ILocatable
+    public class ExportDirectory : ILocationSupport
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();

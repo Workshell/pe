@@ -53,7 +53,7 @@
     <Compile Include="Exports\ExportContent.cs" />
     <Compile Include="Exports\ExportTable.cs" />
     <Compile Include="FileHeader.cs" />
-    <Compile Include="Locatable.cs" />
+    <Compile Include="SupportsLocation.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
     <Compile Include="Native\IMAGE_COR20_HEADER.cs" />
     <Compile Include="Native\IMAGE_DATA_DIRECTORY.cs" />
@@ -64,6 +64,7 @@
     <Compile Include="Native\IMAGE_SECTION_HEADER.cs" />
     <Compile Include="NTHeaders.cs" />
     <Compile Include="OptionalHeader.cs" />
+    <Compile Include="SupportsRawData.cs" />
     <Compile Include="Reader.cs" />
     <Compile Include="ReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

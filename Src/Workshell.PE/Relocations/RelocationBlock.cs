@@ -10,7 +10,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class RelocationBlock : IEnumerable<Relocation>, ILocatable
+    public class RelocationBlock : IEnumerable<Relocation>, ILocationSupport
     {
 
         private RelocationContent content;

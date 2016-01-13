@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class NTHeaders : ILocatable
+    public class NTHeaders : ILocationSupport, IRawDataSupport
     {
 
         public const uint PE_MAGIC_MZ = 17744;
@@ -31,6 +31,11 @@ namespace Workshell.PE
         public override string ToString()
         {
             return "NT Headers";
+        }
+
+        public byte[] GetBytes()
+        {
+            return Utils.ReadBytes(reader.Stream,location);
         }
 
         #endregion

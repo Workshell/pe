@@ -100,7 +100,7 @@ namespace Workshell.PE
         MemoryWrite = 0x80000000
     }
 
-    public class SectionTableEntry : IEquatable<SectionTableEntry>, ILocatable
+    public class SectionTableEntry : IEquatable<SectionTableEntry>, ILocationSupport
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_SECTION_HEADER>();
@@ -345,7 +345,7 @@ namespace Workshell.PE
 
     }
 
-    public class SectionTable : IEnumerable<SectionTableEntry>, ILocatable
+    public class SectionTable : IEnumerable<SectionTableEntry>, ILocationSupport, IRawDataSupport
     {
 
         private ExeReader reader;

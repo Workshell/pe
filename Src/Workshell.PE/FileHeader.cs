@@ -60,7 +60,7 @@ namespace Workshell.PE
         BytesOfWordReserved = 0x8000
     }
 
-    public class FileHeader
+    public class FileHeader : IRawDataSupport
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_FILE_HEADER>();
