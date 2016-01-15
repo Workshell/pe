@@ -158,7 +158,7 @@ namespace Workshell.PE
         private ExportTable<uint> address_table;
         private ExportTable<uint> name_pointer_table;
         private ExportTable<ushort> ordinal_table;
-        private GenericLocationSupport name_table;
+        private ExportTable<string> name_table;
 
         internal ExportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
@@ -268,8 +268,35 @@ namespace Workshell.PE
         {
             long offset = Convert.ToInt64(Section.RVAToOffset(directory.Name));
             long size = (Directory.Location.Offset + DataDirectory.Size) - offset;
-            
-            name_table = new GenericLocationSupport(offset,size,this);
+            List<string> names = new List<string>();
+            byte[] bytes = Utils.ReadBytes(stream,offset,size);
+
+            using (MemoryStream mem = new MemoryStream(bytes))
+            {
+                StringBuilder builder = new StringBuilder();
+
+                while (true)
+                {
+                    int b = mem.ReadByte();
+
+                    if (b == -1)
+                        break;
+
+                    if (b == 0)
+                    {
+                        string name = builder.ToString();
+
+                        names.Add(name);
+                        builder.Clear();
+                    }
+                    else
+                    {
+                        builder.Append((char)b);
+                    }
+                }
+            }
+
+            name_table = new ExportTable<string>(this,offset,size,names);
         }
 
         private void LoadExports(Stream stream)
@@ -390,7 +417,7 @@ namespace Workshell.PE
             }
         }
 
-        public GenericLocationSupport NameTable
+        public ExportTable<string> NameTable
         {
             get
             {
