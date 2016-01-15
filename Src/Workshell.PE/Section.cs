@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class Section : IEnumerable<SectionContent>, ILocationSupport
+    public class Section : IEnumerable<SectionContent>, ILocationSupport, IRawDataSupport
     {
 
         private Sections sections;

@@ -237,84 +237,82 @@ namespace Workshell.PE
             name_table = new GenericLocationSupport(offset,size,this);
         }
 
+        class ExportItem
+        {
+        
+            public int Index;
+            public uint FunctionAddress;
+            public int NameIndex;
+            public uint NameAddress;
+            public int Ordinal;
+
+            public override string ToString()
+            {
+                return String.Format("Address: 0x{0:X8}, Index: {1:D4}, Ordinal: {2:D4}, Has Name: {3}",FunctionAddress,Index,Ordinal,NameIndex != -1);
+            }
+
+        }
+
         private void LoadExports(Stream stream)
         {
             uint[] function_addresses = directory.GetFunctionAddresses();
             uint[] name_addresses = directory.GetFunctionNameAddresses();
             ushort[] ordinals = directory.GetFunctionOrdinals();
-            Dictionary<int,uint> function_addresses_dict = new Dictionary<int,uint>();
+            List<ExportItem> items = new List<ExportItem>();
 
             for(int i = 0; i < function_addresses.Length; i++)
             {
-                uint address = function_addresses[i];
+                ExportItem item = new ExportItem() {
+                    Index = i,
+                    FunctionAddress = function_addresses[i],
+                    NameIndex = -1,
+                    NameAddress = 0,
+                    Ordinal = -1
+                };
 
-                function_addresses_dict.Add(i,address);
+                items.Add(item);
             }
-
-            Dictionary<int,Tuple<ushort,uint>> name_addresses_dict = new Dictionary<int,Tuple<ushort,uint>>();
-
-            for(int i = 0; i < directory.NumberOfNames; i++)
+            
+            for(int i = 0; i < name_addresses.Length; i++)
             {
                 ushort ord = ordinals[i];
-                uint function_address = function_addresses[ord];
+                ExportItem item = items.FirstOrDefault(ei => ei.Index == ord);
 
-                name_addresses_dict.Add(i,new Tuple<ushort,uint>(ord,function_address));
+                if (item != null)
+                {
+                    item.NameIndex = i;
+                    item.NameAddress = name_addresses[i];
+                    item.Ordinal = Convert.ToInt32(ord + directory.Base);
+                }
             }
 
-            Dictionary<int,uint> ord_addresses_dict = new Dictionary<int,uint>();
-
-            for(int i = 0; i < function_addresses.Length; i++)
+            for(int i = 0; i < items.Count; i++)
             {
-                uint address = function_addresses[i];
-                bool exists = false;
+                if (items[i].NameIndex == -1)
+                    items[i].Ordinal = Convert.ToInt32(i + directory.Base);
+            }
 
-                foreach(KeyValuePair<int,Tuple<ushort,uint>> kvp in name_addresses_dict)
+            foreach(ExportItem item in items)
+            {
+                string name = String.Empty;
+
+                if (item.NameIndex > -1)
                 {
-                    if (kvp.Value.Item2 == address)
-                    {
-                        exists = true;
+                    long name_offset = Convert.ToInt64(Section.RVAToOffset(item.NameAddress));
 
-                        break;
-                    }
+                    name = GetString(stream,name_offset);
                 }
 
-                if (!exists)
-                    ord_addresses_dict.Add(i,address);
-            }
-
-            foreach(KeyValuePair<int,Tuple<ushort,uint>> kvp in name_addresses_dict)
-            {
-                Tuple<ushort,uint> tuple = kvp.Value;
-                uint function_address = tuple.Item2;
-                int name_idx = kvp.Key;
-                uint name_address = name_addresses[name_idx];
-                long name_offset = Convert.ToInt64(Section.RVAToOffset(name_address));
-                string name = GetString(stream,name_offset);
                 string fwd_name = String.Empty;
 
-                if (!String.IsNullOrWhiteSpace(name))
+                if (item.FunctionAddress >= DataDirectory.VirtualAddress && item.FunctionAddress <= (DataDirectory.VirtualAddress + DataDirectory.Size))
                 {
-                    if (function_address >= DataDirectory.VirtualAddress && function_address <= (DataDirectory.VirtualAddress + DataDirectory.Size))
-                    {
-                        long fwd_offset = Convert.ToInt64(Section.RVAToOffset(function_address));
+                    long fwd_offset = Convert.ToInt64(Section.RVAToOffset(item.FunctionAddress));
 
-                        fwd_name = GetString(stream,fwd_offset);
-                    }
+                    fwd_name = GetString(stream,fwd_offset);
                 }
 
-                int idx = Convert.ToInt32(tuple.Item1);
-                int ord = Convert.ToInt32(idx + directory.Base);
-                Export export = new Export(this,idx,name_idx,function_address,name,ord,fwd_name);
-                
-                exports.Add(export);
-            }
-
-            foreach(KeyValuePair<int,uint> kvp in ord_addresses_dict)
-            {
-                int idx = kvp.Key;
-                int ord = Convert.ToInt32(idx + directory.Base);
-                uint address = kvp.Value;
-                Export export = new Export(this,idx,-1,address,String.Empty,ord,String.Empty);
+                Export export = new Export(this,item.Index,item.NameIndex,item.FunctionAddress,name,item.Ordinal,fwd_name);
                 
                 exports.Add(export);
             }
