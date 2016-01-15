@@ -117,6 +117,41 @@ namespace Workshell.PE
     public class ExportContent : SectionContent, ILocationSupport, IEnumerable<Export>
     {
 
+        class ExportItem
+        {
+        
+            public int Index
+            {
+                get;
+                set;
+            }
+
+            public uint FunctionAddress
+            {
+                get;
+                set;
+            }
+
+            public int NameIndex
+            {
+                get;
+                set;
+            }
+
+            public uint NameAddress
+            {
+                get;
+                set;
+            }
+
+            public int Ordinal
+            {
+                get;
+                set;
+            }
+
+        }
+
         private StreamLocation location;
         private List<Export> exports;
         private ExportDirectory directory;
@@ -235,22 +270,6 @@ namespace Workshell.PE
             long size = (Directory.Location.Offset + DataDirectory.Size) - offset;
             
             name_table = new GenericLocationSupport(offset,size,this);
-        }
-
-        class ExportItem
-        {
-        
-            public int Index;
-            public uint FunctionAddress;
-            public int NameIndex;
-            public uint NameAddress;
-            public int Ordinal;
-
-            public override string ToString()
-            {
-                return String.Format("Address: 0x{0:X8}, Index: {1:D4}, Ordinal: {2:D4}, Has Name: {3}",FunctionAddress,Index,Ordinal,NameIndex != -1);
-            }
-
         }
 
         private void LoadExports(Stream stream)
