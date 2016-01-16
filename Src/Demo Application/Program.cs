@@ -23,16 +23,11 @@ namespace Workshell.PE.Demo
 
             foreach(Section section in sections)
             {
-                ExportContent exports = (ExportContent)section[DataDirectoryType.ExportTable];
+                ImportContent content = (ImportContent)section[DataDirectoryType.ImportTable];
 
-                if (exports == null)
-                    continue;
-
-                Console.WriteLine("Total number of exports: {0:n0}",exports.Count);
-
-                foreach(Export export in exports)
+                if (content != null)
                 {
-                    Console.WriteLine("0x{0:X8} {1:D4} {2}",export.EntryPoint,export.Ordinal,export.Name);
+                
                 }
             }
 

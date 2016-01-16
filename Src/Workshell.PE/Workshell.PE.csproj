@@ -53,6 +53,12 @@
     <Compile Include="Exports\ExportContent.cs" />
     <Compile Include="Exports\ExportTable.cs" />
     <Compile Include="FileHeader.cs" />
+    <Compile Include="Imports\ImportContent.cs" />
+    <Compile Include="Imports\ImportDirectory.cs" />
+    <Compile Include="Imports\ImportLookupTableEntry.cs" />
+    <Compile Include="Imports\ImportLookupTable.cs" />
+    <Compile Include="Imports\ImportLookupTables.cs" />
+    <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
     <Compile Include="SupportsLocation.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
     <Compile Include="Native\IMAGE_COR20_HEADER.cs" />
