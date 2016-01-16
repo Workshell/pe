@@ -12,76 +12,36 @@ namespace Workshell.PE
     {
 
         private ImportLookupTables tables;
-        private ImportDirectoryEntry entry;
-        private List<ImportLookupTableEntry> list;
+        private ImportDirectoryEntry directory_entry;
         private StreamLocation location;
+        private List<ImportLookupTableEntry> entries;
 
-        internal ImportLookupTable(ImportLookupTables lookupTables, ImportDirectoryEntry directoryEntry, Stream stream)
+        internal ImportLookupTable(ImportLookupTables lookupTables, ImportDirectoryEntry directoryEntry, List<ulong> tableEntries, StreamLocation streamLoc)
         {
             tables = lookupTables;
-            entry = directoryEntry;
-            list = new List<ImportLookupTableEntry>();
+            directory_entry = directoryEntry;
+            location = streamLoc;
+            entries = new List<ImportLookupTableEntry>();
 
-            long ilt_offset = 0;
+            long offset = location.Offset;
+            long size = (tables.Content.Section.Sections.Reader.Is64Bit ? sizeof(ulong) : sizeof(uint));
 
-            if (entry.OriginalFirstThunk != 0)
+            foreach(ulong table_entry in tableEntries)
             {
-                ilt_offset = Convert.ToInt64(lookupTables.Content.Section.RVAToOffset(entry.OriginalFirstThunk));
+                StreamLocation entry_location = new StreamLocation(offset,size);
+                ImportLookupTableEntry entry = new ImportLookupTableEntry(this,entry_location,table_entry);
+
+                entries.Add(entry);
+
+                offset += size;
             }
-            else
-            {
-                ilt_offset = Convert.ToInt64(lookupTables.Content.Section.RVAToOffset(entry.FirstThunk));
-            }
-
-            long ilt_size = 0;
-            long entry_offset = ilt_offset;
-
-            stream.Seek(ilt_offset,SeekOrigin.Begin);
-
-            while (true)
-            {
-                if (lookupTables.Content.Section.Sections.Reader.Is32Bit)
-                {
-                    byte[] buffer = new byte[4];
-
-                    stream.Read(buffer,0,buffer.Length);
-
-                    ilt_size += 4;
-                    entry_offset += 4;
-
-                    uint value = BitConverter.ToUInt32(buffer,0);
-
-                    if (value == 0)
-                        break;
-
-                    list.Add(new ImportLookupTableEntry32(this,entry_offset,value));
-                }
-                else
-                {
-                    byte[] buffer = new byte[8];
-
-                    stream.Read(buffer,0,buffer.Length);
-
-                    ilt_size += 8;
-                    entry_offset += 8;
-
-                    ulong value = BitConverter.ToUInt64(buffer,0);
-
-                    if (value == 0)
-                        break;
-
-                    list.Add(new ImportLookupTableEntry64(this,entry_offset,value));
-                }
-            }
-
-            location = new StreamLocation(ilt_offset,ilt_size);
         }
 
         #region Methods
 
         public IEnumerator<ImportLookupTableEntry> GetEnumerator()
         {
-            return list.GetEnumerator();
+            return entries.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -112,7 +72,7 @@ namespace Workshell.PE
         {
             get
             {
-                return entry;
+                return directory_entry;
             }
         }
 
@@ -128,7 +88,7 @@ namespace Workshell.PE
         {
             get
             {
-                return list.Count;
+                return entries.Count;
             }
         }
 
@@ -136,7 +96,7 @@ namespace Workshell.PE
         {
             get
             {
-                return list[index];
+                return entries[index];
             }
         }
 

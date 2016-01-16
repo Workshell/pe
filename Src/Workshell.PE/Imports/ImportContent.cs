@@ -10,6 +10,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
+
     internal class ImportContentProvider : ISectionContentProvider
     {
 
@@ -36,11 +37,21 @@ namespace Workshell.PE
 
     }
 
+    internal struct ILTTable
+    {
+
+        public long Offset;
+        public long Size;
+        public List<ulong> Entries;
+
+    }
+
     public class ImportContent : SectionContent, ILocationSupport
     {
 
         private StreamLocation location;
         private ImportDirectory directory;
+        private ImportLookupTables ilt;
 
         internal ImportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
@@ -90,19 +101,9 @@ namespace Workshell.PE
             directory = new ImportDirectory(this,descriptors,directory_location);
         }
 
-        class ILTTable
-        {
-        
-            public int DirectoryIndex;
-            public long Offset;
-            public long Size;
-            public List<ulong> Entries;
-
-        }
-
         private void LoadLookupTables(Stream stream)
         {
-            List<ILTTable> ilt_tables = new List<ILTTable>();
+            Dictionary<int,ILTTable> ilt_tables = new Dictionary<int,ILTTable>();
 
             for(int i = 0; i < directory.Count; i++)
             {
@@ -143,17 +144,18 @@ namespace Workshell.PE
                     }
                 }
 
-                long ilt_size = (ilt_entries.Count + 1) * (Section.Sections.Reader.Is64Bit ? 8 : 4);
+                long ilt_size = (ilt_entries.Count + 1) * (Section.Sections.Reader.Is64Bit ? sizeof(ulong) : sizeof(uint));
 
                 ILTTable ilt_table = new ILTTable() {
-                    DirectoryIndex = i,
                     Offset = ilt_offset,
                     Size = ilt_size,
                     Entries = ilt_entries
                 };
 
-                ilt_tables.Add(ilt_table);
+                ilt_tables.Add(i,ilt_table);
             }
+
+            ilt = new ImportLookupTables(this,ilt_tables);
         }
 
         #endregion
@@ -173,6 +175,14 @@ namespace Workshell.PE
             get
             {
                 return directory;
+            }
+        }
+
+        public ImportLookupTables LookupTables
+        {
+            get
+            {
+                return ilt;
             }
         }
 

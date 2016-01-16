@@ -58,6 +58,8 @@
     <Compile Include="Imports\ImportLookupTableEntry.cs" />
     <Compile Include="Imports\ImportLookupTable.cs" />
     <Compile Include="Imports\ImportLookupTables.cs" />
+    <Compile Include="MoreLinq\MinBy.cs" />
+    <Compile Include="MoreLinq\MoreEnumerable.cs" />
     <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
     <Compile Include="SupportsLocation.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />

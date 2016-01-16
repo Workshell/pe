@@ -9,26 +9,22 @@ namespace Workshell.PE
 {
 
 
-    public abstract class ImportLookupTableEntry : ILocationSupport, IRawDataSupport, IEquatable<ImportLookupTableEntry>
+    public class ImportLookupTableEntry : ILocationSupport, IRawDataSupport, IEquatable<ImportLookupTableEntry>
     {
 
         private ImportLookupTable table;
         private StreamLocation location;
+        private ulong address;
+        private int ordinal;
 
-        internal ImportLookupTableEntry(ImportLookupTable lookupTable, long offset, int size)
+        internal ImportLookupTableEntry(ImportLookupTable lookupTable, StreamLocation streamLoc, ulong entryAddress)
         {
             table = lookupTable;
-            location = new StreamLocation(offset,size);
-        }
+            location = streamLoc;
+            address = entryAddress;
+            ordinal = -1;
 
-        #region Methods
-
-        public abstract uint GetAddress();
-        public abstract ulong GetLongAddress();
-
-        public int GetOrdinal()
-        {
-            if (location.Size == 4)
+            if (location.Size == sizeof(uint))
             {
                 uint value = GetAddress();
 
@@ -36,7 +32,7 @@ namespace Workshell.PE
                 {
                     value &= 0x7fffffff;
 
-                    return Convert.ToInt32(value);
+                    ordinal = Convert.ToInt32(value);
                 }
             }
             else
@@ -47,48 +43,36 @@ namespace Workshell.PE
                 {
                     value &= 0x7fffffffffffffff;
 
-                    return Convert.ToInt32(value);
+                    ordinal = Convert.ToInt32(value);
                 }
             }
-
-            return 0;
         }
 
-#if DEBUG
+        #region Methods
 
-        public override string ToString()
+        public uint GetAddress()
         {
-            ulong value;
-
-            if (location.Size == 4)
+            if (location.Size == sizeof(uint))
             {
-                value = GetAddress();
-
-                if (IsOrdinal)
-                {
-                    return String.Format("{0} (Ordinal)",value);
-                }
-                else
-                {
-                    return String.Format("0x{0} (Address)",value.ToString("X8"));
-                }
+                return Convert.ToUInt32(address);
             }
             else
             {
-                value = GetLongAddress();
-            }
-
-            if (IsOrdinal)
-            {
-                return String.Format("{0} (Ordinal)",value);
-            }
-            else
-            {
-                return String.Format("0x{0} (Address)",value.ToString("X16"));
+                return 0;
             }
         }
 
-#endif
+        public ulong GetLongAddress()
+        {
+            if (location.Size == sizeof(ulong))
+            {
+                return address;
+            }
+            else
+            {
+                return 0;
+            }
+        }
 
         public override int GetHashCode()
         {
@@ -162,76 +146,12 @@ namespace Workshell.PE
         {
             get
             {
-                if (location.Size == 4)
-                {
-                    uint value = GetAddress();
-
-                    return ((value & 0x80000000) == 0x80000000);
-                }
-                else
-                {
-                    ulong value = GetLongAddress();
-
-                    return ((value & 0x8000000000000000) == 0x8000000000000000);
-                }
+                return (ordinal != -1);
             }
         }
 
         #endregion
 
     }
-
-    public class ImportLookupTableEntry32 : ImportLookupTableEntry
-    {
-
-        private uint address;
-
-        internal ImportLookupTableEntry32(ImportLookupTable lookupTable, long entryOffset, uint entryAddress) : base(lookupTable,entryOffset,4)
-        {
-            address = entryAddress;
-        }
-
-        #region Methods
-
-        public override uint GetAddress()
-        {
-            return address;
-        }
-
-        public override ulong GetLongAddress()
-        {
-            return 0;
-        }
-
-        #endregion
-
-    }
-
-    public class ImportLookupTableEntry64 : ImportLookupTableEntry
-    {
-
-        private ulong address;
-
-        internal ImportLookupTableEntry64(ImportLookupTable lookupTable, long entryOffset, ulong entryAddress) : base(lookupTable,entryOffset,8)
-        {
-            address = entryAddress;
-        }
-
-        #region Methods
-
-        public override uint GetAddress()
-        {
-            return 0;
-        }
-
-        public override ulong GetLongAddress()
-        {
-            return address;
-        }
-
-        #endregion
-
-    }
-
 
 }
