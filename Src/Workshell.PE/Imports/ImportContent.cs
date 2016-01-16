@@ -10,7 +10,6 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-
     internal class ImportContentProvider : ISectionContentProvider
     {
 
@@ -37,21 +36,13 @@ namespace Workshell.PE
 
     }
 
-    internal struct ILTTable
-    {
-
-        public long Offset;
-        public long Size;
-        public List<ulong> Entries;
-
-    }
-
     public class ImportContent : SectionContent, ILocationSupport
     {
 
         private StreamLocation location;
         private ImportDirectory directory;
         private ImportLookupTables ilt;
+        private ImportHintNameTable hint_name_table;
 
         internal ImportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
@@ -63,6 +54,7 @@ namespace Workshell.PE
 
             LoadDirectory(stream);
             LoadLookupTables(stream);
+            LoadHintNameTable(stream);
         }
 
         #region Methods
@@ -103,7 +95,7 @@ namespace Workshell.PE
 
         private void LoadLookupTables(Stream stream)
         {
-            Dictionary<int,ILTTable> ilt_tables = new Dictionary<int,ILTTable>();
+            ilt = new ImportLookupTables(this);
 
             for(int i = 0; i < directory.Count; i++)
             {
@@ -146,16 +138,53 @@ namespace Workshell.PE
 
                 long ilt_size = (ilt_entries.Count + 1) * (Section.Sections.Reader.Is64Bit ? sizeof(ulong) : sizeof(uint));
 
-                ILTTable ilt_table = new ILTTable() {
-                    Offset = ilt_offset,
-                    Size = ilt_size,
-                    Entries = ilt_entries
-                };
-
-                ilt_tables.Add(i,ilt_table);
+                ilt.Create(entry,ilt_offset,ilt_size,ilt_entries);
             }
+        }
 
-            ilt = new ImportLookupTables(this,ilt_tables);
+        private void LoadHintNameTable(Stream stream)
+        {
+            hint_name_table = new ImportHintNameTable(this);
+
+            foreach(ImportLookupTable table in ilt)
+            {
+                foreach(ImportLookupTableEntry entry in table)
+                {
+                    if (!entry.IsOrdinal)
+                    {
+                        long offset = Convert.ToInt64(Section.RVAToOffset(entry.Address));
+                        long size = 0;
+                        bool is_padded = false;
+                        ushort hint = 0;
+                        StringBuilder name = new StringBuilder();
+
+                        stream.Seek(offset,SeekOrigin.Begin);
+
+                        hint = Utils.ReadUInt16(stream);
+                        size += sizeof(ushort);
+
+                        while (true)
+                        {
+                            int b = stream.ReadByte();
+
+                            size++;
+
+                            if (b <= 0)
+                                break;
+
+                            name.Append((char)b);
+                        }
+
+                        if ((size % 2) != 0)
+                        {
+                            is_padded = true;
+                            size++;
+                        }
+
+                        hint_name_table.Create(offset,size,hint,name.ToString(),is_padded);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -183,6 +212,14 @@ namespace Workshell.PE
             get
             {
                 return ilt;
+            }
+        }
+
+        public ImportHintNameTable HintNameTable
+        {
+            get
+            {
+                return hint_name_table;
             }
         }
 

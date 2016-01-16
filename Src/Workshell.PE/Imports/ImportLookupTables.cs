@@ -17,11 +17,13 @@ namespace Workshell.PE
         private List<ImportLookupTable> tables;
         private StreamLocation location;
 
-        internal ImportLookupTables(ImportContent importContent, Dictionary<int,ILTTable> iltTables)
+        internal ImportLookupTables(ImportContent importContent)
         {
             content = importContent;
             tables = new List<ImportLookupTable>();
+            location = null;
 
+            /*
             foreach(KeyValuePair<int,ILTTable> kvp in iltTables)
             {
                 ImportDirectoryEntry directory_entry = importContent.Directory[kvp.Key];
@@ -31,11 +33,9 @@ namespace Workshell.PE
 
                 tables.Add(table);
             }
+             */
 
-            ImportLookupTable first_table = tables.MinBy(table => table.Location.Offset);
-            long size = tables.Sum(table => table.Location.Size);
-            
-            location = new StreamLocation(first_table.Location.Offset,size);
+
         }
 
         #region Methods
@@ -50,11 +50,48 @@ namespace Workshell.PE
             return GetEnumerator();
         }
 
+        public override string ToString()
+        {
+            return String.Format("Tables: {0:n0}",tables.Count);
+        }
+
         public byte[] GetBytes()
         {
             byte[] buffer = Utils.ReadBytes(content.Section.Sections.Reader.Stream,location);
 
             return buffer;
+        }
+
+        private void UpdateLocation()
+        {
+            if (tables.Count == 0)
+            {
+                location = new StreamLocation(0,0);
+            }
+            else
+            {
+                ImportLookupTable first_table = tables.MinBy(table => table.Location.Offset);
+                long size = tables.Sum(table => table.Location.Size);
+            
+                location = new StreamLocation(first_table.Location.Offset,size);
+            }
+        }
+
+        internal ImportLookupTable Create(ImportDirectoryEntry directoryEntry, long offset, long size, List<ulong> entries)
+        {
+            ImportLookupTable table = tables.FirstOrDefault(tbl => tbl.Location.Offset == offset);
+
+            if (table != null)
+                return table;
+
+            StreamLocation table_location = new StreamLocation(offset,size);
+
+            table = new ImportLookupTable(this,directoryEntry,entries,table_location);
+            location = null;
+
+            tables.Add(table);
+
+            return table;
         }
 
         #endregion
@@ -73,6 +110,9 @@ namespace Workshell.PE
         {
             get
             {
+                if (location == null)
+                    UpdateLocation();
+
                 return location;
             }
         }

@@ -28,8 +28,34 @@ namespace Workshell.PE
 
             foreach(ulong table_entry in tableEntries)
             {
+                int ordinal = -1;
+
+                if (size == sizeof(uint))
+                {
+                    uint value = Convert.ToUInt32(table_entry);
+
+                    if ((value & 0x80000000) == 0x80000000)
+                    {
+                        value &= 0x7fffffff;
+
+                        ordinal = Convert.ToInt32(value);
+                    }
+                }
+                else
+                {
+                    ulong value = table_entry;
+
+                    if ((value & 0x8000000000000000) == 0x8000000000000000)
+                    {
+                        value &= 0x7fffffffffffffff;
+
+                        ordinal = Convert.ToInt32(value);
+                    }
+                }
+
+                uint address = (ordinal != -1 ? 0 : Convert.ToUInt32(table_entry));
                 StreamLocation entry_location = new StreamLocation(offset,size);
-                ImportLookupTableEntry entry = new ImportLookupTableEntry(this,entry_location,table_entry);
+                ImportLookupTableEntry entry = new ImportLookupTableEntry(this,entry_location,address,ordinal);
 
                 entries.Add(entry);
 
@@ -47,6 +73,11 @@ namespace Workshell.PE
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Entries: {0:n0}",entries.Count);
         }
 
         public byte[] GetBytes()
