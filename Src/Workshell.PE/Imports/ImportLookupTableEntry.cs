@@ -13,10 +13,10 @@ namespace Workshell.PE
 
         private ImportLookupTable table;
         private StreamLocation location;
-        private uint address;
+        private ulong address;
         private int ordinal;
 
-        internal ImportLookupTableEntry(ImportLookupTable lookupTable, StreamLocation streamLoc, uint entryAddress, int entryOrdinal)
+        internal ImportLookupTableEntry(ImportLookupTable lookupTable, StreamLocation streamLoc, ulong entryAddress, int entryOrdinal)
         {
             table = lookupTable;
             location = streamLoc;
@@ -65,7 +65,7 @@ namespace Workshell.PE
             }
         }
 
-        public uint Address
+        public ulong Address
         {
             get
             {

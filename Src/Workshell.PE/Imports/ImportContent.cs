@@ -36,7 +36,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportContent : SectionContent, ILocationSupport, IRawDataSupport
+    public class ImportContent : SectionContent, ILocationSupport, IRawDataSupport, IEnumerable<ImportLibrary>
     {
 
         private StreamLocation location;
@@ -60,6 +60,16 @@ namespace Workshell.PE
         }
 
         #region Methods
+
+        public IEnumerator<ImportLibrary> GetEnumerator()
+        {
+            return libraries.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public byte[] GetBytes()
         {
@@ -230,6 +240,8 @@ namespace Workshell.PE
                     }
                 }
             }
+
+            //libraries = libraries.OrderBy(lib => lib.Name).ToList();
         }
 
         #endregion
@@ -265,6 +277,32 @@ namespace Workshell.PE
             get
             {
                 return hint_name_table;
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                return libraries.Count;
+            }
+        }
+
+        public ImportLibrary this[int index]
+        {
+            get
+            {
+                return libraries[index];
+            }
+        }
+
+        public ImportLibrary this[string libraryName]
+        {
+            get
+            {
+                ImportLibrary library = libraries.FirstOrDefault(lib => String.Compare(libraryName,lib.Name,StringComparison.OrdinalIgnoreCase) == 0);
+
+                return library;
             }
         }
 

@@ -53,9 +53,8 @@ namespace Workshell.PE
                     }
                 }
 
-                uint address = Convert.ToUInt32(table_entry);
                 StreamLocation entry_location = new StreamLocation(offset,size);
-                ImportLookupTableEntry entry = new ImportLookupTableEntry(this,entry_location,address,ordinal);
+                ImportLookupTableEntry entry = new ImportLookupTableEntry(this,entry_location,table_entry,ordinal);
 
                 entries.Add(entry);
 
