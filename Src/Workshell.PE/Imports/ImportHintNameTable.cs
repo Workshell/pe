@@ -31,7 +31,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return name;
+            return String.Format("0x{0:X4} {1}",hint,name);
         }
 
         #endregion

@@ -36,13 +36,14 @@ namespace Workshell.PE
 
     }
 
-    public class ImportContent : SectionContent, ILocationSupport
+    public class ImportContent : SectionContent, ILocationSupport, IRawDataSupport
     {
 
         private StreamLocation location;
         private ImportDirectory directory;
         private ImportLookupTables ilt;
         private ImportHintNameTable hint_name_table;
+        private List<ImportLibrary> libraries;
 
         internal ImportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
@@ -55,6 +56,7 @@ namespace Workshell.PE
             LoadDirectory(stream);
             LoadLookupTables(stream);
             LoadHintNameTable(stream);
+            LoadLibraries(stream);
         }
 
         #region Methods
@@ -182,6 +184,49 @@ namespace Workshell.PE
                         }
 
                         hint_name_table.Create(offset,size,hint,name.ToString(),is_padded);
+                    }
+                }
+            }
+        }
+
+        private void LoadLibraries(Stream stream)
+        {
+            libraries = new List<ImportLibrary>();
+
+            foreach(ImportLookupTable table in ilt)
+            {
+                StringBuilder library_name = new StringBuilder();
+                long library_name_offset = Convert.ToInt64(Section.RVAToOffset(table.DirectoryEntry.Name));
+
+                stream.Seek(library_name_offset,SeekOrigin.Begin);
+
+                while (true)
+                {
+                    int b = stream.ReadByte();
+
+                    if (b <= 0)
+                        break;
+
+                    library_name.Append((char)b);
+                }
+
+                ImportLibrary library = new ImportLibrary(this,table,library_name.ToString());
+
+                libraries.Add(library);
+
+                foreach(ImportLookupTableEntry entry in table)
+                {
+                    if (entry.IsOrdinal)
+                    {
+                        library.Add(entry,entry.Ordinal);
+                    }
+                    else
+                    {
+                        long hint_offset = Convert.ToInt64(Section.RVAToOffset(entry.Address));
+                        ImportHintNameEntry hint_entry = hint_name_table.FirstOrDefault(hne => hne.Location.Offset == hint_offset);
+
+                        if (hint_entry != null)
+                            library.Add(entry,hint_entry);
                     }
                 }
             }

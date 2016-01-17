@@ -55,7 +55,9 @@
     <Compile Include="FileHeader.cs" />
     <Compile Include="Imports\ImportContent.cs" />
     <Compile Include="Imports\ImportDirectory.cs" />
+    <Compile Include="Imports\ImportFunction.cs" />
     <Compile Include="Imports\ImportHintNameTable.cs" />
+    <Compile Include="Imports\ImportLibrary.cs" />
     <Compile Include="Imports\ImportLookupTableEntry.cs" />
     <Compile Include="Imports\ImportLookupTable.cs" />
     <Compile Include="Imports\ImportLookupTables.cs" />

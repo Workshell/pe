@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-
     public class ImportLookupTableEntry : ILocationSupport, IRawDataSupport
     {
 
