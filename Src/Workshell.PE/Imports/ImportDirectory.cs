@@ -16,11 +16,14 @@ namespace Workshell.PE
 
         private static readonly int size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
 
+        private ImportDirectory directory;
         private IMAGE_IMPORT_DESCRIPTOR descriptor;
         private StreamLocation location;
+        private string name;
 
-        internal ImportDirectoryEntry(IMAGE_IMPORT_DESCRIPTOR importDescriptor, long descriptorOffset)
+        internal ImportDirectoryEntry(ImportDirectory importDirectory, IMAGE_IMPORT_DESCRIPTOR importDescriptor, long descriptorOffset)
         {
+            directory = importDirectory;
             descriptor = importDescriptor;
             location = new StreamLocation(descriptorOffset,size);
         }
@@ -35,6 +38,37 @@ namespace Workshell.PE
 
                 return mem.ToArray();
             }
+        }
+        
+        public DateTime GetTimeDateStamp()
+        {
+            return Utils.ConvertTimeDateStamp(descriptor.TimeDateStamp);
+        }
+
+        public string GetName()
+        {
+            if (String.IsNullOrWhiteSpace(name))
+            {           
+                StringBuilder builder = new StringBuilder();
+                Stream stream = directory.Content.Section.Sections.Reader.Stream;
+                long offset = Convert.ToInt64(directory.Content.Section.RVAToOffset(descriptor.Name));
+
+                stream.Seek(offset,SeekOrigin.Begin);
+
+                while (true)
+                {
+                    int b = stream.ReadByte();
+
+                    if (b <= 0)
+                        break;
+
+                    builder.Append((char)b);
+                }
+
+                name = builder.ToString();
+            }
+
+            return name;
         }
 
         #endregion
@@ -52,6 +86,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ImportDirectory Directory
+        {
+            get
+            {
+                return directory;
+            }
+        }
 
         public StreamLocation Location
         {
@@ -127,7 +169,7 @@ namespace Workshell.PE
 
             foreach(IMAGE_IMPORT_DESCRIPTOR descriptor in importDescriptors)
             {
-                ImportDirectoryEntry entry = new ImportDirectoryEntry(descriptor,offset);
+                ImportDirectoryEntry entry = new ImportDirectoryEntry(this,descriptor,offset);
 
                 entries.Add(entry);
 
@@ -166,6 +208,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public ImportContent Content
+        {
+            get
+            {
+                return content;
+            }
+        }
+
         public StreamLocation Location
         {
             get
@@ -193,4 +243,5 @@ namespace Workshell.PE
         #endregion
 
     }
+
 }

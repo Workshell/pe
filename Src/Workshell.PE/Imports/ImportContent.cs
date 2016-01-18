@@ -42,6 +42,7 @@ namespace Workshell.PE
         private StreamLocation location;
         private ImportDirectory directory;
         private ImportLookupTables ilt;
+        private ImportLookupTables iat;
         private ImportHintNameTable hint_name_table;
         private List<ImportLibrary> libraries;
 
@@ -54,7 +55,8 @@ namespace Workshell.PE
             Stream stream = Section.Sections.Reader.Stream;
 
             LoadDirectory(stream);
-            LoadLookupTables(stream);
+            LoadILT(stream);
+            LoadIAT(stream);
             LoadHintNameTable(stream);
             LoadLibraries(stream);
         }
@@ -105,7 +107,7 @@ namespace Workshell.PE
             directory = new ImportDirectory(this,descriptors,directory_location);
         }
 
-        private void LoadLookupTables(Stream stream)
+        private void LoadILT(Stream stream)
         {
             ilt = new ImportLookupTables(this);
 
@@ -116,13 +118,10 @@ namespace Workshell.PE
                 long ilt_offset = 0;
 
                 if (entry.OriginalFirstThunk != 0)
-                {
                     ilt_offset = Convert.ToInt32(Section.RVAToOffset(entry.OriginalFirstThunk));
-                }
-                else
-                {
-                    ilt_offset = Convert.ToInt32(Section.RVAToOffset(entry.FirstThunk));
-                }
+                
+                if (ilt_offset == 0)
+                    return;
 
                 stream.Seek(ilt_offset,SeekOrigin.Begin);
 
@@ -151,6 +150,52 @@ namespace Workshell.PE
                 long ilt_size = (ilt_entries.Count + 1) * (Section.Sections.Reader.Is64Bit ? sizeof(ulong) : sizeof(uint));
 
                 ilt.Create(entry,ilt_offset,ilt_size,ilt_entries);
+            }
+        }
+
+        private void LoadIAT(Stream stream)
+        {
+            iat = new ImportLookupTables(this);
+
+            for(int i = 0; i < directory.Count; i++)
+            {
+                ImportDirectoryEntry entry = directory[i];
+                List<ulong> iat_entries = new List<ulong>();
+                long iat_offset = 0;
+
+                if (entry.FirstThunk != 0)
+                    iat_offset = Convert.ToInt32(Section.RVAToOffset(entry.OriginalFirstThunk));
+                
+                if (iat_offset == 0)
+                    return;
+
+                stream.Seek(iat_offset,SeekOrigin.Begin);
+
+                while (true)
+                {
+                    if (!Section.Sections.Reader.Is64Bit)
+                    {
+                        uint iat_entry = Utils.ReadUInt32(stream);
+
+                        if (iat_entry == 0)
+                            break;
+
+                        iat_entries.Add(iat_entry);
+                    }
+                    else
+                    {
+                        ulong iat_entry = Utils.ReadUInt64(stream);
+
+                        if (iat_entry == 0)
+                            break;
+
+                        iat_entries.Add(iat_entry);
+                    }
+                }
+
+                long iat_size = (iat_entries.Count + 1) * (Section.Sections.Reader.Is64Bit ? sizeof(ulong) : sizeof(uint));
+
+                iat.Create(entry,iat_offset,iat_size,iat_entries);
             }
         }
 
@@ -240,8 +285,6 @@ namespace Workshell.PE
                     }
                 }
             }
-
-            //libraries = libraries.OrderBy(lib => lib.Name).ToList();
         }
 
         #endregion
@@ -264,11 +307,19 @@ namespace Workshell.PE
             }
         }
 
-        public ImportLookupTables LookupTables
+        public ImportLookupTables ILT
         {
             get
             {
                 return ilt;
+            }
+        }
+
+        public ImportLookupTables IAT
+        {
+            get
+            {
+                return iat;
             }
         }
 
