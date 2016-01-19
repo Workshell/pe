@@ -48,6 +48,7 @@ namespace Workshell.PE
 
         internal ImportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
+
             long offset = Convert.ToInt64(section.RVAToOffset(dataDirectory.VirtualAddress));
 
             location = new StreamLocation(offset,dataDirectory.Size);
@@ -209,7 +210,7 @@ namespace Workshell.PE
                 {
                     if (!entry.IsOrdinal)
                     {
-                        long offset = Convert.ToInt64(Section.RVAToOffset(entry.Address));
+                        long offset = Section.RVAToOffset(Convert.ToUInt32(entry.Address));
                         long size = 0;
                         bool is_padded = false;
                         ushort hint = 0;
@@ -277,7 +278,7 @@ namespace Workshell.PE
                     }
                     else
                     {
-                        long hint_offset = Convert.ToInt64(Section.RVAToOffset(entry.Address));
+                        long hint_offset = Section.RVAToOffset(Convert.ToUInt32(entry.Address));
                         ImportHintNameEntry hint_entry = hint_name_table.FirstOrDefault(hne => hne.Location.Offset == hint_offset);
 
                         if (hint_entry != null)

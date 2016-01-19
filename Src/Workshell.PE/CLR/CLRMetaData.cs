@@ -16,7 +16,8 @@ namespace Workshell.PE
 
         internal CLRMetaData(Stream stream, CLRContent clrContent)
         {
-            long offset = Convert.ToInt64(clrContent.Section.RVAToOffset(clrContent.Header.MetaData.VirtualAddress));
+            //long offset = Convert.ToInt64(clrContent.Section.RVAToOffset(clrContent.Header.MetaData.VirtualAddress));
+            long offset = 0;
 
             stream.Seek(offset,SeekOrigin.Begin);
 

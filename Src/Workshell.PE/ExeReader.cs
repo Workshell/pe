@@ -310,6 +310,172 @@ namespace Workshell.PE
 
         #endregion
 
+        #region Location Conversion Methods
+
+        /* VA */
+
+        public Section VAToSection(ulong va)
+        {
+            if (_nt_headers == null)
+                LoadNTHeaders();
+
+            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
+            uint rva = Convert.ToUInt32(va - image_base);
+
+            return RVAToSection(rva);
+        }
+
+        public SectionTableEntry VAToSectionTableEntry(ulong va)
+        {
+            if (_nt_headers == null)
+                LoadNTHeaders();
+
+            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
+            uint rva = Convert.ToUInt32(va - image_base);
+
+            return RVAToSectionTableEntry(rva);
+        }
+
+        public long VAToOffset(ulong va)
+        {
+            if (_nt_headers == null)
+                LoadNTHeaders();
+
+            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
+            uint rva = Convert.ToUInt32(va - image_base);
+
+            return RVAToOffset(rva);
+        }
+
+        public long VAToOffset(Section section, ulong va)
+        {
+            return VAToOffset(section.TableEntry,va);
+        }
+
+        public long VAToOffset(SectionTableEntry section, ulong va)
+        {
+            if (_nt_headers == null)
+                LoadNTHeaders();
+
+            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
+            uint rva = Convert.ToUInt32(va - image_base);
+
+            return RVAToOffset(section,rva);
+        }
+
+        public ulong OffsetToVA(long offset)
+        {
+            if (_section_table == null)
+                LoadSectionTable();
+
+            foreach(SectionTableEntry entry in _section_table)
+            {
+                if (offset >= entry.PointerToRawData && offset < (entry.PointerToRawData + entry.SizeOfRawData))
+                    return OffsetToVA(entry,offset);
+            }
+
+            return 0;
+        }
+
+        public ulong OffsetToVA(Section section, long offset)
+        {
+            return OffsetToVA(section.TableEntry,offset);
+        }
+
+        public ulong OffsetToVA(SectionTableEntry section, long offset)
+        {
+            if (_nt_headers == null)
+                LoadNTHeaders();
+
+            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
+            uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
+
+            return image_base + rva;
+        }
+
+        /* RVA */
+
+        public Section RVAToSection(uint rva)
+        {
+            if (_sections == null)
+                LoadSections();
+
+            SectionTableEntry entry = RVAToSectionTableEntry(rva);
+
+            if (entry == null)
+                return null;
+
+            return _sections[entry];
+        }
+
+        public SectionTableEntry RVAToSectionTableEntry(uint rva)
+        {
+            if (_section_table == null)
+                LoadSectionTable();
+
+            foreach(SectionTableEntry entry in _section_table)
+            {
+                if (rva >= entry.VirtualAddress && rva <= (entry.VirtualAddress + entry.SizeOfRawData))
+                    return entry;
+            }
+
+            return null;
+        }
+
+        public long RVAToOffset(uint rva)
+        {
+            if (_section_table == null)
+                LoadSectionTable();
+
+            foreach(SectionTableEntry entry in _section_table)
+            {
+                if (rva >= entry.VirtualAddress && rva < (entry.VirtualAddress + entry.SizeOfRawData))
+                    return RVAToOffset(entry,rva);
+            }
+
+            return 0;
+        }
+
+        public long RVAToOffset(Section section, uint rva)
+        {
+            return RVAToOffset(section.TableEntry,rva);
+        }
+
+        public long RVAToOffset(SectionTableEntry section, uint rva)
+        {
+            long offset = (rva - section.VirtualAddress) + section.PointerToRawData;
+
+            return offset;
+        }
+
+        public uint OffsetToRVA(long offset)
+        {
+            if (_section_table == null)
+                LoadSectionTable();
+
+            foreach(SectionTableEntry entry in _section_table)
+            {
+                if (offset >= entry.PointerToRawData && offset < (entry.PointerToRawData + entry.SizeOfRawData))
+                    return OffsetToRVA(entry,offset);
+            }
+
+            return 0;
+        }
+
+        public uint OffsetToRVA(Section section, long offset)
+        {
+            return OffsetToRVA(section.TableEntry,offset);
+        }
+
+        public uint OffsetToRVA(SectionTableEntry section, long offset)
+        {
+            uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
+
+            return rva;
+        }
+
+        #endregion
+
         #region Properties
 
         public Stream Stream

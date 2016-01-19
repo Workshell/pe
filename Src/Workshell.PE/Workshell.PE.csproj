@@ -78,7 +78,7 @@
     <Compile Include="NTHeaders.cs" />
     <Compile Include="OptionalHeader.cs" />
     <Compile Include="SupportsRawData.cs" />
-    <Compile Include="Reader.cs" />
+    <Compile Include="ExeReader.cs" />
     <Compile Include="ReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Relocations\Relocation.cs" />

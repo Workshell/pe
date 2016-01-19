@@ -42,13 +42,6 @@ namespace Workshell.PE
             return table_entry.Name;
         }
 
-        public ulong RVAToOffset(ulong rva)
-        {
-            ulong offset = (rva - table_entry.VirtualAddress) + table_entry.PointerToRawData;
-
-            return offset;
-        }
-
         public byte[] GetBytes()
         {
             byte[] buffer = new byte[location.Size];
@@ -63,6 +56,30 @@ namespace Workshell.PE
         {
             if (!contents.Contains(content))
                 contents.Add(content);
+        }
+
+        #endregion
+
+        #region Location Conversion Methods
+
+        public long VAToOffset(ulong va)
+        {
+            return sections.Reader.VAToOffset(this,va);
+        }
+
+        public ulong OffsetToVA(long offset)
+        {
+            return sections.Reader.OffsetToVA(this,offset);
+        }
+
+        public long RVAToOffset(uint rva)
+        {
+            return sections.Reader.RVAToOffset(this,rva);
+        }
+
+        public uint OffsetToRVA(long offset)
+        {
+            return sections.Reader.OffsetToRVA(this,offset);
         }
 
         #endregion
@@ -161,17 +178,6 @@ namespace Workshell.PE
             return GetEnumerator();
         }
 
-        public Section RVAToSection(ulong rva)
-        {
-            foreach(SectionTableEntry entry in table)
-            {
-                if (rva >= entry.VirtualAddress && rva < (entry.VirtualAddress + entry.SizeOfRawData))
-                    return CreateSection(entry);
-            }
-
-            return null;
-        }
-
         public bool RegisterContentProvider(ISectionContentProvider contentProvider)
         {
             return RegisterContentProvider(contentProvider,false);
@@ -264,6 +270,13 @@ namespace Workshell.PE
             }
         }
 
+        public SectionTable Table
+        {
+            get
+            {
+                return table;
+            }
+        }
 
         public int Count
         {
@@ -298,6 +311,20 @@ namespace Workshell.PE
                 return CreateSection(entry);
             }
         }
+        
+        public Section this[SectionTableEntry tableEntry]
+        {
+            get
+            {
+                SectionTableEntry entry = table.FirstOrDefault(e => e.VirtualAddress == tableEntry.VirtualAddress);
+
+                if (entry == null)
+                    return null;
+
+                return CreateSection(entry);
+            }
+        }
+
         #endregion
 
     }

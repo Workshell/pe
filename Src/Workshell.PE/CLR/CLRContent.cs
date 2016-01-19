@@ -17,7 +17,8 @@ namespace Workshell.PE
 
         internal CLRContent(Stream stream, DataDirectory dataDirectory, Section owningSection) : base(dataDirectory,owningSection)
         {
-            long offset = Convert.ToInt64(owningSection.RVAToOffset(dataDirectory.VirtualAddress));
+            //long offset = Convert.ToInt64(owningSection.RVAToOffset(dataDirectory.VirtualAddress));
+            long offset = 0;
 
             stream.Seek(offset,SeekOrigin.Begin);
 

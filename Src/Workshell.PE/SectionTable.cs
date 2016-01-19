@@ -404,6 +404,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public ExeReader Reader
+        {
+            get
+            {
+                return reader;
+            }
+        }
+
         public StreamLocation Location
         {
             get
