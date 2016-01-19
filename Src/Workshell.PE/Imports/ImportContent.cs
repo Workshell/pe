@@ -165,7 +165,7 @@ namespace Workshell.PE
                 long iat_offset = 0;
 
                 if (entry.FirstThunk != 0)
-                    iat_offset = Convert.ToInt32(Section.RVAToOffset(entry.OriginalFirstThunk));
+                    iat_offset = Convert.ToInt32(Section.RVAToOffset(entry.FirstThunk));
                 
                 if (iat_offset == 0)
                     return;
