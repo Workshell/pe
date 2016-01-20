@@ -19,17 +19,18 @@ namespace Workshell.PE.Demo
             //string file_name = @"C:\Windows\SysWOW64\shell32.dll";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
-            string file_name = @"P:\Workshell\dotNET Dependency Walker\Bin\Release\netdepends.exe";
+            //string file_name = @"P:\Workshell\dotNET Dependency Walker\Bin\Release\netdepends.exe";
+            string file_name = @"C:\Windows\System32\shell32.dll";
             ExeReader reader = ExeReader.FromFile(file_name);
             Section[] sections = reader.Sections.ToArray();
 
             foreach(Section section in sections)
             {
-                CLRContent content = (CLRContent)section[DataDirectoryType.CLRRuntimeHeader];
+                TLSContent content = (TLSContent)section[DataDirectoryType.TLSTable];
 
                 if (content != null)
                 {
-                    var x = content.MetaData.StreamTable;
+
                 }
             }
 

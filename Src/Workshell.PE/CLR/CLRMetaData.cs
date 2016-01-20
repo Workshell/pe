@@ -10,7 +10,7 @@ using Workshell.PE.Attributes;
 namespace Workshell.PE
 {
 
-    public class CLRMetaData : ILocationSupport
+    public class CLRMetaData : ILocationSupport, IRawDataSupport
     {
 
         private CLRContent content;
@@ -29,6 +29,18 @@ namespace Workshell.PE
             stream_table = null;
             streams = null;
         }
+
+        #region Methods
+
+        public byte[] GetBytes()
+        {
+            Stream stream = content.Section.Sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
+        }
+
+        #endregion
 
         #region Properties
 

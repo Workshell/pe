@@ -232,6 +232,9 @@ namespace Workshell.PE
 
         private Section CreateSection(SectionTableEntry entry)
         {
+            if (entry.VirtualAddress == 0)
+                return null;
+
             Section section = new Section(this,entry);
             Dictionary<DataDirectoryType,DataDirectory> data_directories = new Dictionary<DataDirectoryType,DataDirectory>();
 

@@ -69,6 +69,7 @@
     <Compile Include="MoreLinq\MinBy.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.cs" />
     <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
+    <Compile Include="Native\IMAGE_TLS_DIRECTORY.cs" />
     <Compile Include="SupportsLocation.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
     <Compile Include="Native\IMAGE_COR20_HEADER.cs" />
@@ -91,6 +92,8 @@
     <Compile Include="SectionContent.cs" />
     <Compile Include="SectionTable.cs" />
     <Compile Include="StreamLocation.cs" />
+    <Compile Include="TLS\TLSContent.cs" />
+    <Compile Include="TLS\TLSDirectory.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

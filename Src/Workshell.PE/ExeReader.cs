@@ -100,6 +100,13 @@ namespace Workshell.PE
             return IsValid(mem,true);
         }
 
+        public static ExeReader FromFile(string fileName)
+        {
+            FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
+
+            return FromStream(file,true);
+        }
+
         public static ExeReader FromStream(Stream stream)
         {
             return FromStream(stream,false);
@@ -108,39 +115,6 @@ namespace Workshell.PE
         public static ExeReader FromStream(Stream stream, bool ownStream)
         {
             return new ExeReader(stream,ownStream);
-        }
-
-        public static ExeReader FromFile(string fileName)
-        {
-            return FromFile(fileName,false);
-        }
-
-        public static ExeReader FromFile(string fileName, bool copyMem)
-        {
-            if (copyMem)
-            {
-                MemoryStream mem = new MemoryStream();
-
-                using (FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read))
-                    file.CopyTo(mem,4096);
-
-                mem.Seek(0,SeekOrigin.Begin);
-
-                return FromStream(mem,true);
-            }
-            else
-            {
-                FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
-
-                return FromStream(file,true);
-            }           
-        }
-
-        public static ExeReader FromBytes(byte[] bytes)
-        {
-            MemoryStream mem = new MemoryStream(bytes);
-
-            return FromStream(mem,true);
         }
 
         #endregion
@@ -254,7 +228,8 @@ namespace Workshell.PE
 
         private OptionalHeader LoadOptionalHeader(FileHeader fileHeader)
         {
-            bool is_x64 = !((fileHeader.GetCharacteristics() & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
+            CharacteristicsType characteristics = fileHeader.GetCharacteristics();
+            bool is_x64 = !((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
             IMAGE_OPTIONAL_HEADER32 opt_header_32 = new IMAGE_OPTIONAL_HEADER32();
             IMAGE_OPTIONAL_HEADER64 opt_header_64 = new IMAGE_OPTIONAL_HEADER64();
             StreamLocation location = null;
