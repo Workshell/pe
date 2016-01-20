@@ -310,6 +310,11 @@ namespace Workshell.PE
 
         #endregion
 
+        internal Stream GetStream()
+        {
+            return _stream;
+        }
+
         #region Location Conversion Methods
 
         /* VA */

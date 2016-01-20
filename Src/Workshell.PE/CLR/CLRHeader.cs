@@ -40,11 +40,16 @@ namespace Workshell.PE
         private IMAGE_COR20_HEADER header;
         private StreamLocation location;
 
-        internal CLRHeader(CLRContent clrContent, long offset, IMAGE_COR20_HEADER clrHeader)
+        internal CLRHeader(CLRContent clrContent, DataDirectory dataDirectory)
         {
+            long offset = clrContent.Section.RVAToOffset(dataDirectory.VirtualAddress);
+            Stream stream = clrContent.Section.Sections.Reader.GetStream();
+
+            stream.Seek(offset,SeekOrigin.Begin);
+
             content = clrContent;
             location = new StreamLocation(offset,size);
-            header = clrHeader;           
+            header = Utils.Read<IMAGE_COR20_HEADER>(stream);        
         }
 
         #region Methods

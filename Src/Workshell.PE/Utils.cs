@@ -162,9 +162,26 @@ namespace Workshell.PE
                 if (b <= 0)
                     break;
 
-                char c = (char)b;
+                builder.Append((char)b);
+            }
 
-                builder.Append(c);
+            return builder.ToString();
+        }
+
+        public static string ReadString(Stream stream, long size)
+        {
+            byte[] buffer = new byte[size];
+
+            stream.Read(buffer,0,buffer.Length);
+
+            StringBuilder builder = new StringBuilder();
+
+            foreach(byte b in buffer)
+            {
+                if (b == 0)
+                    break;
+
+                builder.Append((char)b);
             }
 
             return builder.ToString();

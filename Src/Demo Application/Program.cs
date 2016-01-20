@@ -29,7 +29,7 @@ namespace Workshell.PE.Demo
 
                 if (content != null)
                 {
-                
+                    var x = content.MetaData.StreamTable;
                 }
             }
 

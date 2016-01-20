@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Workshell.PE.Attributes;
+
 namespace Workshell.PE
 {
 
@@ -13,25 +15,69 @@ namespace Workshell.PE
 
         private CLRContent content;
         private StreamLocation location;
+        private CLRMetaDataHeader header;
+        private CLRMetaDataStreamTable stream_table;
+        private CLRMetaDataStreams streams;
 
-        internal CLRMetaData(Stream stream, CLRContent clrContent)
+        internal CLRMetaData(CLRContent clrContent)
         {
-            //long offset = Convert.ToInt64(clrContent.Section.RVAToOffset(clrContent.Header.MetaData.VirtualAddress));
-            long offset = 0;
-
-            stream.Seek(offset,SeekOrigin.Begin);
+            long offset = clrContent.Section.RVAToOffset(clrContent.Header.MetaDataAddress);
 
             content = clrContent;
-            location = new StreamLocation(offset,0);
+            location = new StreamLocation(offset,clrContent.Header.MetaDataSize);
+            header = null;
+            stream_table = null;
+            streams = null;
         }
 
         #region Properties
+
+        public CLRContent Content
+        {
+            get
+            {
+                return content;
+            }
+        }
 
         public StreamLocation Location
         {
             get
             {
                 return location;
+            }
+        }
+
+        public CLRMetaDataHeader Header
+        {
+            get
+            {
+                if (header == null)
+                    header = new CLRMetaDataHeader(this);
+
+                return header;
+            }
+        }
+
+        public CLRMetaDataStreamTable StreamTable
+        {
+            get
+            {
+                if (stream_table == null)
+                    stream_table = new CLRMetaDataStreamTable(this);
+
+                return stream_table;
+            }
+        }
+
+        public CLRMetaDataStreams Streams
+        {
+            get
+            {
+                if (streams == null)
+                    streams = new CLRMetaDataStreams(this);
+
+                return streams;
             }
         }
 

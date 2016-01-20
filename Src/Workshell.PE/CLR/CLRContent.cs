@@ -41,26 +41,18 @@ namespace Workshell.PE
 
         private StreamLocation location;
         private CLRHeader header;
+        private CLRMetaData meta_data;
 
         internal CLRContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
             long offset = section.RVAToOffset(dataDirectory.VirtualAddress);
+
             location = new StreamLocation(offset,dataDirectory.Size);
-
-            Stream stream = Section.Sections.Reader.Stream;
-
-            LoadHeader(stream);
+            header = new CLRHeader(this,dataDirectory);
+            meta_data = null;
         }
 
         #region Methods
-
-        private void LoadHeader(Stream stream)
-        {
-            stream.Seek(location.Offset,SeekOrigin.Begin);
-
-            IMAGE_COR20_HEADER native_clr_header = Utils.Read<IMAGE_COR20_HEADER>(stream);
-            header = new CLRHeader(this,location.Offset,native_clr_header);
-        }
 
         #endregion
 
@@ -79,6 +71,17 @@ namespace Workshell.PE
             get
             {
                 return header;
+            }
+        }
+
+        public CLRMetaData MetaData
+        {
+            get
+            {
+                if (meta_data == null)
+                    meta_data = new CLRMetaData(this);
+
+                return meta_data;
             }
         }
 

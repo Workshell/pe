@@ -46,6 +46,9 @@
     <Compile Include="CLR\CLRContent.cs" />
     <Compile Include="CLR\CLRHeader.cs" />
     <Compile Include="CLR\CLRMetaData.cs" />
+    <Compile Include="CLR\CLRMetaDataHeader.cs" />
+    <Compile Include="CLR\CLRMetaDataStream.cs" />
+    <Compile Include="CLR\CLRMetaDataStreamTable.cs" />
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
