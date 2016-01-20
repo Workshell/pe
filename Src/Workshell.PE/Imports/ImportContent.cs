@@ -48,8 +48,7 @@ namespace Workshell.PE
 
         internal ImportContent(DataDirectory dataDirectory, Section section) : base(dataDirectory,section)
         {
-
-            long offset = Convert.ToInt64(section.RVAToOffset(dataDirectory.VirtualAddress));
+            long offset = section.RVAToOffset(dataDirectory.VirtualAddress);
 
             location = new StreamLocation(offset,dataDirectory.Size);
 
@@ -87,9 +86,7 @@ namespace Workshell.PE
 
         private void LoadDirectory(Stream stream)
         {
-            long offset = Convert.ToInt64(Section.RVAToOffset(DataDirectory.VirtualAddress));
-
-            stream.Seek(offset,SeekOrigin.Begin);
+            stream.Seek(location.Offset,SeekOrigin.Begin);
 
             List<IMAGE_IMPORT_DESCRIPTOR> descriptors = new List<IMAGE_IMPORT_DESCRIPTOR>();
 
@@ -103,7 +100,7 @@ namespace Workshell.PE
                 descriptors.Add(descriptor);
             }
 
-            StreamLocation directory_location = new StreamLocation(offset,(descriptors.Count + 1) * ImportDirectoryEntry.Size);
+            StreamLocation directory_location = new StreamLocation(location.Offset,(descriptors.Count + 1) * ImportDirectoryEntry.Size);
 
             directory = new ImportDirectory(this,descriptors,directory_location);
         }
@@ -119,7 +116,7 @@ namespace Workshell.PE
                 long ilt_offset = 0;
 
                 if (entry.OriginalFirstThunk != 0)
-                    ilt_offset = Convert.ToInt32(Section.RVAToOffset(entry.OriginalFirstThunk));
+                    ilt_offset = Section.RVAToOffset(entry.OriginalFirstThunk);
                 
                 if (ilt_offset == 0)
                     return;
@@ -165,7 +162,7 @@ namespace Workshell.PE
                 long iat_offset = 0;
 
                 if (entry.FirstThunk != 0)
-                    iat_offset = Convert.ToInt32(Section.RVAToOffset(entry.FirstThunk));
+                    iat_offset = Section.RVAToOffset(entry.FirstThunk);
                 
                 if (iat_offset == 0)
                     return;
@@ -252,7 +249,7 @@ namespace Workshell.PE
             foreach(ImportLookupTable table in ilt)
             {
                 StringBuilder library_name = new StringBuilder();
-                long library_name_offset = Convert.ToInt64(Section.RVAToOffset(table.DirectoryEntry.Name));
+                long library_name_offset = Section.RVAToOffset(table.DirectoryEntry.Name);
 
                 stream.Seek(library_name_offset,SeekOrigin.Begin);
 

@@ -31,7 +31,7 @@ namespace Workshell.PE
         Prefer32Bit = 0x20000
     }
 
-    public class CLRHeader : ILocationSupport
+    public class CLRHeader : ILocationSupport, IRawDataSupport
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_COR20_HEADER>();
@@ -40,17 +40,67 @@ namespace Workshell.PE
         private IMAGE_COR20_HEADER header;
         private StreamLocation location;
 
-        internal CLRHeader(Stream stream, CLRContent clrContent, long headerOffset)
+        internal CLRHeader(CLRContent clrContent, long offset, IMAGE_COR20_HEADER clrHeader)
         {
-            header = Utils.Read<IMAGE_COR20_HEADER>(stream,size);
-            location = new StreamLocation(headerOffset,size);
+            content = clrContent;
+            location = new StreamLocation(offset,size);
+            header = clrHeader;           
         }
 
         #region Methods
 
-        internal IMAGE_COR20_HEADER GetNativeHeader()
+        public byte[] GetBytes()
         {
-            return header;
+            byte[] buffer = new byte[size];
+
+            Utils.Write<IMAGE_COR20_HEADER>(header,buffer,0,buffer.Length);
+
+            return buffer;
+        }
+
+        public Version GetRuntimeVersion()
+        {
+            return new Version(header.MajorRuntimeVersion,header.MinorRuntimeVersion);
+        }
+
+        public DataDirectory GetMetaData()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.MetaData);
+        }
+
+        public COMImageFlags GetFlags()
+        {
+            return (COMImageFlags)header.Flags;
+        }
+
+        public DataDirectory GetResources()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.Resources);
+        }
+
+        public DataDirectory GetStrongNameSignature()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.StrongNameSignature);
+        }
+
+        public DataDirectory GetCodeManagerTable()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.CodeManagerTable);
+        }
+
+        public DataDirectory GetVTableFixups()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.VTableFixups);
+        }
+
+        public DataDirectory GetExportAddressTableJumps()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.ExportAddressTableJumps);
+        }
+
+        public DataDirectory GetManagedNativeHeader()
+        {
+            return new DataDirectory(DataDirectoryType.None,header.ManagedNativeHeader);
         }
 
         #endregion
@@ -69,6 +119,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public CLRContent Content
+        {
+            get
+            {
+                return content;
+            }
+        }
+
         public StreamLocation Location
         {
             get
@@ -77,105 +135,174 @@ namespace Workshell.PE
             }
         }
 
-        public Version RuntimeVersion
+        [FieldAnnotation("Header Size")]
+        public uint HeaderSize
         {
             get
             {
-                return new Version(header.MajorRuntimeVersion,header.MinorRuntimeVersion);
+                return header.cb;
             }
         }
 
-        public DataDirectory MetaData
+        [FieldAnnotation("Major Runtime Version")]
+        public ushort MajorRuntimeVersion
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.MetaData);
+                return header.MajorRuntimeVersion;
             }
         }
 
-        public COMImageFlags Flags
+        [FieldAnnotation("Minor Runtime Version")]
+        public ushort MinorRuntimeVersion
         {
             get
             {
-                return (COMImageFlags)header.Flags;
+                return header.MinorRuntimeVersion;
             }
         }
 
-        public uint EntryPointToken
+        [FieldAnnotation("MetaData Virtual Address")]
+        public uint MetaDataAddress
         {
             get
             {
-                if ((Flags & COMImageFlags.NativeEntryPoint) != COMImageFlags.NativeEntryPoint)
-                {
-                    return header.EntryPointTokenOrRVA;
-                }
-                else
-                {
-                    return 0;
-                }
+                return header.MetaData.VirtualAddress;
             }
         }
 
-        public uint EntryPointRVA
+        [FieldAnnotation("MetaData Size")]
+        public uint MetaDataSize
         {
             get
             {
-                if ((Flags & COMImageFlags.NativeEntryPoint) == COMImageFlags.NativeEntryPoint)
-                {
-                    return header.EntryPointTokenOrRVA;
-                }
-                else
-                {
-                    return 0;
-                }
+                return header.MetaData.Size;
             }
         }
 
-        public DataDirectory Resources
+        [FieldAnnotation("Flags")]
+        public uint Flags
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.Resources);
+                return header.Flags;
             }
         }
 
-        public DataDirectory StrongNameSignature
+        [FieldAnnotation("EntryPoint Token/Virtual Address")]
+        public uint EntryPointTokenOrVirtualAddress
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.StrongNameSignature);
+                return header.EntryPointTokenOrRVA;
             }
         }
 
-        public DataDirectory CodeManagerTable
+        [FieldAnnotation("Resources Virtual Address")]
+        public uint ResourcesAddress
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.CodeManagerTable);
+                return header.Resources.VirtualAddress;
             }
         }
 
-        public DataDirectory VTableFixups
+        [FieldAnnotation("Resources Size")]
+        public uint ResourcesSize
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.VTableFixuups);
+                return header.Resources.Size;
             }
         }
 
-        public DataDirectory ExportAddressTableJumps
+        [FieldAnnotation("Strongname Signature Virtual Address")]
+        public uint StrongNameSignatureAddress
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.ExportAddressTableJumps);
+                return header.StrongNameSignature.VirtualAddress;
             }
         }
 
-        public DataDirectory ManagedNativeHeader
+        [FieldAnnotation("Strongname Signature Size")]
+        public uint StrongNameSignatureSize
         {
             get
             {
-                return new DataDirectory(DataDirectoryType.None,header.ManagedNativeHeader);
+                return header.StrongNameSignature.Size;
+            }
+        }
+
+        [FieldAnnotation("Code Manager Table Virtual Address")]
+        public uint CodeManagerTableAddress
+        {
+            get
+            {
+                return header.CodeManagerTable.VirtualAddress;
+            }
+        }
+
+        [FieldAnnotation("Code Manager Table Size")]
+        public uint CodeManagerTableSize
+        {
+            get
+            {
+                return header.CodeManagerTable.Size;
+            }
+        }
+
+        [FieldAnnotation("VTable Fixups Virtual Address")]
+        public uint VTableFixupsAddress
+        {
+            get
+            {
+                return header.VTableFixups.VirtualAddress;
+            }
+        }
+
+        [FieldAnnotation("VTable Fixups Size")]
+        public uint VTableFixupsSize
+        {
+            get
+            {
+                return header.VTableFixups.Size;
+            }
+        }
+
+        [FieldAnnotation("Export Address Table Jumps Virtual Address")]
+        public uint ExportAddressTableJumpsAddress
+        {
+            get
+            {
+                return header.ExportAddressTableJumps.VirtualAddress;
+            }
+        }
+
+        [FieldAnnotation("Export Address Table Jumps Size")]
+        public uint ExportAddressTableJumpsSize
+        {
+            get
+            {
+                return header.CodeManagerTable.Size;
+            }
+        }
+
+        [FieldAnnotation("Managed Native Header Virtual Address")]
+        public uint ManagedNativeHeaderAddress
+        {
+            get
+            {
+                return header.ManagedNativeHeader.VirtualAddress;
+            }
+        }
+
+        [FieldAnnotation("Managed Native Header Size")]
+        public uint ManagedNativeHeaderSize
+        {
+            get
+            {
+                return header.ManagedNativeHeader.Size;
             }
         }
 

@@ -21,7 +21,7 @@ namespace Workshell.PE.Native
         public IMAGE_DATA_DIRECTORY Resources;
         public IMAGE_DATA_DIRECTORY StrongNameSignature;
         public IMAGE_DATA_DIRECTORY CodeManagerTable;
-        public IMAGE_DATA_DIRECTORY VTableFixuups;
+        public IMAGE_DATA_DIRECTORY VTableFixups;
         public IMAGE_DATA_DIRECTORY ExportAddressTableJumps;
         public IMAGE_DATA_DIRECTORY ManagedNativeHeader;
 
