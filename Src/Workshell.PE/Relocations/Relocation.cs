@@ -82,6 +82,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public RelocationBlock Block
+        {
+            get
+            {
+                return block;
+            }
+        }
+
         public StreamLocation Location
         {
             get

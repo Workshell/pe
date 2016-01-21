@@ -24,6 +24,10 @@ namespace Workshell.PE
         private SectionTable _section_table;
         private Sections _sections;
 
+        private bool is_32bit;
+        private bool is_64bit;
+        private bool is_clr;
+
         private ExeReader(Stream sourceStream, bool ownStream)
         {
             if (!sourceStream.CanRead)
@@ -41,6 +45,10 @@ namespace Workshell.PE
             _nt_headers = null;
             _section_table = null;
             _sections = null;
+
+            is_32bit = false;
+            is_64bit = false;
+            is_clr = false;
         }
 
         #region Static Methods
@@ -208,6 +216,24 @@ namespace Workshell.PE
             StreamLocation location = new StreamLocation(_dos_header.FileAddressNewHeader,4 + file_header.Location.Size + opt_header.Location.Size);
 
             _nt_headers = new NTHeaders(this,location,file_header,opt_header);
+
+            if (_nt_headers.FileHeader != null)
+            {
+                CharacteristicsType characteristics = _nt_headers.FileHeader.GetCharacteristics();
+
+                is_32bit = ((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
+                is_64bit = !is_32bit;
+            }
+
+            if (_nt_headers.OptionalHeader != null)
+            {
+                is_32bit = (_nt_headers.OptionalHeader.GetMagic() == MagicType.PE32);
+                is_64bit = !is_32bit;
+            }
+
+            DataDirectory clr_dir = _nt_headers.OptionalHeader.DataDirectories[DataDirectoryType.CLRRuntimeHeader];
+
+            is_clr = (clr_dir != null && clr_dir.VirtualAddress > 0 && clr_dir.Size > 0);
         }
 
         private void LoadPESignature()
@@ -473,19 +499,7 @@ namespace Workshell.PE
                 if (_nt_headers == null)
                     LoadNTHeaders();
 
-                bool result = false;
-
-                if (_nt_headers.FileHeader != null)
-                {
-                    CharacteristicsType characteristics = _nt_headers.FileHeader.GetCharacteristics();
-
-                    result = ((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
-                }
-
-                if (_nt_headers.OptionalHeader != null)
-                    result = (_nt_headers.OptionalHeader.GetMagic() == MagicType.PE32);
-
-                return result;
+                return is_32bit;
             }
         }
 
@@ -496,19 +510,7 @@ namespace Workshell.PE
                 if (_nt_headers == null)
                     LoadNTHeaders();
 
-                bool result = false;
-
-                if (_nt_headers.FileHeader != null)
-                {
-                    CharacteristicsType characteristics = _nt_headers.FileHeader.GetCharacteristics();
-
-                    result = ((characteristics & CharacteristicsType.Supports32Bit) != CharacteristicsType.Supports32Bit);
-                }
-
-                if (_nt_headers.OptionalHeader != null)
-                    result = (_nt_headers.OptionalHeader.GetMagic() == MagicType.PE32plus);
-
-                return result;
+                return is_64bit;
             }
         }
 
@@ -519,12 +521,7 @@ namespace Workshell.PE
                 if (_nt_headers == null)
                     LoadNTHeaders();
 
-                DataDirectory directory = _nt_headers.OptionalHeader.DataDirectories[DataDirectoryType.CLRRuntimeHeader];
-
-                if (directory == null || directory.Size == 0)
-                    return false;
-
-                return true;
+                return is_clr;
             }
         }
 

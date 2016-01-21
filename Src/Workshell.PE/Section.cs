@@ -110,6 +110,14 @@ namespace Workshell.PE
             }
         }
 
+        public string Name
+        {
+            get
+            {
+                return table_entry.Name;
+            }
+        }
+
         public int Count
         {
             get
