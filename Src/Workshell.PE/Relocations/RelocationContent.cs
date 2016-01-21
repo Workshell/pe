@@ -46,7 +46,8 @@ namespace Workshell.PE
         {
             blocks = new List<RelocationBlock>();
 
-            long offset = section.RVAToOffset(directory.VirtualAddress);
+            long base_offset = section.RVAToOffset(directory.VirtualAddress);
+            long offset = base_offset;
             long size = 0;
             Stream stream = Section.Sections.Reader.GetStream();
 
@@ -81,7 +82,7 @@ namespace Workshell.PE
                     break;
             }
 
-            location = new StreamLocation(offset,size);
+            location = new StreamLocation(base_offset,size);
         }
 
         #region Methods
