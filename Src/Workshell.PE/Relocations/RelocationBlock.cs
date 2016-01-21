@@ -16,7 +16,7 @@ namespace Workshell.PE
         private RelocationContent content;
         private StreamLocation location;
         private IMAGE_BASE_RELOCATION relocation;
-        private Section relocation_section;
+        private SectionTableEntry relocation_section;
         private List<Relocation> list;
 
         internal RelocationBlock(RelocationContent relocContent, long offset, long size, IMAGE_BASE_RELOCATION baseRelocation, List<ushort> relocList)
@@ -24,18 +24,7 @@ namespace Workshell.PE
             content = relocContent;
             location = new StreamLocation(offset,size);
             relocation = baseRelocation;
-            relocation_section = null;
-
-            foreach(Section section in relocContent.Section.Sections)
-            {
-                if (relocation.VirtualAddress >= section.TableEntry.VirtualAddress && relocation.VirtualAddress <= (section.TableEntry.VirtualAddress + section.TableEntry.VirtualSizeOrPhysicalAddress))
-                {
-                    relocation_section = section;
-
-                    break;
-                }
-            }
-
+            relocation_section = relocContent.Section.Sections.Reader.RVAToSectionTableEntry(baseRelocation.VirtualAddress);
             list = new List<Relocation>();
 
             long reloc_offset = offset + 8;
@@ -46,16 +35,6 @@ namespace Workshell.PE
 
         #region Methods
 
-        public IMAGE_BASE_RELOCATION GetNativeRelocation()
-        {
-            return relocation;
-        }
-
-        public override string ToString()
-        {
-            return String.Format("0x{0:X8}+{1}",relocation.VirtualAddress,relocation_section.TableEntry.Name);
-        }
-
         public IEnumerator<Relocation> GetEnumerator()
         {
             return list.GetEnumerator();
@@ -64,6 +43,11 @@ namespace Workshell.PE
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            return String.Format("0x{0:X8}+{1} -> {2}",relocation.VirtualAddress,relocation.SizeOfBlock,relocation_section.Name);
         }
 
         #endregion
@@ -94,7 +78,7 @@ namespace Workshell.PE
             }
         }
 
-        public Section RelocationSection
+        public SectionTableEntry RelocationSection
         {
             get
             {

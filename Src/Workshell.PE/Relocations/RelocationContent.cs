@@ -36,23 +36,21 @@ namespace Workshell.PE
 
     }
 
-    public class RelocationContent : SectionContent, IEnumerable<RelocationBlock>
+    public class RelocationContent : SectionContent, ILocationSupport, IRawDataSupport, IEnumerable<RelocationBlock>
     {
 
         private List<RelocationBlock> blocks;
+        private StreamLocation location;
 
         internal RelocationContent(DataDirectory directory, Section section) : base(directory,section)
         {
-            Stream stream = section.Sections.Reader.Stream;
-
             blocks = new List<RelocationBlock>();
 
-            return;
-
-            long offset = section.Location.Offset;
+            long offset = section.RVAToOffset(directory.VirtualAddress);
             long size = 0;
+            Stream stream = Section.Sections.Reader.GetStream();
 
-            stream.Seek(section.Location.Offset,SeekOrigin.Begin);
+            stream.Seek(offset,SeekOrigin.Begin);
 
             while (true)
             {
@@ -76,12 +74,14 @@ namespace Workshell.PE
                 }
 
                 RelocationBlock block = new RelocationBlock(this,block_offset,block_data.SizeOfBlock,block_data,relocations);
-
+                
                 blocks.Add(block);
 
                 if (size >= directory.Size)
                     break;
             }
+
+            location = new StreamLocation(offset,size);
         }
 
         #region Methods
@@ -96,9 +96,25 @@ namespace Workshell.PE
             return GetEnumerator();
         }
 
+        public byte[] GetBytes()
+        {
+            Stream stream = Section.Sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
+        }
+
         #endregion
 
         #region Properties
+
+        public StreamLocation Location
+        {
+            get
+            {
+                return location;
+            }
+        }
 
         public int Count
         {

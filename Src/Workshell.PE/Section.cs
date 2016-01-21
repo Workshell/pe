@@ -156,12 +156,14 @@ namespace Workshell.PE
         private ExeReader reader;
         private SectionTable table;
         private Dictionary<DataDirectoryType,ISectionContentProvider> content_providers;
+        private Dictionary<SectionTableEntry,Section> cache;
 
         internal Sections(ExeReader exeReader, SectionTable sectionTable)
         {
             reader = exeReader;
             table = sectionTable;
             content_providers = new Dictionary<DataDirectoryType,ISectionContentProvider>();
+            cache = new Dictionary<SectionTableEntry,Section>();
 
             RegisterAssemblyContentProviders();
         }
@@ -235,6 +237,9 @@ namespace Workshell.PE
             if (entry.VirtualAddress == 0)
                 return null;
 
+            if (cache.ContainsKey(entry))
+                return cache[entry];
+
             Section section = new Section(this,entry);
             Dictionary<DataDirectoryType,DataDirectory> data_directories = new Dictionary<DataDirectoryType,DataDirectory>();
 
@@ -257,6 +262,8 @@ namespace Workshell.PE
 
                 section.Attach(content);
             }
+
+            cache.Add(entry,section);
 
             return section;
         }
@@ -298,7 +305,7 @@ namespace Workshell.PE
 
                 SectionTableEntry entry = table[index];
 
-                return CreateSection(entry);
+                return this[entry];
             }
         }
 
@@ -308,10 +315,7 @@ namespace Workshell.PE
             {
                 SectionTableEntry entry = table.FirstOrDefault(e => String.Compare(sectionName,e.Name,StringComparison.OrdinalIgnoreCase) == 0);
 
-                if (entry == null)
-                    return null;
-
-                return CreateSection(entry);
+                return this[entry];
             }
         }
         
@@ -319,12 +323,10 @@ namespace Workshell.PE
         {
             get
             {
-                SectionTableEntry entry = table.FirstOrDefault(e => e.VirtualAddress == tableEntry.VirtualAddress);
-
-                if (entry == null)
+                if (tableEntry == null)
                     return null;
 
-                return CreateSection(entry);
+                return CreateSection(tableEntry);
             }
         }
 

@@ -26,7 +26,7 @@ namespace Workshell.PE.Demo
 
             foreach(Section section in sections)
             {
-                TLSContent content = (TLSContent)section[DataDirectoryType.TLSTable];
+                RelocationContent content = (RelocationContent)section[DataDirectoryType.BaseRelocationTable];
 
                 if (content != null)
                 {

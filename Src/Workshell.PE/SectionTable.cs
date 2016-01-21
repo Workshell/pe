@@ -372,17 +372,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            using (MemoryStream mem = new MemoryStream(SectionTableEntry.Size * table.Count))
-            {
-                foreach(SectionTableEntry entry in table)
-                {
-                    byte[] buffer = entry.GetBytes();
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
-                    mem.Write(buffer,0,buffer.Length);
-                }
-
-                return mem.ToArray();
-            }
+            return buffer;
         }
 
         public bool Has(string name)
