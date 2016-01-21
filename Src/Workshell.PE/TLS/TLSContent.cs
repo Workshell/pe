@@ -71,12 +71,12 @@ namespace Workshell.PE
             if (Section.Sections.Reader.Is32Bit)
             {
                 IMAGE_TLS_DIRECTORY32 tls_directory = Utils.Read<IMAGE_TLS_DIRECTORY32>(stream,TLSDirectory.Size32);
-                result = new TLSDirectory32(this,stream.Position,tls_directory);
+                result = new TLSDirectory32(this,location.Offset,tls_directory);
             }
             else
             {
                 IMAGE_TLS_DIRECTORY64 tls_directory = Utils.Read<IMAGE_TLS_DIRECTORY64>(stream,TLSDirectory.Size64);
-                result = new TLSDirectory64(this,stream.Position,tls_directory);
+                result = new TLSDirectory64(this,location.Offset,tls_directory);
             }
 
             return result;
