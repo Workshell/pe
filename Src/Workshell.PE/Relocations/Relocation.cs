@@ -11,7 +11,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public enum RelocationType
+    public enum RelocationType : byte
     {
         [EnumAnnotationAttribute("IMAGE_REL_BASED_ABSOLUTE")]
         Absolute = 0,
@@ -42,8 +42,9 @@ namespace Workshell.PE
 
         private RelocationBlock block;
         private RelocationType type;
-        private int offset;
+        private ushort offset;
         private ushort value;
+        private uint computed_rva;
         private StreamLocation location;
 
         internal Relocation(RelocationBlock relocBlock, long relocOffset, ushort relocValue)
@@ -52,21 +53,31 @@ namespace Workshell.PE
 
             int reloc_type = relocValue >> 12;
             int reloc_offset = relocValue & 0xFFF;
-			
+
             type = (RelocationType)reloc_type;
-            offset = reloc_offset;
+            offset = Convert.ToUInt16(reloc_offset);
             value = relocValue;
+            computed_rva = block.PageRVA;
+
+            switch (type)
+            {
+                case RelocationType.Absolute:
+                    break;
+                case RelocationType.HighLow:
+                    computed_rva += offset;
+                    break;
+                case RelocationType.Dir64:
+                    computed_rva += offset;
+                    break;      
+                case RelocationType.High:
+                case RelocationType.Low:
+                default:
+                    computed_rva = 0;
+                    break;
+            }
+
             location = new StreamLocation(relocOffset,size);
         }
-
-        #region Methods
-
-        public override string ToString()
-        {
-            return String.Format("{0} (0x{0:X4})",value);
-        }
-
-        #endregion
 
         #region Static Properties
 
@@ -106,7 +117,7 @@ namespace Workshell.PE
             }
         }
 
-        public int Offset
+        public ushort Offset
         {
             get
             {
@@ -119,6 +130,14 @@ namespace Workshell.PE
             get
             {
                 return value;
+            }
+        }
+
+        public uint ComputedRVA
+        {
+            get
+            {
+                return computed_rva;
             }
         }
 

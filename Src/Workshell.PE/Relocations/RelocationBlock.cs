@@ -13,6 +13,8 @@ namespace Workshell.PE
     public class RelocationBlock : IEnumerable<Relocation>, ILocationSupport
     {
 
+        private static readonly int size = Utils.SizeOf<IMAGE_BASE_RELOCATION>();
+
         private RelocationContent content;
         private StreamLocation location;
         private IMAGE_BASE_RELOCATION relocation;
@@ -48,6 +50,18 @@ namespace Workshell.PE
         public override string ToString()
         {
             return String.Format("0x{0:X8}+{1} -> {2}",relocation.VirtualAddress,relocation.SizeOfBlock,relocation_section.Name);
+        }
+
+        #endregion
+
+        #region Static Properties
+
+        public static int Size
+        {
+            get
+            {
+                return size;
+            }
         }
 
         #endregion
