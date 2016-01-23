@@ -53,7 +53,7 @@ namespace Workshell.PE
         {
             StringBuilder builder = new StringBuilder();
             long offset = Convert.ToInt64(content.Section.RVAToOffset(directory.Name));
-            Stream stream = content.Section.Sections.Reader.Stream;
+            Stream stream = content.Section.Sections.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
 
@@ -76,7 +76,7 @@ namespace Workshell.PE
         {
             List<uint> results = new List<uint>();
             long offset = Convert.ToInt64(content.Section.RVAToOffset(directory.AddressOfFunctions));
-            Stream stream = content.Section.Sections.Reader.Stream;
+            Stream stream = content.Section.Sections.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
 
@@ -94,7 +94,7 @@ namespace Workshell.PE
         {
             List<uint> results = new List<uint>();
             long offset = Convert.ToInt64(content.Section.RVAToOffset(directory.AddressOfNames));
-            Stream stream = content.Section.Sections.Reader.Stream;
+            Stream stream = content.Section.Sections.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
 
@@ -112,7 +112,7 @@ namespace Workshell.PE
         {
             List<ushort> results = new List<ushort>();
             long offset = Convert.ToInt64(content.Section.RVAToOffset(directory.AddressOfNameOrdinals));
-            Stream stream = content.Section.Sections.Reader.Stream;
+            Stream stream = content.Section.Sections.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
 

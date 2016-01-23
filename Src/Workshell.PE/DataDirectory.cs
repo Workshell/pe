@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -136,7 +137,9 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return Utils.ReadBytes(header.Reader.Stream,location);
+            Stream stream = header.Reader.GetStream();
+
+            return Utils.ReadBytes(stream,location);
         }
 
         public bool Has(DataDirectoryType directoryType)

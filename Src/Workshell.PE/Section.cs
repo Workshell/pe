@@ -44,10 +44,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            byte[] buffer = new byte[location.Size];
-
-            sections.Reader.Stream.Seek(location.Offset,SeekOrigin.Begin);
-            sections.Reader.Stream.Read(buffer,0,buffer.Length);
+            Stream stream = sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }

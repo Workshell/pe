@@ -52,11 +52,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = Section.Sections.Reader.Stream;
-            byte[] buffer = new byte[location.Size];
-            
-            stream.Seek(location.Offset,SeekOrigin.Begin);
-            stream.Read(buffer,0,buffer.Length);
+            Stream stream = Section.Sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }
@@ -64,7 +61,7 @@ namespace Workshell.PE
         private TLSDirectory LoadDirectory()
         {
             TLSDirectory result;
-            Stream stream = Section.Sections.Reader.Stream;
+            Stream stream = Section.Sections.Reader.GetStream();
 
             stream.Seek(location.Offset,SeekOrigin.Begin);
 

@@ -166,7 +166,7 @@ namespace Workshell.PE
 
             location = new StreamLocation(offset,dataDirectory.Size);
 
-            Stream stream = Section.Sections.Reader.Stream;
+            Stream stream = Section.Sections.Reader.GetStream();
 
             exports = new List<Export>();
 
@@ -192,11 +192,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = Section.Sections.Reader.Stream;
-            byte[] buffer = new byte[location.Size];
-            
-            stream.Seek(location.Offset,SeekOrigin.Begin);
-            stream.Read(buffer,0,buffer.Length);
+            Stream stream = Section.Sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }

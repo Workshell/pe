@@ -35,7 +35,9 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return Utils.ReadBytes(reader.Stream,location);
+            Stream stream = reader.GetStream();
+
+            return Utils.ReadBytes(stream,location);
         }
 
         #endregion

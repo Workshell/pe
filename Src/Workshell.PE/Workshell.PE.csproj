@@ -83,7 +83,7 @@
     <Compile Include="OptionalHeader.cs" />
     <Compile Include="SupportsRawData.cs" />
     <Compile Include="ExeReader.cs" />
-    <Compile Include="ReaderException.cs" />
+    <Compile Include="ExeReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Relocations\Relocation.cs" />
     <Compile Include="Relocations\RelocationBlock.cs" />

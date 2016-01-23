@@ -29,20 +29,21 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            long position = reader.Stream.Position;
+            Stream stream = reader.GetStream();
+            long position = stream.Position;
 
             try
             {
                 byte[] buffer = new byte[location.Size];
 
-                reader.Stream.Seek(location.Offset,SeekOrigin.Begin);
-                reader.Stream.Read(buffer,0,buffer.Length);
+                stream.Seek(location.Offset,SeekOrigin.Begin);
+                stream.Read(buffer,0,buffer.Length);
 
                 return buffer;
             }
             finally
             {
-                reader.Stream.Seek(position,SeekOrigin.Begin);
+                stream.Seek(position,SeekOrigin.Begin);
             }
         }
 

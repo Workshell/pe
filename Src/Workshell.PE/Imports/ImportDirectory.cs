@@ -50,7 +50,7 @@ namespace Workshell.PE
             if (String.IsNullOrWhiteSpace(name))
             {           
                 StringBuilder builder = new StringBuilder();
-                Stream stream = directory.Content.Section.Sections.Reader.Stream;
+                Stream stream = directory.Content.Section.Sections.Reader.GetStream();
                 long offset = Convert.ToInt64(directory.Content.Section.RVAToOffset(descriptor.Name));
 
                 stream.Seek(offset,SeekOrigin.Begin);

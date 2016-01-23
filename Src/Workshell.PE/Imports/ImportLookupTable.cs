@@ -81,7 +81,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            byte[] buffer = Utils.ReadBytes(tables.Content.Section.Sections.Reader.Stream,location);
+            Stream stream = tables.Content.Section.Sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }

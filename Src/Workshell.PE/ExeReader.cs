@@ -322,7 +322,7 @@ namespace Workshell.PE
             long offset = _dos_header.Location.Offset + _dos_header.Location.Size;
             int size = _dos_header.FileAddressNewHeader - DOSHeader.Size;
 
-            if ((offset + size) > Stream.Length)
+            if ((offset + size) > _stream.Length)
                 throw new ExeReaderException("Cannot read beyond end of stream.");
 
             StreamLocation location = new StreamLocation(offset,size);
@@ -611,14 +611,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public Stream Stream
-        {
-            get
-            {
-                return _stream;
-            }
-        }
 
         public bool Is32Bit
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -113,7 +114,8 @@ namespace Workshell.PE
             if (location == null)
                 UpdateLocation();
 
-            byte[] buffer = Utils.ReadBytes(content.Section.Sections.Reader.Stream,location);
+            Stream stream = content.Section.Sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }
