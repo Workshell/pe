@@ -55,57 +55,28 @@ namespace Workshell.PE
 
         public static bool IsValid(Stream stream)
         {
-            return IsValid(stream,false);
+            string error_message;
+
+            return IsValid(stream,out error_message);
         }
 
-        public static bool IsValid(Stream stream, bool ownStream)
+        public static bool IsValid(Stream stream, out string errorMessage)
         {
-            using (ExeReader reader = new ExeReader(stream,ownStream))
-            {
-                try
-                {
-                    reader.Validate();
-
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
+            return Validate(stream,out errorMessage);
         }
 
         public static bool IsValid(string fileName)
         {
-            return IsValid(fileName,false);
+            string error_message;
+
+            return IsValid(fileName,out error_message);
         }
 
-        public static bool IsValid(string fileName, bool copyMem)
+        public static bool IsValid(string fileName, out string errorMessage)
         {
-            if (copyMem)
-            {
-                MemoryStream mem = new MemoryStream();
+            FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
 
-                using (FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read))
-                    file.CopyTo(mem,4096);
-
-                mem.Seek(0,SeekOrigin.Begin);
-
-                return IsValid(mem,true);
-            }
-            else
-            {
-                FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
-
-                return IsValid(file,true);
-            }           
-        }
-
-        public static bool IsValid(byte[] bytes)
-        {
-            MemoryStream mem = new MemoryStream(bytes);
-
-            return IsValid(mem,true);
+            return IsValid(file,out errorMessage);  
         }
 
         public static ExeReader FromFile(string fileName)
@@ -123,6 +94,172 @@ namespace Workshell.PE
         public static ExeReader FromStream(Stream stream, bool ownStream)
         {
             return new ExeReader(stream,ownStream);
+        }
+
+        private static bool Validate(Stream stream, out string errorMessage)
+        {
+            errorMessage = String.Empty;
+
+            if (!stream.CanSeek)
+            {
+                errorMessage = "Cannot seek in stream.";
+
+                return false;
+            }
+
+            if (!stream.CanRead)
+            {
+                errorMessage = "Cannot read from stream.";
+
+                return false;
+            }
+
+            stream.Seek(0,SeekOrigin.Begin);
+
+            IMAGE_DOS_HEADER dos_header = Utils.Read<IMAGE_DOS_HEADER>(stream,DOSHeader.Size);
+
+            if (dos_header.e_magic != DOSHeader.DOS_MAGIC_MZ)
+            {
+                errorMessage = "Incorrect magic number specified in MS-DOS header.";
+
+                return false;
+            }
+
+            if (dos_header.e_lfanew == 0)
+            {
+                errorMessage = "No new header location specified in MS-DOS header, most likely a 16-bit executable.";
+
+                return false;
+            }
+
+            if (dos_header.e_lfanew >= (256 * (1024 * 1024)))
+            {           
+                errorMessage = "New header location specified in MS-DOS header is beyond 256mb boundary (see RtlImageNtHeaderEx).";
+
+                return false;
+            }
+
+            if (dos_header.e_lfanew % 4 != 0)
+            {
+                errorMessage = "New header location specified in MS-DOS header is not properly aligned.";
+
+                return false;
+            }
+
+            if (dos_header.e_lfanew < DOSHeader.Size)
+            {
+                errorMessage = "New header location specified is invalid.";
+
+                return false;
+            }
+
+            long stub_offset = DOSHeader.Size;
+            int stub_size = dos_header.e_lfanew - DOSHeader.Size;
+
+            if ((stub_offset + stub_size) > stream.Length)
+            {
+                errorMessage = "Cannot read beyond end of stream.";
+
+                return false;
+            }
+
+            stream.Seek(dos_header.e_lfanew,SeekOrigin.Begin);
+
+            uint pe_sig = Utils.ReadUInt32(stream);
+
+            if (pe_sig != NTHeaders.PE_MAGIC_MZ)
+            {
+                errorMessage = "Incorrect PE signature found in NT Header.";
+
+                return false;
+            }
+
+            if ((stream.Position + FileHeader.Size) > stream.Length)
+            {
+                errorMessage = "Cannot read beyond end of stream.";
+
+                return false;
+            }
+
+            IMAGE_FILE_HEADER file_header = Utils.Read<IMAGE_FILE_HEADER>(stream,FileHeader.Size);
+            CharacteristicsType characteristics = (CharacteristicsType)file_header.Characteristics;
+            bool is_32bit = ((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
+            bool is_64bit = !is_32bit;
+
+            if ((stream.Position + file_header.SizeOfOptionalHeader) > stream.Length)
+            {
+                errorMessage = "Cannot read beyond end of stream.";
+
+                return false;
+            }
+
+            IMAGE_OPTIONAL_HEADER32 opt_header_32 = new IMAGE_OPTIONAL_HEADER32();
+            IMAGE_OPTIONAL_HEADER64 opt_header_64 = new IMAGE_OPTIONAL_HEADER64();
+
+            if (!is_64bit)
+            {
+                opt_header_32 = Utils.Read<IMAGE_OPTIONAL_HEADER32>(stream,OptionalHeader.Size32);
+
+                if (stream.Length < opt_header_32.SizeOfImage)
+                {
+                    errorMessage = "Stream is smaller than specified image size.";
+
+                    return false;
+                }
+            }
+            else
+            {
+                opt_header_64 = Utils.Read<IMAGE_OPTIONAL_HEADER64>(stream,OptionalHeader.Size64);
+
+                if (stream.Length < opt_header_64.SizeOfImage)
+                {
+                    errorMessage = "Stream is smaller than specified image size.";
+
+                    return false;
+                }
+            }
+
+            long section_table_size = SectionTableEntry.Size * file_header.NumberOfSections;
+
+            if ((stream.Position + section_table_size) > stream.Length)
+            {
+                errorMessage = "Cannot read beyond end of stream.";
+
+                return false;
+            }
+
+            List<IMAGE_SECTION_HEADER> section_table_headers = new List<IMAGE_SECTION_HEADER>();
+
+            for(int i = 0; i < file_header.NumberOfSections; i++)
+            {
+                IMAGE_SECTION_HEADER header = Utils.Read<IMAGE_SECTION_HEADER>(stream,SectionTableEntry.Size);
+
+                section_table_headers.Add(header);
+            }
+
+            foreach(IMAGE_SECTION_HEADER section_header in section_table_headers)
+            {
+                if ((section_header.PointerToRawData + section_header.SizeOfRawData) > stream.Length)
+                {
+                    StringBuilder builder = new StringBuilder();
+
+                    foreach(char c in section_header.Name)
+                    {
+                        if (c == '\0')
+                            break;
+
+                        builder.Append(c);
+                    }
+
+                    errorMessage = String.Format("Section {0} data is beyond end of stream.",builder.ToString());
+
+                    return false;
+                }
+
+                stream.Seek(section_header.PointerToRawData,SeekOrigin.Begin);
+            }
+
+            return true;
         }
 
         #endregion
@@ -149,15 +286,6 @@ namespace Workshell.PE
 
                 return mem.ToArray();
             }
-        }
-
-        private void Validate()
-        {
-            LoadDOSHeader();
-            LoadDOSStub();
-            LoadNTHeaders();
-            LoadSectionTable();
-            LoadSections();
         }
 
         private void LoadDOSHeader()
