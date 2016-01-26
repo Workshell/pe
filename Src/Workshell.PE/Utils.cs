@@ -306,6 +306,16 @@ namespace Workshell.PE
             return result;
         }
 
+        public static ushort HiWord(uint value)
+        {
+            return Convert.ToUInt16((value >> 16) & 0xFFFF);
+        }
+
+        public static ushort LoWord(uint value)
+        {
+            return Convert.ToUInt16(value & 0xFFFF);
+        }
+
         #endregion
 
     }

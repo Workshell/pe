@@ -64,11 +64,14 @@
     <Compile Include="Imports\ImportLookupTableEntry.cs" />
     <Compile Include="Imports\ImportLookupTable.cs" />
     <Compile Include="Imports\ImportLookupTables.cs" />
+    <Compile Include="LoadConfig\LoadConfigContent.cs" />
+    <Compile Include="LoadConfig\LoadConfigDirectory.cs" />
     <Compile Include="MoreLinq\DistinctBy.cs" />
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.cs" />
     <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
+    <Compile Include="Native\IMAGE_LOAD_CONFIG_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_TLS_DIRECTORY.cs" />
     <Compile Include="SupportsLocation.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
