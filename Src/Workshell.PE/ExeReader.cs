@@ -199,24 +199,10 @@ namespace Workshell.PE
             if (!is_64bit)
             {
                 opt_header_32 = Utils.Read<IMAGE_OPTIONAL_HEADER32>(stream,OptionalHeader.Size32);
-
-                if (stream.Length < opt_header_32.SizeOfImage)
-                {
-                    errorMessage = "Stream is smaller than specified image size.";
-
-                    return false;
-                }
             }
             else
             {
                 opt_header_64 = Utils.Read<IMAGE_OPTIONAL_HEADER64>(stream,OptionalHeader.Size64);
-
-                if (stream.Length < opt_header_64.SizeOfImage)
-                {
-                    errorMessage = "Stream is smaller than specified image size.";
-
-                    return false;
-                }
             }
 
             long section_table_size = SectionTableEntry.Size * file_header.NumberOfSections;
