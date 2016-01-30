@@ -36,7 +36,15 @@ namespace Workshell.PE
         [EnumAnnotation("IMAGE_DEBUG_TYPE_RESERVED10")]
         Reserved = 10,
         [EnumAnnotation("IMAGE_DEBUG_TYPE_CLSID")]
-        CLSID = 11
+        CLSID = 11,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_VC_FEATURE")]
+        VCFeature = 12,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_POGO")]
+        POGO = 13,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_ILTCG")]
+        ILTCG = 14,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_MPX")]
+        MPX = 15
     }
 
     public class DebugDirectory : ILocationSupport, IRawDataSupport
