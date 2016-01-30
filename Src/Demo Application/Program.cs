@@ -35,7 +35,7 @@ namespace Workshell.PE.Demo
 
             foreach(Section section in sections)
             {
-                LoadConfigContent content = (LoadConfigContent)section[DataDirectoryType.LoadConfigTable];
+                DebugContent content = (DebugContent)section[DataDirectoryType.Debug];
 
                 if (content != null)
                 {
