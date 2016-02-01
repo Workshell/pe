@@ -348,11 +348,11 @@ namespace Workshell.PE
     public class SectionTable : IEnumerable<SectionTableEntry>, ILocationSupport, IRawDataSupport
     {
 
-        private ExeReader reader;
+        private ImageReader reader;
         private StreamLocation location;
         private List<SectionTableEntry> table;
 
-        internal SectionTable(ExeReader exeReader, StreamLocation streamLoc, List<IMAGE_SECTION_HEADER> sectionHeaders)
+        internal SectionTable(ImageReader exeReader, StreamLocation streamLoc, List<IMAGE_SECTION_HEADER> sectionHeaders)
         {
             reader = exeReader;
             location = streamLoc;
@@ -397,7 +397,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ExeReader Reader
+        public ImageReader Reader
         {
             get
             {

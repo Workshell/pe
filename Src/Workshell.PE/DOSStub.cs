@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class DOSStub : ILocationSupport, IRawDataSupport
+    public class DOSStub
     {
 
-        private ExeReader reader;
-        private StreamLocation location;
+        private ImageReader reader;
+        private Location location;
 
-        internal DOSStub(ExeReader exeReader, StreamLocation streamLoc)
+        internal DOSStub(ImageReader exeReader, ulong stubOffset, uint stubSize, ulong imageBase)
         {
             reader = exeReader;
-            location = streamLoc;
+            location = new Location(stubOffset,Convert.ToUInt32(stubOffset),imageBase + stubOffset,stubSize,stubSize);
         }
 
         #region Methods
@@ -29,29 +29,14 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
-            long position = stream.Position;
-
-            try
-            {
-                byte[] buffer = new byte[location.Size];
-
-                stream.Seek(location.Offset,SeekOrigin.Begin);
-                stream.Read(buffer,0,buffer.Length);
-
-                return buffer;
-            }
-            finally
-            {
-                stream.Seek(position,SeekOrigin.Begin);
-            }
+            return null;
         }
 
         #endregion
 
         #region Properties
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {

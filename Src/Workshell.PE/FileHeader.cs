@@ -60,20 +60,23 @@ namespace Workshell.PE
         BytesOfWordReserved = 0x8000
     }
 
-    public class FileHeader : IRawDataSupport
+    public class FileHeader
     {
 
-        private static readonly int size = Utils.SizeOf<IMAGE_FILE_HEADER>();
-  
-        private ExeReader reader;
-        private IMAGE_FILE_HEADER header;
-        private StreamLocation location;
+        internal static readonly int Size = Utils.SizeOf<IMAGE_FILE_HEADER>();
 
-        internal FileHeader(ExeReader exeReader, IMAGE_FILE_HEADER fileHeader, StreamLocation streamLoc)
+        private ImageReader reader;
+        private IMAGE_FILE_HEADER header;
+        private Location location;
+
+        internal FileHeader(ImageReader exeReader, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
         {
             reader = exeReader;
             header = fileHeader;
-            location = streamLoc;
+
+            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_FILE_HEADER>());
+
+            location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,size,size);
         }
 
         #region Methods
@@ -85,11 +88,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            byte[] buffer = new byte[size];
-
-            Utils.Write<IMAGE_FILE_HEADER>(header,buffer,0,buffer.Length);
-
-            return buffer;
+            return null;
         }
 
         public MachineType GetMachineType()
@@ -109,21 +108,9 @@ namespace Workshell.PE
 
         #endregion
 
-        #region Static Properties
-
-        public static int Size
-        {
-            get
-            {
-                return size;
-            }
-        }
-
-        #endregion
-
         #region Properties
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {

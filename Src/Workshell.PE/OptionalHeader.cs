@@ -78,19 +78,19 @@ namespace Workshell.PE
         TerminalServerAware = 0x8000
     }
 
-    public abstract class OptionalHeader : ILocationSupport, IRawDataSupport
+    public abstract class OptionalHeader
     {
 
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
         public static readonly int Size64 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 
-        private ExeReader reader;
-        private StreamLocation location;
+        private ImageReader reader;
+        private Location location;
 
-        internal OptionalHeader(ExeReader exeReader, StreamLocation streamLoc)
+        internal OptionalHeader(ImageReader exeReader, ulong headerOffset, uint headerSize, ulong imageBase)
         {
             reader = exeReader;
-            location = streamLoc;
+            location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,headerSize,headerSize);
         }
 
         #region Methods
@@ -136,7 +136,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ExeReader Reader
+        public ImageReader Reader
         {
             get
             {
@@ -144,7 +144,7 @@ namespace Workshell.PE
             }
         }
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {
@@ -341,10 +341,11 @@ namespace Workshell.PE
         private IMAGE_OPTIONAL_HEADER32 header;
         private DataDirectories data_dirs;
 
-        internal OptionalHeader32(ExeReader exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, StreamLocation streamLoc) : base(exeReader,streamLoc)
+        internal OptionalHeader32(ImageReader exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size32),imageBase)
         {
             header = optHeader;
 
+            /*
             List<DataDirectory> dirs = new List<DataDirectory>();
 
             dirs.AddRange(new DataDirectory[] {
@@ -369,6 +370,7 @@ namespace Workshell.PE
             StreamLocation location = new StreamLocation((streamLoc.Offset + streamLoc.Size) - dir_size,dir_size);
 
             data_dirs = new DataDirectories(this,location,dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType));
+            */
         }
 
         #region Methods
@@ -636,10 +638,11 @@ namespace Workshell.PE
         private IMAGE_OPTIONAL_HEADER64 header;
         private DataDirectories data_dirs;
 
-        internal OptionalHeader64(ExeReader exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, StreamLocation streamLoc) : base(exeReader,streamLoc)
+        internal OptionalHeader64(ImageReader exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
         {
             header = optHeader;
 
+            /*
             List<DataDirectory> dirs = new List<DataDirectory>();
 
             dirs.AddRange(new DataDirectory[] {
@@ -664,6 +667,7 @@ namespace Workshell.PE
             StreamLocation location = new StreamLocation((streamLoc.Offset + streamLoc.Size) - dir_size,dir_size);
 
             data_dirs = new DataDirectories(this,location,dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType));
+             */
         }
 
         #region Methods

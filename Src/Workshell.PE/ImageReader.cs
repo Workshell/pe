@@ -11,8 +11,26 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ExeReader : IDisposable, IRawDataSupport
+    public class ImageReader : IDisposable, IRawDataSupport
     {
+
+        class PreloadedInformation
+        {
+
+            public IMAGE_DOS_HEADER DOSHeader;
+            public ulong StubOffset;
+            public uint StubSize;
+            public IMAGE_FILE_HEADER FileHeader;
+            public IMAGE_OPTIONAL_HEADER32? OptHeader32;
+            public IMAGE_OPTIONAL_HEADER64? OptHeader64;
+            public IMAGE_DATA_DIRECTORY[] DataDirectories;
+            public IMAGE_SECTION_HEADER[] SectionHeaders;
+
+            public bool Is32Bit;
+            public bool Is64Bit;
+            public bool IsCLR;
+        
+        }
 
         private bool _disposed;
         private Stream _stream;
@@ -28,7 +46,7 @@ namespace Workshell.PE
         private bool is_64bit;
         private bool is_clr;
 
-        private ExeReader(Stream sourceStream, bool ownStream)
+        private ImageReader(Stream sourceStream, bool ownStream)
         {
             if (!sourceStream.CanRead)
                 throw new IOException("Cannot read from stream.");
@@ -62,7 +80,9 @@ namespace Workshell.PE
 
         public static bool IsValid(Stream stream, out string errorMessage)
         {
-            return Validate(stream,out errorMessage);
+            PreloadedInformation preload_info = TryPreload(stream,out errorMessage);
+
+            return (preload_info != null);
         }
 
         public static bool IsValid(string fileName)
@@ -79,24 +99,24 @@ namespace Workshell.PE
             return IsValid(file,out errorMessage);  
         }
 
-        public static ExeReader FromFile(string fileName)
+        public static ImageReader FromFile(string fileName)
         {
             FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
 
             return FromStream(file,true);
         }
 
-        public static ExeReader FromStream(Stream stream)
+        public static ImageReader FromStream(Stream stream)
         {
             return FromStream(stream,false);
         }
 
-        public static ExeReader FromStream(Stream stream, bool ownStream)
+        public static ImageReader FromStream(Stream stream, bool ownStream)
         {
-            return new ExeReader(stream,ownStream);
+            return new ImageReader(stream,ownStream);
         }
 
-        private static bool Validate(Stream stream, out string errorMessage)
+        private static PreloadedInformation TryPreload(Stream stream, out string errorMessage)
         {
             errorMessage = String.Empty;
 
@@ -104,14 +124,14 @@ namespace Workshell.PE
             {
                 errorMessage = "Cannot seek in stream.";
 
-                return false;
+                return null;
             }
 
             if (!stream.CanRead)
             {
                 errorMessage = "Cannot read from stream.";
 
-                return false;
+                return null;
             }
 
             stream.Seek(0,SeekOrigin.Begin);
@@ -122,35 +142,35 @@ namespace Workshell.PE
             {
                 errorMessage = "Incorrect magic number specified in MS-DOS header.";
 
-                return false;
+                return null;
             }
 
             if (dos_header.e_lfanew == 0)
             {
                 errorMessage = "No new header location specified in MS-DOS header, most likely a 16-bit executable.";
 
-                return false;
+                return null;
             }
 
             if (dos_header.e_lfanew >= (256 * (1024 * 1024)))
             {           
                 errorMessage = "New header location specified in MS-DOS header is beyond 256mb boundary (see RtlImageNtHeaderEx).";
 
-                return false;
+                return null;
             }
 
             if (dos_header.e_lfanew % 4 != 0)
             {
                 errorMessage = "New header location specified in MS-DOS header is not properly aligned.";
 
-                return false;
+                return null;
             }
 
             if (dos_header.e_lfanew < DOSHeader.Size)
             {
                 errorMessage = "New header location specified is invalid.";
 
-                return false;
+                return null;
             }
 
             long stub_offset = DOSHeader.Size;
@@ -160,7 +180,7 @@ namespace Workshell.PE
             {
                 errorMessage = "Cannot read beyond end of stream.";
 
-                return false;
+                return null;
             }
 
             stream.Seek(dos_header.e_lfanew,SeekOrigin.Begin);
@@ -171,14 +191,14 @@ namespace Workshell.PE
             {
                 errorMessage = "Incorrect PE signature found in NT Header.";
 
-                return false;
+                return null;
             }
 
             if ((stream.Position + FileHeader.Size) > stream.Length)
             {
                 errorMessage = "Cannot read beyond end of stream.";
 
-                return false;
+                return null;
             }
 
             IMAGE_FILE_HEADER file_header = Utils.Read<IMAGE_FILE_HEADER>(stream,FileHeader.Size);
@@ -190,20 +210,28 @@ namespace Workshell.PE
             {
                 errorMessage = "Cannot read beyond end of stream.";
 
-                return false;
+                return null;
             }
 
             IMAGE_OPTIONAL_HEADER32 opt_header_32 = new IMAGE_OPTIONAL_HEADER32();
             IMAGE_OPTIONAL_HEADER64 opt_header_64 = new IMAGE_OPTIONAL_HEADER64();
+            int data_dir_count = 0;
 
             if (!is_64bit)
             {
                 opt_header_32 = Utils.Read<IMAGE_OPTIONAL_HEADER32>(stream,OptionalHeader.Size32);
+                data_dir_count = Convert.ToInt32(opt_header_32.NumberOfRvaAndSizes);
             }
             else
             {
                 opt_header_64 = Utils.Read<IMAGE_OPTIONAL_HEADER64>(stream,OptionalHeader.Size64);
+                data_dir_count = Convert.ToInt32(opt_header_64.NumberOfRvaAndSizes);
             }
+
+            IMAGE_DATA_DIRECTORY[] data_directories = new IMAGE_DATA_DIRECTORY[data_dir_count];
+
+            for(int i = 0; i < data_dir_count; i++)
+                data_directories[i] = Utils.Read<IMAGE_DATA_DIRECTORY>(stream,Utils.SizeOf<IMAGE_DATA_DIRECTORY>());
 
             long section_table_size = SectionTableEntry.Size * file_header.NumberOfSections;
 
@@ -211,41 +239,53 @@ namespace Workshell.PE
             {
                 errorMessage = "Cannot read beyond end of stream.";
 
-                return false;
+                return null;
             }
 
-            List<IMAGE_SECTION_HEADER> section_table_headers = new List<IMAGE_SECTION_HEADER>();
+            IMAGE_SECTION_HEADER[] section_table_headers = new IMAGE_SECTION_HEADER[file_header.NumberOfSections];
 
             for(int i = 0; i < file_header.NumberOfSections; i++)
-            {
-                IMAGE_SECTION_HEADER header = Utils.Read<IMAGE_SECTION_HEADER>(stream,SectionTableEntry.Size);
-
-                section_table_headers.Add(header);
-            }
+                section_table_headers[i] = Utils.Read<IMAGE_SECTION_HEADER>(stream,Utils.SizeOf<IMAGE_SECTION_HEADER>());
 
             foreach(IMAGE_SECTION_HEADER section_header in section_table_headers)
             {
                 if ((section_header.PointerToRawData + section_header.SizeOfRawData) > stream.Length)
                 {
-                    StringBuilder builder = new StringBuilder();
+                    errorMessage = "Section data is beyond end of stream.";
 
-                    foreach(char c in section_header.Name)
-                    {
-                        if (c == '\0')
-                            break;
-
-                        builder.Append(c);
-                    }
-
-                    errorMessage = String.Format("Section {0} data is beyond end of stream.",builder.ToString());
-
-                    return false;
+                    return null;
                 }
 
                 stream.Seek(section_header.PointerToRawData,SeekOrigin.Begin);
             }
 
-            return true;
+            bool is_clr = false;
+            int clr_dir_index = (int)DataDirectoryType.CLRRuntimeHeader;
+
+            if (clr_dir_index < 0 || clr_dir_index > (data_directories.Length - 1))
+            {
+                IMAGE_DATA_DIRECTORY clr_dir = data_directories[clr_dir_index];
+
+                if (clr_dir.VirtualAddress > 0 && clr_dir.Size > 0)
+                    is_clr = true;
+            }
+
+            PreloadedInformation info = new PreloadedInformation() {
+                DOSHeader = dos_header,
+                StubOffset = Convert.ToUInt64(stub_offset),
+                StubSize = Convert.ToUInt32(stub_size),
+                FileHeader = file_header,
+                OptHeader32 = opt_header_32,
+                OptHeader64 = opt_header_64,
+                DataDirectories = data_directories,
+                SectionHeaders = section_table_headers,
+
+                Is32Bit = is_32bit,
+                Is64Bit = is_64bit,
+                IsCLR = is_clr
+            };
+
+            return info;
         }
 
         #endregion
@@ -274,125 +314,48 @@ namespace Workshell.PE
             }
         }
 
-        private void LoadDOSHeader()
+        private void Load()
         {
-            _stream.Seek(0,SeekOrigin.Begin);
+            string error_message = String.Empty;
+            PreloadedInformation preload_info = TryPreload(_stream,out error_message);
 
-            IMAGE_DOS_HEADER native_dos_header = Utils.Read<IMAGE_DOS_HEADER>(_stream,DOSHeader.Size);
+            if (preload_info == null)
+                throw new ImageReaderException(error_message);
 
-            if (native_dos_header.e_magic != DOSHeader.DOS_MAGIC_MZ)
-                throw new ExeReaderException("Incorrect magic number specified in MS-DOS header.");
+            ulong image_base = 0;
 
-            if (native_dos_header.e_lfanew == 0)
-                throw new ExeReaderException("No new header location specified in MS-DOS header, most likely a 16-bit executable.");
+            if (preload_info.OptHeader32 != null)
+                image_base = preload_info.OptHeader32.Value.ImageBase;
 
-            if (native_dos_header.e_lfanew >= (256 * (1024 * 1024)))
-                throw new ExeReaderException("New header location specified in MS-DOS header is beyond 256mb boundary (see RtlImageNtHeaderEx).");
+            if (preload_info.OptHeader64 != null)
+                image_base = preload_info.OptHeader64.Value.ImageBase;
 
-            if (native_dos_header.e_lfanew % 4 != 0)
-                throw new ExeReaderException("New header location specified in MS-DOS header is not properly aligned.");
+            _dos_header = new DOSHeader(this,preload_info.DOSHeader,image_base);
+            _dos_stub = new DOSStub(this,preload_info.StubOffset,preload_info.StubSize,image_base);
+           
+            FileHeader file_header = new FileHeader(this,preload_info.FileHeader,_dos_stub.Location.FileOffset + _dos_stub.Location.FileSize + 4,image_base);
+            OptionalHeader opt_header;
 
-            if (native_dos_header.e_lfanew < DOSHeader.Size)
-                throw new ExeReaderException("New header location specified is invalid.");
-
-            StreamLocation location = new StreamLocation(0,DOSHeader.Size);
-
-            _dos_header = new DOSHeader(this,native_dos_header,location);
-        }
-
-        private void LoadDOSStub()
-        {
-            if (_dos_header == null)
-                LoadDOSHeader();
-
-            long offset = _dos_header.Location.Offset + _dos_header.Location.Size;
-            int size = _dos_header.FileAddressNewHeader - DOSHeader.Size;
-
-            if ((offset + size) > _stream.Length)
-                throw new ExeReaderException("Cannot read beyond end of stream.");
-
-            StreamLocation location = new StreamLocation(offset,size);
-
-            _dos_stub = new DOSStub(this,location);
-        }
-
-        private void LoadNTHeaders()
-        {
-            if (_dos_header == null)
-                LoadDOSHeader();
-
-            _stream.Seek(_dos_header.FileAddressNewHeader,SeekOrigin.Begin);
-
-            LoadPESignature();
-
-            FileHeader file_header = LoadFileHeader(_dos_header);
-            OptionalHeader opt_header = LoadOptionalHeader(file_header);
-            StreamLocation location = new StreamLocation(_dos_header.FileAddressNewHeader,4 + file_header.Location.Size + opt_header.Location.Size);
-
-            _nt_headers = new NTHeaders(this,location,file_header,opt_header);
-
-            if (_nt_headers.FileHeader != null)
+            if (preload_info.Is32Bit)
             {
-                CharacteristicsType characteristics = _nt_headers.FileHeader.GetCharacteristics();
-
-                is_32bit = ((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
-                is_64bit = !is_32bit;
-            }
-
-            if (_nt_headers.OptionalHeader != null)
-            {
-                is_32bit = (_nt_headers.OptionalHeader.GetMagic() == MagicType.PE32);
-                is_64bit = !is_32bit;
-            }
-
-            DataDirectory clr_dir = _nt_headers.OptionalHeader.DataDirectories[DataDirectoryType.CLRRuntimeHeader];
-
-            is_clr = (clr_dir != null && clr_dir.VirtualAddress > 0 && clr_dir.Size > 0);
-        }
-
-        private void LoadPESignature()
-        {
-            uint sig = Utils.ReadUInt32(_stream);
-
-            if (sig != NTHeaders.PE_MAGIC_MZ)
-                throw new ExeReaderException("Incorrect magic number specified in PE header.");
-        }
-
-        private FileHeader LoadFileHeader(DOSHeader dosHeader)
-        {
-            IMAGE_FILE_HEADER native_file_header = Utils.Read<IMAGE_FILE_HEADER>(_stream,FileHeader.Size);
-            StreamLocation location = new StreamLocation(dosHeader.FileAddressNewHeader + 4,FileHeader.Size);
-
-            return new FileHeader(this,native_file_header,location);
-        }
-
-        private OptionalHeader LoadOptionalHeader(FileHeader fileHeader)
-        {
-            CharacteristicsType characteristics = fileHeader.GetCharacteristics();
-            bool is_x64 = !((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
-            IMAGE_OPTIONAL_HEADER32 opt_header_32 = new IMAGE_OPTIONAL_HEADER32();
-            IMAGE_OPTIONAL_HEADER64 opt_header_64 = new IMAGE_OPTIONAL_HEADER64();
-            StreamLocation location = null;
-            OptionalHeader opt_header = null;
-
-            if (!is_x64)
-            {
-                opt_header_32 = Utils.Read<IMAGE_OPTIONAL_HEADER32>(_stream,OptionalHeader.Size32);
-                location = new StreamLocation(fileHeader.Location.Offset + fileHeader.Location.Size,OptionalHeader.Size32);
-                opt_header = new OptionalHeader32(this,opt_header_32,location);
+                opt_header = new OptionalHeader32(this,preload_info.OptHeader32.Value,file_header.Location.FileOffset + file_header.Location.FileSize,image_base);
             }
             else
             {
-                opt_header_64 = Utils.Read<IMAGE_OPTIONAL_HEADER64>(_stream,OptionalHeader.Size64);
-                location = new StreamLocation(fileHeader.Location.Offset + fileHeader.Location.Size,OptionalHeader.Size64);
-                opt_header = new OptionalHeader64(this,opt_header_64,location);
+                opt_header = new OptionalHeader64(this,preload_info.OptHeader64.Value,file_header.Location.FileOffset + file_header.Location.FileSize,image_base);
             }
+            
+            _nt_headers = new NTHeaders(this,file_header.Location.FileOffset - 4,image_base,file_header,opt_header);
 
-            return opt_header;
+            is_32bit = preload_info.Is32Bit;
+            is_64bit = preload_info.Is64Bit;
+            is_clr = preload_info.IsCLR;
         }
+
 
         private void LoadSectionTable()
         {
+            /*
             if (_nt_headers == null)
                 LoadNTHeaders();
 
@@ -413,14 +376,17 @@ namespace Workshell.PE
             StreamLocation location = new StreamLocation(offset,size);
 
             _section_table = new SectionTable(this,location,headers);
+            */
         }
 
         private void LoadSections()
         {
+            /*
             if (_section_table == null)
                 LoadSectionTable();
 
             _sections = new Sections(this,_section_table);
+             */
         }
 
         #endregion
@@ -437,7 +403,7 @@ namespace Workshell.PE
         public Section VAToSection(ulong va)
         {
             if (_nt_headers == null)
-                LoadNTHeaders();
+                Load();
 
             ulong image_base = _nt_headers.OptionalHeader.ImageBase;
             uint rva = Convert.ToUInt32(va - image_base);
@@ -448,7 +414,7 @@ namespace Workshell.PE
         public SectionTableEntry VAToSectionTableEntry(ulong va)
         {
             if (_nt_headers == null)
-                LoadNTHeaders();
+                Load();
 
             ulong image_base = _nt_headers.OptionalHeader.ImageBase;
             uint rva = Convert.ToUInt32(va - image_base);
@@ -459,7 +425,7 @@ namespace Workshell.PE
         public long VAToOffset(ulong va)
         {
             if (_nt_headers == null)
-                LoadNTHeaders();
+                Load();
 
             ulong image_base = _nt_headers.OptionalHeader.ImageBase;
             uint rva = Convert.ToUInt32(va - image_base);
@@ -475,7 +441,7 @@ namespace Workshell.PE
         public long VAToOffset(SectionTableEntry section, ulong va)
         {
             if (_nt_headers == null)
-                LoadNTHeaders();
+                Load();
 
             ulong image_base = _nt_headers.OptionalHeader.ImageBase;
             uint rva = Convert.ToUInt32(va - image_base);
@@ -505,7 +471,7 @@ namespace Workshell.PE
         public ulong OffsetToVA(SectionTableEntry section, long offset)
         {
             if (_nt_headers == null)
-                LoadNTHeaders();
+                Load();
 
             ulong image_base = _nt_headers.OptionalHeader.ImageBase;
             uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
@@ -603,7 +569,7 @@ namespace Workshell.PE
             get
             {
                 if (_nt_headers == null)
-                    LoadNTHeaders();
+                    Load();
 
                 return is_32bit;
             }
@@ -614,7 +580,7 @@ namespace Workshell.PE
             get
             {
                 if (_nt_headers == null)
-                    LoadNTHeaders();
+                    Load();
 
                 return is_64bit;
             }
@@ -625,7 +591,7 @@ namespace Workshell.PE
             get
             {
                 if (_nt_headers == null)
-                    LoadNTHeaders();
+                    Load();
 
                 return is_clr;
             }
@@ -636,7 +602,7 @@ namespace Workshell.PE
             get
             {
                 if (_dos_header == null)
-                    LoadDOSHeader();
+                    Load();
 
                 return _dos_header;
             }
@@ -647,7 +613,7 @@ namespace Workshell.PE
             get
             {
                 if (_dos_stub == null)
-                    LoadDOSStub();
+                    Load();
 
                 return _dos_stub;
             }
@@ -658,7 +624,7 @@ namespace Workshell.PE
             get
             {
                 if (_nt_headers == null)
-                    LoadNTHeaders();
+                    Load();
 
                 return _nt_headers;
             }

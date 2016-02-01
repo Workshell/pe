@@ -68,10 +68,13 @@
     <Compile Include="Imports\ImportLookupTables.cs" />
     <Compile Include="LoadConfig\LoadConfigContent.cs" />
     <Compile Include="LoadConfig\LoadConfigDirectory.cs" />
+    <Compile Include="Location.cs" />
     <Compile Include="MoreLinq\DistinctBy.cs" />
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.cs" />
+    <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY_ENTRY.cs" />
+    <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_DEBUG_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
     <Compile Include="Native\IMAGE_LOAD_CONFIG_DIRECTORY.cs" />
@@ -88,8 +91,8 @@
     <Compile Include="NTHeaders.cs" />
     <Compile Include="OptionalHeader.cs" />
     <Compile Include="SupportsRawData.cs" />
-    <Compile Include="ExeReader.cs" />
-    <Compile Include="ExeReaderException.cs" />
+    <Compile Include="ImageReader.cs" />
+    <Compile Include="ImageReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Relocations\Relocation.cs" />
     <Compile Include="Relocations\RelocationBlock.cs" />

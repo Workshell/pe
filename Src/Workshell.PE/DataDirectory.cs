@@ -10,7 +10,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public enum DataDirectoryType
+    public enum DataDirectoryType : int
     {
         ExportTable = 0,
         ImportTable = 1,
@@ -27,7 +27,7 @@ namespace Workshell.PE
         ImportAddressTable = 12,
         DelayImportDescriptor = 13,
         CLRRuntimeHeader = 14,
-        None = 999
+        None = -1
     }
 
     public class DataDirectory
@@ -44,15 +44,15 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static bool IsNullOrEmpty(DataDirectory dataDir)
+        public static bool IsNullOrEmpty(DataDirectory dataDirectory)
         {
-            if (dataDir == null)
+            if (dataDirectory == null)
                 return true;
 
-            if (dataDir.VirtualAddress == 0)
+            if (dataDirectory.VirtualAddress == 0)
                 return true;
 
-            if (dataDir.Size == 0)
+            if (dataDirectory.Size == 0)
                 return true;
 
             return false;

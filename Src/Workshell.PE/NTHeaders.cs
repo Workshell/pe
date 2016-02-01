@@ -8,20 +8,22 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class NTHeaders : ILocationSupport, IRawDataSupport
+    public class NTHeaders
     {
 
         public const uint PE_MAGIC_MZ = 17744;
 
-        private ExeReader reader;
-        private StreamLocation location;
+        private ImageReader reader;
+        private Location location;
         private FileHeader file_header;
         private OptionalHeader opt_header;
 
-        internal NTHeaders(ExeReader exeReader, StreamLocation streamLoc, FileHeader fileHeader, OptionalHeader optHeader)
+        internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader)
         {
+            uint size = fileHeader.Location.FileSize + optHeader.Location.FileSize;
+
             reader = exeReader;
-            location = streamLoc;
+            location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,size,size);
             file_header = fileHeader;
             opt_header = optHeader;
         }
@@ -35,16 +37,14 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
-
-            return Utils.ReadBytes(stream,location);
+            return null;
         }
 
         #endregion
 
         #region Properties
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {

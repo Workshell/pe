@@ -44,6 +44,7 @@ namespace Workshell.PE.Native
         public uint LoaderFlags;
         public uint NumberOfRvaAndSizes;
 
+        /*
         public IMAGE_DATA_DIRECTORY ExportTable;
         public IMAGE_DATA_DIRECTORY ImportTable;
         public IMAGE_DATA_DIRECTORY ResourceTable;
@@ -60,6 +61,7 @@ namespace Workshell.PE.Native
         public IMAGE_DATA_DIRECTORY DelayImportDescriptor;
         public IMAGE_DATA_DIRECTORY CLRRuntimeHeader;
         public IMAGE_DATA_DIRECTORY Reserved;
+        */
 
     }
 
@@ -97,6 +99,7 @@ namespace Workshell.PE.Native
         public uint LoaderFlags;
         public uint NumberOfRvaAndSizes;
 
+        /*
         public IMAGE_DATA_DIRECTORY ExportTable;
         public IMAGE_DATA_DIRECTORY ImportTable;
         public IMAGE_DATA_DIRECTORY ResourceTable;
@@ -113,6 +116,7 @@ namespace Workshell.PE.Native
         public IMAGE_DATA_DIRECTORY DelayImportDescriptor;
         public IMAGE_DATA_DIRECTORY CLRRuntimeHeader;
         public IMAGE_DATA_DIRECTORY Reserved;
+         */
 
     }
 

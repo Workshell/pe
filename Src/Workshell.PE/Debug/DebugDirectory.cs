@@ -120,6 +120,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Characteristics")]
         public uint Characteristics
         {
             get
@@ -128,6 +129,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Date/Time Stamp")]
         public uint TimeDateStamp
         {
             get
@@ -136,6 +138,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Major Version")]
         public ushort MajorVersion
         {
             get
@@ -144,6 +147,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Minor Version")]
         public ushort MinorVersion
         {
             get
@@ -152,6 +156,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Type")]
         public uint Type
         {
             get
@@ -160,6 +165,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Size of Data")]
         public uint SizeOfData
         {
             get
@@ -168,6 +174,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Address of Raw Data")]
         public uint AddressOfRawData
         {
             get
@@ -176,6 +183,7 @@ namespace Workshell.PE
             }
         }
 
+        [FieldAnnotation("Pointer to Raw Data")]
         public uint PointerToRawData
         {
             get

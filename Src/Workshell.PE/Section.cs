@@ -159,12 +159,12 @@ namespace Workshell.PE
     public class Sections : IEnumerable<Section>
     {
 
-        private ExeReader reader;
+        private ImageReader reader;
         private SectionTable table;
         private Dictionary<DataDirectoryType,ISectionContentProvider> content_providers;
         private Dictionary<SectionTableEntry,Section> cache;
 
-        internal Sections(ExeReader exeReader, SectionTable sectionTable)
+        internal Sections(ImageReader exeReader, SectionTable sectionTable)
         {
             reader = exeReader;
             table = sectionTable;
@@ -278,7 +278,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ExeReader Reader
+        public ImageReader Reader
         {
             get
             {

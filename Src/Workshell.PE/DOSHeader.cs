@@ -12,22 +12,22 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class DOSHeader : ILocationSupport, IRawDataSupport
+    public class DOSHeader
     {
 
         public const ushort DOS_MAGIC_MZ = 23117;
 
         private static readonly int size = Utils.SizeOf<IMAGE_DOS_HEADER>();
 
-        private ExeReader reader;
+        private ImageReader reader;
         private IMAGE_DOS_HEADER header;
-        private StreamLocation location;
+        private Location location;
 
-        internal DOSHeader(ExeReader exeReader, IMAGE_DOS_HEADER dosHeader, StreamLocation streamLoc)
+        internal DOSHeader(ImageReader exeReader, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
         {
             reader = exeReader;
             header = dosHeader;
-            location = streamLoc;
+            location = new Location(0,0,imageBase,Convert.ToUInt32(DOSHeader.Size),Convert.ToUInt32(DOSHeader.Size));
         }
 
         #region Methods
@@ -62,7 +62,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {

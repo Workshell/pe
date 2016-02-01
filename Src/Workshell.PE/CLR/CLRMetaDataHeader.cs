@@ -26,7 +26,7 @@ namespace Workshell.PE
             Signature = Utils.ReadUInt32(stream);
 
             if (Signature != CLR_METADATA_SIGNATURE)
-                throw new ExeReaderException("Incorrect signature found in CLR meta-data header.");
+                throw new ImageReaderException("Incorrect signature found in CLR meta-data header.");
 
             MajorVersion = Utils.ReadUInt16(stream);
             MinorVersion = Utils.ReadUInt16(stream);
