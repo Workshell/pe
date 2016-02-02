@@ -70,7 +70,7 @@ namespace Workshell.PE
 
         public DataDirectory GetMetaData()
         {
-            return new DataDirectory(DataDirectoryType.None,header.MetaData);
+            return new DataDirectory(DataDirectoryType.Unknown,header.MetaData);
         }
 
         public COMImageFlags GetFlags()
@@ -80,32 +80,32 @@ namespace Workshell.PE
 
         public DataDirectory GetResources()
         {
-            return new DataDirectory(DataDirectoryType.None,header.Resources);
+            return new DataDirectory(DataDirectoryType.Unknown,header.Resources);
         }
 
         public DataDirectory GetStrongNameSignature()
         {
-            return new DataDirectory(DataDirectoryType.None,header.StrongNameSignature);
+            return new DataDirectory(DataDirectoryType.Unknown,header.StrongNameSignature);
         }
 
         public DataDirectory GetCodeManagerTable()
         {
-            return new DataDirectory(DataDirectoryType.None,header.CodeManagerTable);
+            return new DataDirectory(DataDirectoryType.Unknown,header.CodeManagerTable);
         }
 
         public DataDirectory GetVTableFixups()
         {
-            return new DataDirectory(DataDirectoryType.None,header.VTableFixups);
+            return new DataDirectory(DataDirectoryType.Unknown,header.VTableFixups);
         }
 
         public DataDirectory GetExportAddressTableJumps()
         {
-            return new DataDirectory(DataDirectoryType.None,header.ExportAddressTableJumps);
+            return new DataDirectory(DataDirectoryType.Unknown,header.ExportAddressTableJumps);
         }
 
         public DataDirectory GetManagedNativeHeader()
         {
-            return new DataDirectory(DataDirectoryType.None,header.ManagedNativeHeader);
+            return new DataDirectory(DataDirectoryType.Unknown,header.ManagedNativeHeader);
         }
 
         #endregion

@@ -12,6 +12,7 @@ namespace Workshell.PE
 
     public enum DataDirectoryType : int
     {
+        Unknown = -1,
         ExportTable = 0,
         ImportTable = 1,
         ResourceTable = 2,
@@ -26,8 +27,7 @@ namespace Workshell.PE
         BoundImport = 11,
         ImportAddressTable = 12,
         DelayImportDescriptor = 13,
-        CLRRuntimeHeader = 14,
-        None = -1
+        CLRRuntimeHeader = 14
     }
 
     public class DataDirectory
@@ -64,7 +64,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            if (dir_type != DataDirectoryType.None)
+            if (dir_type != DataDirectoryType.Unknown)
             {
                 return dir_type.ToString();
             }
@@ -106,21 +106,43 @@ namespace Workshell.PE
 
     }
 
-    public class DataDirectories : IEnumerable<DataDirectory>, ILocationSupport, IRawDataSupport
+    public class DataDirectories : IEnumerable<DataDirectory>
     {
 
-        public static readonly int EntrySize = Utils.SizeOf<IMAGE_DATA_DIRECTORY>();
-
         private OptionalHeader header;
-        private StreamLocation location;
+        private Location location;
         private Dictionary<DataDirectoryType,DataDirectory> dirs;
-        
 
-        public DataDirectories(OptionalHeader optHeader, StreamLocation streamLoc, Dictionary<DataDirectoryType,DataDirectory> dataDirs)
+        internal DataDirectories(OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
         {
+            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length);
+            ulong file_offset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
+            uint rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize;
+            ulong va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
+
             header = optHeader;
-            location = streamLoc;
-            dirs = dataDirs;
+            location = new Location(file_offset,rva,va,size,size);
+            dirs = new Dictionary<DataDirectoryType,DataDirectory>();
+            
+            for(int i = 0; i < dataDirs.Length; i++)
+            {
+                DataDirectoryType dir_type = DataDirectoryType.Unknown;
+
+                if (i >= 0 && i <= 14)
+                    dir_type = (DataDirectoryType)i;
+
+                switch (dir_type)
+                {
+                    default:
+                        {
+                            DataDirectory data_dir = new DataDirectory(dir_type,dataDirs[i]);
+
+                            dirs.Add(dir_type,data_dir);
+
+                            break;
+                        }
+                }
+            }
         }
 
         #region Methods
@@ -137,26 +159,24 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = header.Reader.GetStream();
-
-            return Utils.ReadBytes(stream,location);
+            return null;
         }
 
-        public bool Has(DataDirectoryType directoryType)
+        public bool Exists(DataDirectoryType directoryType)
         {
             return dirs.ContainsKey(directoryType);
         }
 
-        public bool Has(int directoryType)
+        public bool Exists(int directoryType)
         {
-            return Has((DataDirectoryType)directoryType);
+            return Exists((DataDirectoryType)directoryType);
         }
 
         #endregion
 
         #region Properties
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {

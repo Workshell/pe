@@ -100,21 +100,21 @@ namespace Workshell.PE
         MemoryWrite = 0x80000000
     }
 
-    public class SectionTableEntry : IEquatable<SectionTableEntry>, ILocationSupport
+    public class SectionTableEntry : IEquatable<SectionTableEntry>
     {
 
-        private static readonly int size = Utils.SizeOf<IMAGE_SECTION_HEADER>();
+        private static readonly uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
 
         private SectionTable table;
         private IMAGE_SECTION_HEADER header;
-        private StreamLocation location;
+        private Location location;
         private string name;
 
-        internal SectionTableEntry(SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, long entryOffset)
+        internal SectionTableEntry(SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, ulong entryOffset, ulong imageBase)
         {
             table = sectionTable;
             header = entryHeader;
-            location = new StreamLocation(entryOffset,size);
+            location = new Location(entryOffset,Convert.ToUInt32(entryOffset),imageBase + entryOffset,size,size);
             name = GetName();
         }
 
@@ -202,11 +202,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            byte[] buffer = new byte[size];
-
-            Utils.Write<IMAGE_SECTION_HEADER>(header,buffer,0,buffer.Length);
-
-            return buffer;
+            return null;
         }
 
         public SectionCharacteristicsType GetCharacteristics()
@@ -231,18 +227,6 @@ namespace Workshell.PE
 
         #endregion
 
-        #region Static Properties
-
-        public static int Size
-        {
-            get
-            {
-                return size;
-            }
-        }
-
-        #endregion
-
         #region Properties
 
         public SectionTable Table
@@ -253,7 +237,7 @@ namespace Workshell.PE
             }
         }
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {
@@ -345,26 +329,28 @@ namespace Workshell.PE
 
     }
 
-    public class SectionTable : IEnumerable<SectionTableEntry>, ILocationSupport, IRawDataSupport
+    public class SectionTable : IEnumerable<SectionTableEntry>
     {
 
         private ImageReader reader;
-        private StreamLocation location;
+        private Location location;
         private List<SectionTableEntry> table;
 
-        internal SectionTable(ImageReader exeReader, StreamLocation streamLoc, List<IMAGE_SECTION_HEADER> sectionHeaders)
+        internal SectionTable(ImageReader exeReader, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
         {
+            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length);
+
             reader = exeReader;
-            location = streamLoc;
+            location = new Location(tableOffset,Convert.ToUInt32(tableOffset),imageBase + tableOffset,size,size);
             table = new List<SectionTableEntry>();
-            
-            long offset = streamLoc.Offset;
+
+            ulong offset = tableOffset;
 
             foreach(IMAGE_SECTION_HEADER header in sectionHeaders)
             {
-                table.Add(new SectionTableEntry(this,header,offset));
+                table.Add(new SectionTableEntry(this,header,offset,imageBase));
 
-                offset += SectionTableEntry.Size;
+                offset += Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
             }
         }
 
@@ -372,10 +358,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
-
-            return buffer;
+            return null;
         }
 
         public bool Has(string name)
@@ -405,7 +388,7 @@ namespace Workshell.PE
             }
         }
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {

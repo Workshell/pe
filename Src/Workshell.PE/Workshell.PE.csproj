@@ -69,6 +69,7 @@
     <Compile Include="LoadConfig\LoadConfigContent.cs" />
     <Compile Include="LoadConfig\LoadConfigDirectory.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="LocationCalculator.cs" />
     <Compile Include="MoreLinq\DistinctBy.cs" />
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />

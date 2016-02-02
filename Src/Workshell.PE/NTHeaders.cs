@@ -17,15 +17,17 @@ namespace Workshell.PE
         private Location location;
         private FileHeader file_header;
         private OptionalHeader opt_header;
+        private DataDirectories data_dirs;
 
-        internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader)
+        internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectories dataDirs)
         {
-            uint size = fileHeader.Location.FileSize + optHeader.Location.FileSize;
+            uint size = 4 + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize;
 
             reader = exeReader;
             location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,size,size);
             file_header = fileHeader;
             opt_header = optHeader;
+            data_dirs = dataDirs;
         }
 
         #region Methods
@@ -65,6 +67,14 @@ namespace Workshell.PE
             get
             {
                 return opt_header;
+            }
+        }
+
+        public DataDirectories DataDirectories
+        {
+            get
+            {
+                return data_dirs;
             }
         }
 

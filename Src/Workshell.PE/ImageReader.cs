@@ -42,9 +42,9 @@ namespace Workshell.PE
         private SectionTable _section_table;
         private Sections _sections;
 
-        private bool is_32bit;
-        private bool is_64bit;
-        private bool is_clr;
+        private bool _is_32bit;
+        private bool _is_64bit;
+        private bool _is_clr;
 
         private ImageReader(Stream sourceStream, bool ownStream)
         {
@@ -64,9 +64,11 @@ namespace Workshell.PE
             _section_table = null;
             _sections = null;
 
-            is_32bit = false;
-            is_64bit = false;
-            is_clr = false;
+            _is_32bit = false;
+            _is_64bit = false;
+            _is_clr = false;
+
+            Load();
         }
 
         #region Static Methods
@@ -233,7 +235,7 @@ namespace Workshell.PE
             for(int i = 0; i < data_dir_count; i++)
                 data_directories[i] = Utils.Read<IMAGE_DATA_DIRECTORY>(stream,Utils.SizeOf<IMAGE_DATA_DIRECTORY>());
 
-            long section_table_size = SectionTableEntry.Size * file_header.NumberOfSections;
+            long section_table_size = Utils.SizeOf<IMAGE_SECTION_HEADER>() * file_header.NumberOfSections;
 
             if ((stream.Position + section_table_size) > stream.Length)
             {
@@ -344,49 +346,15 @@ namespace Workshell.PE
             {
                 opt_header = new OptionalHeader64(this,preload_info.OptHeader64.Value,file_header.Location.FileOffset + file_header.Location.FileSize,image_base);
             }
+
+            DataDirectories data_dirs = new DataDirectories(opt_header,preload_info.DataDirectories);
             
-            _nt_headers = new NTHeaders(this,file_header.Location.FileOffset - 4,image_base,file_header,opt_header);
+            _nt_headers = new NTHeaders(this,file_header.Location.FileOffset - 4,image_base,file_header,opt_header,data_dirs);
+            _section_table = new SectionTable(this,preload_info.SectionHeaders,_nt_headers.Location.FileOffset + _nt_headers.Location.FileSize,image_base);
 
-            is_32bit = preload_info.Is32Bit;
-            is_64bit = preload_info.Is64Bit;
-            is_clr = preload_info.IsCLR;
-        }
-
-
-        private void LoadSectionTable()
-        {
-            /*
-            if (_nt_headers == null)
-                LoadNTHeaders();
-
-            long offset = _nt_headers.Location.Offset + _nt_headers.Location.Size;
-
-            _stream.Seek(offset,SeekOrigin.Begin);
-
-            List<IMAGE_SECTION_HEADER> headers = new List<IMAGE_SECTION_HEADER>();
-
-            for(var i = 0; i < _nt_headers.FileHeader.NumberOfSections; i++)
-            {
-                IMAGE_SECTION_HEADER header = Utils.Read<IMAGE_SECTION_HEADER>(_stream,SectionTableEntry.Size);
-
-                headers.Add(header);
-            }
-
-            long size = headers.Count * SectionTableEntry.Size;
-            StreamLocation location = new StreamLocation(offset,size);
-
-            _section_table = new SectionTable(this,location,headers);
-            */
-        }
-
-        private void LoadSections()
-        {
-            /*
-            if (_section_table == null)
-                LoadSectionTable();
-
-            _sections = new Sections(this,_section_table);
-             */
+            _is_32bit = preload_info.Is32Bit;
+            _is_64bit = preload_info.Is64Bit;
+            _is_clr = preload_info.IsCLR;
         }
 
         #endregion
@@ -395,172 +363,6 @@ namespace Workshell.PE
         {
             return _stream;
         }
-
-        #region Location Conversion Methods
-
-        /* VA */
-
-        public Section VAToSection(ulong va)
-        {
-            if (_nt_headers == null)
-                Load();
-
-            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
-
-            return RVAToSection(rva);
-        }
-
-        public SectionTableEntry VAToSectionTableEntry(ulong va)
-        {
-            if (_nt_headers == null)
-                Load();
-
-            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
-
-            return RVAToSectionTableEntry(rva);
-        }
-
-        public long VAToOffset(ulong va)
-        {
-            if (_nt_headers == null)
-                Load();
-
-            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
-
-            return RVAToOffset(rva);
-        }
-
-        public long VAToOffset(Section section, ulong va)
-        {
-            return VAToOffset(section.TableEntry,va);
-        }
-
-        public long VAToOffset(SectionTableEntry section, ulong va)
-        {
-            if (_nt_headers == null)
-                Load();
-
-            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
-
-            return RVAToOffset(section,rva);
-        }
-
-        public ulong OffsetToVA(long offset)
-        {
-            if (_section_table == null)
-                LoadSectionTable();
-
-            foreach(SectionTableEntry entry in _section_table)
-            {
-                if (offset >= entry.PointerToRawData && offset < (entry.PointerToRawData + entry.SizeOfRawData))
-                    return OffsetToVA(entry,offset);
-            }
-
-            return 0;
-        }
-
-        public ulong OffsetToVA(Section section, long offset)
-        {
-            return OffsetToVA(section.TableEntry,offset);
-        }
-
-        public ulong OffsetToVA(SectionTableEntry section, long offset)
-        {
-            if (_nt_headers == null)
-                Load();
-
-            ulong image_base = _nt_headers.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
-
-            return image_base + rva;
-        }
-
-        /* RVA */
-
-        public Section RVAToSection(uint rva)
-        {
-            if (_sections == null)
-                LoadSections();
-
-            SectionTableEntry entry = RVAToSectionTableEntry(rva);
-
-            if (entry == null)
-                return null;
-
-            return _sections[entry];
-        }
-
-        public SectionTableEntry RVAToSectionTableEntry(uint rva)
-        {
-            if (_section_table == null)
-                LoadSectionTable();
-
-            foreach(SectionTableEntry entry in _section_table)
-            {
-                if (rva >= entry.VirtualAddress && rva <= (entry.VirtualAddress + entry.SizeOfRawData))
-                    return entry;
-            }
-
-            return null;
-        }
-
-        public long RVAToOffset(uint rva)
-        {
-            if (_section_table == null)
-                LoadSectionTable();
-
-            foreach(SectionTableEntry entry in _section_table)
-            {
-                if (rva >= entry.VirtualAddress && rva < (entry.VirtualAddress + entry.SizeOfRawData))
-                    return RVAToOffset(entry,rva);
-            }
-
-            return 0;
-        }
-
-        public long RVAToOffset(Section section, uint rva)
-        {
-            return RVAToOffset(section.TableEntry,rva);
-        }
-
-        public long RVAToOffset(SectionTableEntry section, uint rva)
-        {
-            long offset = (rva - section.VirtualAddress) + section.PointerToRawData;
-
-            return offset;
-        }
-
-        public uint OffsetToRVA(long offset)
-        {
-            if (_section_table == null)
-                LoadSectionTable();
-
-            foreach(SectionTableEntry entry in _section_table)
-            {
-                if (offset >= entry.PointerToRawData && offset < (entry.PointerToRawData + entry.SizeOfRawData))
-                    return OffsetToRVA(entry,offset);
-            }
-
-            return 0;
-        }
-
-        public uint OffsetToRVA(Section section, long offset)
-        {
-            return OffsetToRVA(section.TableEntry,offset);
-        }
-
-        public uint OffsetToRVA(SectionTableEntry section, long offset)
-        {
-            uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
-
-            return rva;
-        }
-
-        #endregion
 
         #region Properties
 
@@ -571,7 +373,7 @@ namespace Workshell.PE
                 if (_nt_headers == null)
                     Load();
 
-                return is_32bit;
+                return _is_32bit;
             }
         }
 
@@ -582,7 +384,7 @@ namespace Workshell.PE
                 if (_nt_headers == null)
                     Load();
 
-                return is_64bit;
+                return _is_64bit;
             }
         }
 
@@ -593,7 +395,7 @@ namespace Workshell.PE
                 if (_nt_headers == null)
                     Load();
 
-                return is_clr;
+                return _is_clr;
             }
         }
 
@@ -635,7 +437,7 @@ namespace Workshell.PE
             get
             {
                 if (_section_table == null)
-                    LoadSectionTable();
+                    Load();
 
                 return _section_table;
             }
