@@ -9,75 +9,30 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class Section : IEnumerable<SectionContent>, ILocationSupport, IRawDataSupport
+    public class Section
     {
 
-        private Sections sections;
-        private SectionTableEntry table_entry;
-        private StreamLocation location;
-        private List<SectionContent> contents;
+        private Sections _sections;
+        private SectionTableEntry _table_entry;
+        private Location _location;
 
-        internal Section(Sections sections, SectionTableEntry tableEntry)
+        internal Section(Sections sections, SectionTableEntry tableEntry, ulong imageBase)
         {
-            this.sections = sections;
-            this.table_entry = tableEntry;
-            this.location = new StreamLocation(tableEntry.PointerToRawData,tableEntry.SizeOfRawData);
-            this.contents = new List<SectionContent>();
+            _sections = sections;
+            _table_entry = tableEntry;
+            _location = new Location(tableEntry.PointerToRawData,tableEntry.VirtualAddress,imageBase + tableEntry.VirtualAddress,tableEntry.SizeOfRawData,tableEntry.VirtualSizeOrPhysicalAddress);
         }
 
         #region Methods
 
-        public IEnumerator<SectionContent> GetEnumerator()
-        {
-            return contents.GetEnumerator();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
         public override string ToString()
         {
-            return table_entry.Name;
+            return _table_entry.Name;
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = sections.Reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
-
-            return buffer;
-        }
-
-        internal void Attach(SectionContent content)
-        {
-            if (!contents.Contains(content))
-                contents.Add(content);
-        }
-
-        #endregion
-
-        #region Location Conversion Methods
-
-        public long VAToOffset(ulong va)
-        {
-            return sections.Reader.VAToOffset(this,va);
-        }
-
-        public ulong OffsetToVA(long offset)
-        {
-            return sections.Reader.OffsetToVA(this,offset);
-        }
-
-        public long RVAToOffset(uint rva)
-        {
-            return sections.Reader.RVAToOffset(this,rva);
-        }
-
-        public uint OffsetToRVA(long offset)
-        {
-            return sections.Reader.OffsetToRVA(this,offset);
+            return null;
         }
 
         #endregion
@@ -88,7 +43,7 @@ namespace Workshell.PE
         {
             get
             {
-                return sections;
+                return _sections;
             }
         }
 
@@ -96,15 +51,15 @@ namespace Workshell.PE
         {
             get
             {
-                return table_entry;
+                return _table_entry;
             }
         }
 
-        public StreamLocation Location
+        public Location Location
         {
             get
             {
-                return location;
+                return _location;
             }
         }
 
@@ -112,43 +67,7 @@ namespace Workshell.PE
         {
             get
             {
-                return table_entry.Name;
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return contents.Count;
-            }
-        }
-
-        public SectionContent this[int index]
-        {
-            get
-            {
-                return contents[index];
-            }
-        }
-
-        public SectionContent this[DataDirectory dataDirectory]
-        {
-            get
-            {
-                SectionContent content = contents.FirstOrDefault(c => c.DataDirectory != null && c.DataDirectory.Equals(dataDirectory));
-
-                return content;
-            }
-        }
-
-        public SectionContent this[DataDirectoryType directoryType]
-        {
-            get
-            {
-                SectionContent content = contents.FirstOrDefault(c => c.DataDirectory != null && c.DataDirectory.DirectoryType == directoryType);
-
-                return content;
+                return _table_entry.Name;
             }
         }
 
@@ -161,117 +80,32 @@ namespace Workshell.PE
 
         private ImageReader reader;
         private SectionTable table;
-        private Dictionary<DataDirectoryType,ISectionContentProvider> content_providers;
-        private Dictionary<SectionTableEntry,Section> cache;
+        private List<Section> sections;
 
-        internal Sections(ImageReader exeReader, SectionTable sectionTable)
+        internal Sections(ImageReader exeReader, SectionTable sectionTable, ulong imageBase)
         {
             reader = exeReader;
             table = sectionTable;
-            content_providers = new Dictionary<DataDirectoryType,ISectionContentProvider>();
-            cache = new Dictionary<SectionTableEntry,Section>();
+            sections = new List<Section>();
 
-            RegisterAssemblyContentProviders();
+            foreach(SectionTableEntry entry in sectionTable)
+            {
+                Section section = new Section(this,entry,imageBase);
+
+                sections.Add(section);
+            }
         }
 
         #region Methods
 
         public IEnumerator<Section> GetEnumerator()
         {
-            return table.Select(entry => CreateSection(entry)).GetEnumerator();
+            return sections.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
-        }
-
-        public bool RegisterContentProvider(ISectionContentProvider contentProvider)
-        {
-            return RegisterContentProvider(contentProvider,false);
-        }
-
-        public bool RegisterContentProvider(ISectionContentProvider contentProvider, bool allowReplace)
-        {
-            if (content_providers.ContainsKey(contentProvider.DirectoryType))
-                return false;
-
-            content_providers[contentProvider.DirectoryType] = contentProvider;
-
-            return true;
-        }
-
-        public void UnregisterContentProvider(DataDirectoryType directoryType)
-        {
-            if (content_providers.ContainsKey(directoryType))
-                content_providers.Remove(directoryType);
-        }
-
-        public void UnregisterContentProvider(ISectionContentProvider contentProvider)
-        {
-            foreach(KeyValuePair<DataDirectoryType,ISectionContentProvider> kvp in content_providers)
-            {
-                if (kvp.Value == contentProvider)
-                {
-                    content_providers.Remove(kvp.Key);
-
-                    break;
-                }
-            }
-        }
-
-        private void RegisterAssemblyContentProviders()
-        {
-            Type iface_type = typeof(ISectionContentProvider);
-            Type[] types = Assembly.GetExecutingAssembly().GetTypes();
-
-            foreach(Type type in types)
-            {
-                Type[] type_ifaces = type.GetInterfaces();
-
-                if (type_ifaces.Contains(iface_type))
-                {
-                    ISectionContentProvider content_provider = (ISectionContentProvider)Activator.CreateInstance(type);
-
-                    RegisterContentProvider(content_provider);
-                }
-            }
-        }
-
-        private Section CreateSection(SectionTableEntry entry)
-        {
-            if (entry.VirtualAddress == 0)
-                return null;
-
-            if (cache.ContainsKey(entry))
-                return cache[entry];
-
-            Section section = new Section(this,entry);
-            Dictionary<DataDirectoryType,DataDirectory> data_directories = new Dictionary<DataDirectoryType,DataDirectory>();
-
-            foreach(DataDirectory directory in reader.NTHeaders.OptionalHeader.DataDirectories)
-            {
-                if (DataDirectory.IsNullOrEmpty(directory))
-                    continue;
-
-                if (directory.VirtualAddress >= entry.VirtualAddress && directory.VirtualAddress < ((entry.VirtualAddress + entry.SizeOfRawData) - directory.Size))
-                    data_directories[directory.DirectoryType] = directory;
-            }
-
-            foreach(KeyValuePair<DataDirectoryType,ISectionContentProvider> kvp in content_providers)
-            {
-                if (!data_directories.ContainsKey(kvp.Key))
-                    continue;
-
-                DataDirectory data_directory = data_directories[kvp.Key];
-                SectionContent content = kvp.Value.Create(data_directory,section);
-
-                section.Attach(content);
-            }
-
-            cache.Add(entry,section);
-
-            return section;
         }
 
         #endregion
@@ -329,10 +163,9 @@ namespace Workshell.PE
         {
             get
             {
-                if (tableEntry == null)
-                    return null;
+                Section section = sections.FirstOrDefault(s => s.TableEntry == tableEntry);
 
-                return CreateSection(tableEntry);
+                return section;
             }
         }
 

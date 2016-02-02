@@ -37,12 +37,12 @@ namespace Workshell.PE.Demo
 
             foreach(Section section in sections)
             {
-                DebugContent content = (DebugContent)section[DataDirectoryType.Debug];
-
-                if (content != null)
-                {
-
-                }
+                //DebugContent content = (DebugContent)section[DataDirectoryType.Debug];
+                //
+                //if (content != null)
+                //{
+                //
+                //}
             }
 
             Console.ReadKey();

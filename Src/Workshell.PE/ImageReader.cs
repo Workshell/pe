@@ -48,12 +48,6 @@ namespace Workshell.PE
 
         private ImageReader(Stream sourceStream, bool ownStream)
         {
-            if (!sourceStream.CanRead)
-                throw new IOException("Cannot read from stream.");
-
-            if (!sourceStream.CanSeek)
-                throw new IOException("Cannot seek in stream.");
-
             _disposed = false;
             _stream = sourceStream;
             _own_stream = ownStream;
@@ -292,6 +286,15 @@ namespace Workshell.PE
 
         #endregion
 
+        #region Internal Methods
+
+        internal Stream GetStream()
+        {
+            return _stream;
+        }
+
+        #endregion
+
         #region Methods
 
         public void Dispose()
@@ -351,6 +354,7 @@ namespace Workshell.PE
             
             _nt_headers = new NTHeaders(this,file_header.Location.FileOffset - 4,image_base,file_header,opt_header,data_dirs);
             _section_table = new SectionTable(this,preload_info.SectionHeaders,_nt_headers.Location.FileOffset + _nt_headers.Location.FileSize,image_base);
+            _sections = new Sections(this,_section_table,image_base);
 
             _is_32bit = preload_info.Is32Bit;
             _is_64bit = preload_info.Is64Bit;
@@ -359,20 +363,12 @@ namespace Workshell.PE
 
         #endregion
 
-        internal Stream GetStream()
-        {
-            return _stream;
-        }
-
         #region Properties
 
         public bool Is32Bit
         {
             get
             {
-                if (_nt_headers == null)
-                    Load();
-
                 return _is_32bit;
             }
         }
@@ -381,9 +377,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_nt_headers == null)
-                    Load();
-
                 return _is_64bit;
             }
         }
@@ -392,9 +385,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_nt_headers == null)
-                    Load();
-
                 return _is_clr;
             }
         }
@@ -403,9 +393,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_dos_header == null)
-                    Load();
-
                 return _dos_header;
             }
         }
@@ -414,9 +401,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_dos_stub == null)
-                    Load();
-
                 return _dos_stub;
             }
         }
@@ -425,9 +409,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_nt_headers == null)
-                    Load();
-
                 return _nt_headers;
             }
         }
@@ -436,9 +417,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_section_table == null)
-                    Load();
-
                 return _section_table;
             }
         }
@@ -447,9 +425,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (_sections == null)
-                    LoadSections();
-
                 return _sections;
             }
         }

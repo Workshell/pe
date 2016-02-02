@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE.Attributes
+namespace Workshell.PE.Annotations
 {
 
     [AttributeUsage(AttributeTargets.Property)]
