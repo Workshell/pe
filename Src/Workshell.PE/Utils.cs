@@ -197,9 +197,9 @@ namespace Workshell.PE
             return buffer;
         }
 
-        public static byte[] ReadBytes(Stream stream, StreamLocation location)
+        public static byte[] ReadBytes(Stream stream, Location location)
         {
-            return ReadBytes(stream,location.Offset,location.Size);
+            return ReadBytes(stream,Convert.ToInt64(location.FileOffset),location.FileSize);
         }
 
         public static void Write<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct

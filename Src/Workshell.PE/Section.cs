@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class Section
+    public class Section : ISupportsLocation
     {
 
         private Sections _sections;

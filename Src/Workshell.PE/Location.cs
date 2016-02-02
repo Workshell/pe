@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public sealed class Location
+    public sealed class Location : IEquatable<Location>
     {
 
         internal Location(ulong fileOffset, uint rva, ulong va, uint fileSize, uint virtualSize)
@@ -18,6 +18,51 @@ namespace Workshell.PE
             VirtualAddress = va;
             VirtualSize = virtualSize;
         }
+
+        #region Methods
+
+        public override bool Equals(object other)
+        {
+            return Equals(other as Location);
+        }
+
+        public bool Equals(Location other)
+        {
+            if (other == null)
+                return false;
+
+            if (FileOffset != other.FileOffset)
+                return false;
+
+            if (FileSize != other.FileSize)
+                return false;
+
+            if (RelativeVirtualAddress != other.RelativeVirtualAddress)
+                return false;
+
+            if (VirtualAddress != other.VirtualAddress)
+                return false;
+
+            if (VirtualSize != other.VirtualSize)
+                return false;
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 13;
+
+            hash = (hash * 7) + FileOffset.GetHashCode();
+            hash = (hash * 7) + FileSize.GetHashCode();
+            hash = (hash * 7) + RelativeVirtualAddress.GetHashCode();
+            hash = (hash * 7) + VirtualAddress.GetHashCode();
+            hash = (hash * 7) + VirtualSize.GetHashCode();
+
+            return hash;
+        }
+
+        #endregion
 
         #region Properties
 

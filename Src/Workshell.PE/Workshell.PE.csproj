@@ -77,7 +77,6 @@
     <Compile Include="Section.cs" />
     <Compile Include="SectionContent.cs" />
     <Compile Include="SectionTable.cs" />
-    <Compile Include="StreamLocation.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

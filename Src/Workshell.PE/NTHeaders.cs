@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class NTHeaders
+    public class NTHeaders : ISupportsLocation
     {
 
         public const uint PE_MAGIC_MZ = 17744;

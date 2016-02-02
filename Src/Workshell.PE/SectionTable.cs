@@ -100,7 +100,7 @@ namespace Workshell.PE
         MemoryWrite = 0x80000000
     }
 
-    public class SectionTableEntry : IEquatable<SectionTableEntry>
+    public class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation
     {
 
         private static readonly uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
@@ -132,28 +132,9 @@ namespace Workshell.PE
             }
         }
 
-        public override int GetHashCode()
+        public override bool Equals(object other)
         {
-            int prime = 397;
-            int result = 0;
-
-            result = (result * prime) ^ location.GetHashCode();
-            result = (result * prime) ^ name.GetHashCode();
-            result = (result * prime) ^ header.VirtualSize.GetHashCode();
-            result = (result * prime) ^ header.SizeOfRawData.GetHashCode();
-            result = (result * prime) ^ header.PointerToRawData.GetHashCode();
-            result = (result * prime) ^ header.PointerToRelocations.GetHashCode();
-            result = (result * prime) ^ header.PointerToLineNumbers.GetHashCode();
-            result = (result * prime) ^ header.NumberOfRelocations.GetHashCode();
-            result = (result * prime) ^ header.NumberOfLineNumbers.GetHashCode();
-            result = (result * prime) ^ header.Characteristics.GetHashCode();
-
-            return result;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as SectionTableEntry);
+            return Equals(other as SectionTableEntry);
         }
 
         public bool Equals(SectionTableEntry other)
@@ -198,6 +179,25 @@ namespace Workshell.PE
                 return false;
 
             return true;
+        }
+
+        public override int GetHashCode()
+        {
+            int prime = 397;
+            int result = 0;
+
+            result = (result * prime) ^ location.GetHashCode();
+            result = (result * prime) ^ name.GetHashCode();
+            result = (result * prime) ^ header.VirtualSize.GetHashCode();
+            result = (result * prime) ^ header.SizeOfRawData.GetHashCode();
+            result = (result * prime) ^ header.PointerToRawData.GetHashCode();
+            result = (result * prime) ^ header.PointerToRelocations.GetHashCode();
+            result = (result * prime) ^ header.PointerToLineNumbers.GetHashCode();
+            result = (result * prime) ^ header.NumberOfRelocations.GetHashCode();
+            result = (result * prime) ^ header.NumberOfLineNumbers.GetHashCode();
+            result = (result * prime) ^ header.Characteristics.GetHashCode();
+
+            return result;
         }
 
         public byte[] GetBytes()
@@ -329,7 +329,7 @@ namespace Workshell.PE
 
     }
 
-    public class SectionTable : IEnumerable<SectionTableEntry>
+    public class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation
     {
 
         private ImageReader reader;

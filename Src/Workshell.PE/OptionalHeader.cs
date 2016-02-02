@@ -78,7 +78,7 @@ namespace Workshell.PE
         TerminalServerAware = 0x8000
     }
 
-    public abstract class OptionalHeader
+    public abstract class OptionalHeader : ISupportsLocation
     {
 
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();

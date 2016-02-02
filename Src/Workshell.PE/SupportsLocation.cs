@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public interface ILocationSupport
+    public interface ISupportsLocation
     {
 
         #region Properties
 
-        StreamLocation Location
+        Location Location
         {
             get;
         }
@@ -21,52 +21,14 @@ namespace Workshell.PE
 
     }
 
-    public abstract class LocationSupport : ILocationSupport
+    public abstract class SupportsLocation : ISupportsLocation
     {
 
         #region Properties
 
-        public abstract StreamLocation Location
+        public abstract Location Location
         {
             get;
-        }
-
-        #endregion
-
-    }
-
-    public sealed class GenericLocationSupport : LocationSupport
-    {
-
-        private StreamLocation location;
-        private object parent;
-
-        public GenericLocationSupport(long offset, long size) : this(offset,size,null)
-        {
-        }
-
-        public GenericLocationSupport(long offset, long size, object parentObj)
-        {
-            location = new StreamLocation(offset,size);
-            parent = parentObj;
-        }
-
-        #region Properties
-
-        public override StreamLocation Location
-        {
-            get
-            {
-                return location;
-            }
-        }
-
-        public object Parent
-        {
-            get
-            {
-                return parent;
-            }
         }
 
         #endregion
