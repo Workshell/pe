@@ -43,6 +43,11 @@
     <Compile Include="Annotations\FieldAnnotation.cs" />
     <Compile Include="Annotations\EnumAnnotationAttribute.cs" />
     <Compile Include="Annotations\FieldAnnotationAttribute.cs" />
+    <Compile Include="Content\DataDirectoryContent.cs" />
+    <Compile Include="Content\Exports\Exports.cs" />
+    <Compile Include="Content\Exports\ExportDirectory.cs" />
+    <Compile Include="Content\Exports\ExportTable.cs" />
+    <Compile Include="Content\Exports\ExportTableContent.cs" />
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
@@ -75,7 +80,6 @@
     <Compile Include="ImageReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Section.cs" />
-    <Compile Include="SectionContent.cs" />
     <Compile Include="SectionTable.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>

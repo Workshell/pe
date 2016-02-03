@@ -12,7 +12,7 @@ namespace Workshell.PE
 
         private ImageReader reader;
 
-        public LocationCalculator(ImageReader imageReader)
+        internal LocationCalculator(ImageReader imageReader)
         {
             reader = imageReader;
         }

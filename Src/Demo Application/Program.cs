@@ -33,16 +33,10 @@ namespace Workshell.PE.Demo
             }
 
             ImageReader reader = ImageReader.FromFile(file_name);
-            Section[] sections = reader.Sections.ToArray();
 
-            foreach(Section section in sections)
+            foreach(DataDirectory dir in reader.NTHeaders.DataDirectories)
             {
-                //DebugContent content = (DebugContent)section[DataDirectoryType.Debug];
-                //
-                //if (content != null)
-                //{
-                //
-                //}
+                DataDirectoryContent content = dir.Content;
             }
 
             Console.ReadKey();

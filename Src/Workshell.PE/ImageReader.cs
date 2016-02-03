@@ -35,6 +35,7 @@ namespace Workshell.PE
         private bool _disposed;
         private Stream _stream;
         private bool _own_stream;
+        private LocationCalculator _calc;
 
         private DOSHeader _dos_header;
         private DOSStub _dos_stub;
@@ -51,6 +52,7 @@ namespace Workshell.PE
             _disposed = false;
             _stream = sourceStream;
             _own_stream = ownStream;
+            _calc = null;
 
             _dos_header = null;
             _dos_stub = null;
@@ -317,6 +319,14 @@ namespace Workshell.PE
 
                 return mem.ToArray();
             }
+        }
+
+        public LocationCalculator GetCalculator()
+        {
+            if (_calc == null)
+                _calc = new LocationCalculator(this);
+
+            return _calc;
         }
 
         private void Load()

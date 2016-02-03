@@ -33,13 +33,19 @@ namespace Workshell.PE
     public class DataDirectory
     {
 
+        private DataDirectories dirs;
         private DataDirectoryType dir_type;
         private IMAGE_DATA_DIRECTORY data_dir;
+        private DataDirectoryContent dir_content;
+        private ulong image_base;
 
-        internal DataDirectory(DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory)
+        internal DataDirectory(DataDirectories dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
+            dirs = dataDirs;
             dir_type = dirType;
             data_dir = dataDirectory;
+            dir_content = null;
+            image_base = imageBase;
         }
 
         #region Static Methods
@@ -74,9 +80,30 @@ namespace Workshell.PE
             }
         }
 
+        private void LoadContent()
+        {
+            switch (dir_type)
+            {
+                case DataDirectoryType.ExportTable:
+                    dir_content = new ExportTableContent(this,image_base);
+                    break;
+                default:
+                    dir_content = null;
+                    break;
+            }
+        }
+
         #endregion
 
         #region Properties
+
+        public DataDirectories Directories
+        {
+            get
+            {
+                return dirs;
+            }
+        }
 
         public DataDirectoryType DirectoryType
         {
@@ -102,6 +129,17 @@ namespace Workshell.PE
             }
         }
 
+        public DataDirectoryContent Content
+        {
+            get
+            {
+                if (dir_content == null)
+                    LoadContent();
+
+                return dir_content;
+            }
+        }
+
         #endregion
 
     }
@@ -109,7 +147,7 @@ namespace Workshell.PE
     public class DataDirectories : IEnumerable<DataDirectory>
     {
 
-        private OptionalHeader header;
+        private ImageReader reader;
         private Location location;
         private Dictionary<DataDirectoryType,DataDirectory> dirs;
 
@@ -120,28 +158,20 @@ namespace Workshell.PE
             uint rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize;
             ulong va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
 
-            header = optHeader;
+            reader = optHeader.Reader;
             location = new Location(file_offset,rva,va,size,size);
             dirs = new Dictionary<DataDirectoryType,DataDirectory>();
-            
+
             for(int i = 0; i < dataDirs.Length; i++)
             {
-                DataDirectoryType dir_type = DataDirectoryType.Unknown;
+                DataDirectoryType type = DataDirectoryType.Unknown;
 
                 if (i >= 0 && i <= 14)
-                    dir_type = (DataDirectoryType)i;
+                    type = (DataDirectoryType)i;
 
-                switch (dir_type)
-                {
-                    default:
-                        {
-                            DataDirectory data_dir = new DataDirectory(dir_type,dataDirs[i]);
+                DataDirectory dir = new DataDirectory(this,type,dataDirs[i],optHeader.ImageBase);
 
-                            dirs.Add(dir_type,data_dir);
-
-                            break;
-                        }
-                }
+                dirs.Add(type,dir);
             }
         }
 
@@ -175,6 +205,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ImageReader Reader
+        {
+            get
+            {
+                return reader;
+            }
+        }
 
         public Location Location
         {
@@ -210,9 +248,7 @@ namespace Workshell.PE
         }
 
         #endregion
-
-
-        
+   
     }
 
 }
