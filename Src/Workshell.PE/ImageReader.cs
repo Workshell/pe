@@ -11,7 +11,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ImageReader : IDisposable, IRawDataSupport
+    public class ImageReader : IDisposable, ISupportsBytes
     {
 
         class PreloadedInformation

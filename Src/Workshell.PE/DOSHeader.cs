@@ -12,7 +12,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class DOSHeader : ISupportsLocation
+    public class DOSHeader : ISupportsLocation, ISupportsBytes
     {
 
         public const ushort DOS_MAGIC_MZ = 23117;
@@ -39,9 +39,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            byte[] buffer = new byte[size];
-
-            Utils.Write<IMAGE_DOS_HEADER>(header,buffer,0,buffer.Length);
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }

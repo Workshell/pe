@@ -48,6 +48,8 @@
     <Compile Include="Content\Exports\ExportDirectory.cs" />
     <Compile Include="Content\Exports\ExportTable.cs" />
     <Compile Include="Content\Exports\ExportTableContent.cs" />
+    <Compile Include="Content\Imports\ImportTableContent.cs" />
+    <Compile Include="Content\Imports\ImportDirectory.cs" />
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
@@ -64,7 +66,7 @@
     <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
     <Compile Include="Native\IMAGE_LOAD_CONFIG_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_TLS_DIRECTORY.cs" />
-    <Compile Include="SupportsLocation.cs" />
+    <Compile Include="Supports.cs" />
     <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
     <Compile Include="Native\IMAGE_COR20_HEADER.cs" />
     <Compile Include="Native\IMAGE_DATA_DIRECTORY.cs" />
@@ -75,7 +77,6 @@
     <Compile Include="Native\IMAGE_SECTION_HEADER.cs" />
     <Compile Include="NTHeaders.cs" />
     <Compile Include="OptionalHeader.cs" />
-    <Compile Include="SupportsRawData.cs" />
     <Compile Include="ImageReader.cs" />
     <Compile Include="ImageReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="SectionTable.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

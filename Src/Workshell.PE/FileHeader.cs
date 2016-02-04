@@ -60,7 +60,7 @@ namespace Workshell.PE
         BytesOfWordReserved = 0x8000
     }
 
-    public class FileHeader : ISupportsLocation
+    public class FileHeader : ISupportsLocation, ISupportsBytes
     {
 
         internal static readonly int Size = Utils.SizeOf<IMAGE_FILE_HEADER>();
@@ -88,7 +88,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         public MachineType GetMachineType()

@@ -21,15 +21,12 @@ namespace Workshell.PE
 
     }
 
-    public abstract class SupportsLocation : ISupportsLocation
+    public interface ISupportsBytes
     {
 
-        #region Properties
+        #region Methods
 
-        public abstract Location Location
-        {
-            get;
-        }
+        byte[] GetBytes();
 
         #endregion
 

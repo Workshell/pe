@@ -37,6 +37,11 @@ namespace Workshell.PE.Demo
             foreach(DataDirectory dir in reader.NTHeaders.DataDirectories)
             {
                 DataDirectoryContent content = dir.Content;
+
+                if (content.DataDirectory.DirectoryType == DataDirectoryType.ImportTable)
+                {
+                
+                }
             }
 
             Console.ReadKey();

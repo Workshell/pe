@@ -87,6 +87,9 @@ namespace Workshell.PE
                 case DataDirectoryType.ExportTable:
                     dir_content = new ExportTableContent(this,image_base);
                     break;
+                case DataDirectoryType.ImportTable:
+                    dir_content = new ImportTableContent(this,image_base);
+                    break;
                 default:
                     dir_content = null;
                     break;
@@ -144,7 +147,7 @@ namespace Workshell.PE
 
     }
 
-    public class DataDirectories : IEnumerable<DataDirectory>
+    public class DataDirectories : IEnumerable<DataDirectory>, ISupportsBytes
     {
 
         private ImageReader reader;
@@ -189,7 +192,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         public bool Exists(DataDirectoryType directoryType)

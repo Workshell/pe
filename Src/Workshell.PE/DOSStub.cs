@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class DOSStub : ISupportsLocation
+    public class DOSStub : ISupportsLocation, ISupportsBytes
     {
 
         private ImageReader reader;
@@ -29,7 +29,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         #endregion

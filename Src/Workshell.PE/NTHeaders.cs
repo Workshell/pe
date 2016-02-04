@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class NTHeaders : ISupportsLocation
+    public class NTHeaders : ISupportsLocation, ISupportsBytes
     {
 
         public const uint PE_MAGIC_MZ = 17744;
@@ -39,7 +39,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         #endregion

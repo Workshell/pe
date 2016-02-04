@@ -78,7 +78,7 @@ namespace Workshell.PE
         TerminalServerAware = 0x8000
     }
 
-    public abstract class OptionalHeader : ISupportsLocation
+    public abstract class OptionalHeader : ISupportsLocation, ISupportsBytes
     {
 
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
@@ -326,11 +326,6 @@ namespace Workshell.PE
             get;
         }
 
-        public abstract DataDirectories DataDirectories
-        {
-            get;
-        }
-
         #endregion
 
     }
@@ -339,47 +334,18 @@ namespace Workshell.PE
     {
 
         private IMAGE_OPTIONAL_HEADER32 header;
-        private DataDirectories data_dirs;
 
         internal OptionalHeader32(ImageReader exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size32),imageBase)
         {
             header = optHeader;
-
-            /*
-            List<DataDirectory> dirs = new List<DataDirectory>();
-
-            dirs.AddRange(new DataDirectory[] {
-                new DataDirectory(DataDirectoryType.ExportTable,header.ExportTable),
-                new DataDirectory(DataDirectoryType.ImportTable,header.ImportTable),
-                new DataDirectory(DataDirectoryType.ResourceTable,header.ResourceTable),
-                new DataDirectory(DataDirectoryType.ExceptionTable,header.ExceptionTable),
-                new DataDirectory(DataDirectoryType.CertificateTable,header.CertificateTable),
-                new DataDirectory(DataDirectoryType.BaseRelocationTable,header.BaseRelocationTable),
-                new DataDirectory(DataDirectoryType.Debug,header.Debug),
-                new DataDirectory(DataDirectoryType.Architecture,header.Architecture),
-                new DataDirectory(DataDirectoryType.GlobalPtr,header.GlobalPtr),
-                new DataDirectory(DataDirectoryType.TLSTable,header.TLSTable),
-                new DataDirectory(DataDirectoryType.LoadConfigTable,header.LoadConfigTable),
-                new DataDirectory(DataDirectoryType.BoundImport,header.BoundImport),
-                new DataDirectory(DataDirectoryType.ImportAddressTable,header.IAT),
-                new DataDirectory(DataDirectoryType.DelayImportDescriptor,header.DelayImportDescriptor),
-                new DataDirectory(DataDirectoryType.CLRRuntimeHeader,header.CLRRuntimeHeader)
-            });
-
-            long dir_size = 16 * DataDirectories.EntrySize;
-            StreamLocation location = new StreamLocation((streamLoc.Offset + streamLoc.Size) - dir_size,dir_size);
-
-            data_dirs = new DataDirectories(this,location,dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType));
-            */
         }
 
         #region Methods
 
         public override byte[] GetBytes()
         {
-            byte[] buffer = new byte[OptionalHeader.Size32];
-
-            Utils.Write<IMAGE_OPTIONAL_HEADER32>(header,buffer,0,buffer.Length);
+            Stream stream = Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
@@ -617,14 +583,6 @@ namespace Workshell.PE
             get
             {
                 return header.NumberOfRvaAndSizes;
-            }
-        }
-
-        public override DataDirectories DataDirectories
-        {
-            get
-            {
-                return data_dirs;
             }
         }
 
@@ -636,47 +594,18 @@ namespace Workshell.PE
     {
 
         private IMAGE_OPTIONAL_HEADER64 header;
-        private DataDirectories data_dirs;
 
         internal OptionalHeader64(ImageReader exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
         {
             header = optHeader;
-
-            /*
-            List<DataDirectory> dirs = new List<DataDirectory>();
-
-            dirs.AddRange(new DataDirectory[] {
-                new DataDirectory(DataDirectoryType.ExportTable,header.ExportTable),
-                new DataDirectory(DataDirectoryType.ImportTable,header.ImportTable),
-                new DataDirectory(DataDirectoryType.ResourceTable,header.ResourceTable),
-                new DataDirectory(DataDirectoryType.ExceptionTable,header.ExceptionTable),
-                new DataDirectory(DataDirectoryType.CertificateTable,header.CertificateTable),
-                new DataDirectory(DataDirectoryType.BaseRelocationTable,header.BaseRelocationTable),
-                new DataDirectory(DataDirectoryType.Debug,header.Debug),
-                new DataDirectory(DataDirectoryType.Architecture,header.Architecture),
-                new DataDirectory(DataDirectoryType.GlobalPtr,header.GlobalPtr),
-                new DataDirectory(DataDirectoryType.TLSTable,header.TLSTable),
-                new DataDirectory(DataDirectoryType.LoadConfigTable,header.LoadConfigTable),
-                new DataDirectory(DataDirectoryType.BoundImport,header.BoundImport),
-                new DataDirectory(DataDirectoryType.ImportAddressTable,header.IAT),
-                new DataDirectory(DataDirectoryType.DelayImportDescriptor,header.DelayImportDescriptor),
-                new DataDirectory(DataDirectoryType.CLRRuntimeHeader,header.CLRRuntimeHeader)
-            });
-
-            long dir_size = 16 * DataDirectories.EntrySize;
-            StreamLocation location = new StreamLocation((streamLoc.Offset + streamLoc.Size) - dir_size,dir_size);
-
-            data_dirs = new DataDirectories(this,location,dirs.Where(dir => dir.DirectoryType != DataDirectoryType.None).ToDictionary(dir => dir.DirectoryType));
-             */
         }
 
         #region Methods
 
         public override byte[] GetBytes()
         {
-            byte[] buffer = new byte[OptionalHeader.Size64];
-
-            Utils.Write<IMAGE_OPTIONAL_HEADER64>(header,buffer,0,buffer.Length);
+            Stream stream = Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
@@ -914,14 +843,6 @@ namespace Workshell.PE
             get
             {
                 return header.NumberOfRvaAndSizes;
-            }
-        }
-
-        public override DataDirectories DataDirectories
-        {
-            get
-            {
-                return data_dirs;
             }
         }
 
