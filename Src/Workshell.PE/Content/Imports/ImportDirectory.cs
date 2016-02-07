@@ -145,7 +145,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportDirectory : ISupportsLocation, IEnumerable<ImportDirectoryEntry>
+    public class ImportDirectory : IEnumerable<ImportDirectoryEntry>, ISupportsLocation
     {
 
         private ImportTableContent content;

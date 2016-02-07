@@ -15,6 +15,7 @@ namespace Workshell.PE
 
         private ulong image_base;
         private ImportDirectory dir;
+        private ImportAddressTables ilt;
 
         internal ImportTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory,imageBase)
         {
@@ -24,6 +25,7 @@ namespace Workshell.PE
             Stream stream = DataDirectory.Directories.Reader.GetStream();
 
             LoadDirectory(calc,stream);
+            LoadILT(calc,stream);
         }
 
         #region Methods
@@ -53,6 +55,25 @@ namespace Workshell.PE
             dir = new ImportDirectory(this,location,section,descriptors,image_base);
         }
 
+        private void LoadILT(LocationCalculator calc, Stream stream)
+        {
+            bool is_64bit = DataDirectory.Directories.Reader.Is64Bit;
+            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
+            List<Tuple<ulong,ImportDirectoryEntry>> tables = new List<Tuple<ulong,ImportDirectoryEntry>>();
+
+            foreach(ImportDirectoryEntry dir_entry in dir)
+            {
+                if (dir_entry.OriginalFirstThunk == 0)
+                    continue;
+
+                ulong offset = calc.RVAToOffset(section,dir_entry.OriginalFirstThunk);
+
+                tables.Add(new Tuple<ulong,ImportDirectoryEntry>(offset,dir_entry));
+            }
+
+            ilt = new ImportAddressTables(this,section,tables);
+        }
+
         #endregion
 
         #region Properties
@@ -62,6 +83,14 @@ namespace Workshell.PE
             get
             {
                 return dir;
+            }
+        }
+
+        public ImportAddressTables ILT
+        {
+            get
+            {
+                return ilt;
             }
         }
 

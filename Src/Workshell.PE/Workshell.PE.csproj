@@ -48,6 +48,7 @@
     <Compile Include="Content\Exports\ExportDirectory.cs" />
     <Compile Include="Content\Exports\ExportTable.cs" />
     <Compile Include="Content\Exports\ExportTableContent.cs" />
+    <Compile Include="Content\Imports\ImportAddressTable.cs" />
     <Compile Include="Content\Imports\ImportTableContent.cs" />
     <Compile Include="Content\Imports\ImportDirectory.cs" />
     <Compile Include="DataDirectory.cs" />
