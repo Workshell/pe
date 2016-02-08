@@ -18,6 +18,7 @@ namespace Workshell.PE
         private ImportAddressTables ilt;
         private ImportAddressTables iat;
         private ImportHintNameTable hint_name_table;
+        private Imports imports;
 
         internal ImportTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory,imageBase)
         {
@@ -29,7 +30,8 @@ namespace Workshell.PE
             LoadDirectory(calc,stream);
             LoadILT(calc,stream);
             LoadIAT(calc,stream);
-            LoadHintNameTable(calc, stream);
+            LoadHintNameTable(calc,stream);
+            LoadImports(calc,stream);
         }
 
         #region Methods
@@ -152,6 +154,35 @@ namespace Workshell.PE
             hint_name_table = new ImportHintNameTable(this, entries.Values);
         }
 
+        private void LoadImports(LocationCalculator calc, Stream stream)
+        {
+            List<Tuple<string,ImportAddressTable,ImportHintNameTable>> libraries = new List<Tuple<string,ImportAddressTable,ImportHintNameTable>>();
+
+            foreach(ImportAddressTable table in ilt)
+            {
+                StringBuilder builder = new StringBuilder();
+                ulong offset = calc.RVAToOffset(table.DirectoryEntry.Name);
+
+                stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
+
+                while (true)
+                {
+                    int b = stream.ReadByte();
+
+                    if (b <= 0)
+                        break;
+
+                    builder.Append((char)b);
+                }
+
+                Tuple<string,ImportAddressTable,ImportHintNameTable> tuple = new Tuple<string,ImportAddressTable,ImportHintNameTable>(builder.ToString(),table,hint_name_table);
+
+                libraries.Add(tuple);
+            }
+
+            imports = new Imports(this,libraries);
+        }
+
         #endregion
 
         #region Properties
@@ -185,6 +216,14 @@ namespace Workshell.PE
             get
             {
                 return hint_name_table;
+            }
+        }
+
+        public Imports Imports
+        {
+            get
+            {
+                return imports;
             }
         }
 

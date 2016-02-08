@@ -52,6 +52,7 @@
     <Compile Include="Content\Imports\ImportFunction.cs" />
     <Compile Include="Content\Imports\ImportHintNameTable.cs" />
     <Compile Include="Content\Imports\ImportLibrary.cs" />
+    <Compile Include="Content\Imports\Imports.cs" />
     <Compile Include="Content\Imports\ImportTableContent.cs" />
     <Compile Include="Content\Imports\ImportDirectory.cs" />
     <Compile Include="DataDirectory.cs" />

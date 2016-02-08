@@ -11,15 +11,17 @@ namespace Workshell.PE
     public class ImportLibrary : IEnumerable<ImportLibraryFunction>
     {
 
-        private ImportTableContent content;
-        private ImportAddressTable table;
+        private Imports imports;
+        private ImportAddressTable address_table;
+        private ImportHintNameTable name_table;
         private string name;
         private List<ImportLibraryFunction> functions;
 
-        internal ImportLibrary(ImportTableContent tableContent, ImportAddressTable addressTable, string libraryName)
+        internal ImportLibrary(Imports owningImports, ImportAddressTable addressTable, ImportHintNameTable nameTable, string libraryName)
         {
-            content = tableContent;
-            table = addressTable;
+            imports = owningImports;
+            address_table = addressTable;
+            name_table = nameTable;
             name = libraryName;
             functions = new List<ImportLibraryFunction>();
 
@@ -45,9 +47,11 @@ namespace Workshell.PE
 
         private void LoadFunctions()
         {
-            foreach (ImportAddressTableEntry entry in table)
+            LocationCalculator calc = imports.Content.DataDirectory.Directories.Reader.GetCalculator();
+
+            foreach (ImportAddressTableEntry entry in address_table)
             {
-                ImportLibraryFunction func;
+                ImportLibraryFunction func = null;
 
                 if (entry.IsOrdinal)
                 {
@@ -55,13 +59,15 @@ namespace Workshell.PE
                 }
                 else
                 {
-                    ImportHintNameEntry hint_entry = content.HintNameTable.FirstOrDefault(hne => hne.Location.VirtualAddress == entry.Address);
+                    ulong offset = calc.RVAToOffset(entry.Address);
+                    ImportHintNameEntry hint_entry = name_table.FirstOrDefault(hne => hne.Location.FileOffset == offset);
 
                     if (hint_entry != null)
                         func = new ImportLibraryNamedFunction(this, entry, hint_entry);
                 }
 
-                functions.Add(func);
+                if (func != null)
+                    functions.Add(func);
             }
         }
 
@@ -69,11 +75,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImportTableContent Content
+        public Imports Imports
         {
             get
             {
-                return content;
+                return imports;
             }
         }
 
@@ -81,7 +87,7 @@ namespace Workshell.PE
         {
             get
             {
-                return table;
+                return address_table;
             }
         }
 
