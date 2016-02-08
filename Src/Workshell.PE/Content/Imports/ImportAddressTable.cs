@@ -15,11 +15,11 @@ namespace Workshell.PE
 
         private ImportAddressTable table;
         private Location location;
-        private ulong address;
+        private uint address;
         private ushort ordinal;
         private bool is_ordinal;
 
-        internal ImportAddressTableEntry(ImportAddressTable addressTable, ulong entryOffset, ulong entryAddress, ushort entryOrdinal, bool isOrdinal)
+        internal ImportAddressTableEntry(ImportAddressTable addressTable, ulong entryOffset, uint entryAddress, ushort entryOrdinal, bool isOrdinal)
         {
             bool is_64bit = addressTable.Tables.Content.DataDirectory.Directories.Reader.Is64Bit;
             LocationCalculator calc = addressTable.Tables.Content.DataDirectory.Directories.Reader.GetCalculator();
@@ -87,7 +87,7 @@ namespace Workshell.PE
             }
         }
 
-        public ulong Address
+        public uint Address
         {
             get
             {
@@ -198,7 +198,18 @@ namespace Workshell.PE
                     }
                 }
 
-                ImportAddressTableEntry entry = new ImportAddressTableEntry(this,offset,addr_or_ord,ordinal,is_ordinal);
+                uint address;
+
+                if (is_ordinal)
+                {
+                    address = 0;
+                }
+                else
+                {
+                    address = Utils.LoDWord(addr_or_ord);
+                }
+
+                ImportAddressTableEntry entry = new ImportAddressTableEntry(this,offset,address,ordinal,is_ordinal);
 
                 entries.Add(entry);
 

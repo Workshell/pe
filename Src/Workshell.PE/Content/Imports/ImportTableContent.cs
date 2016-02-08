@@ -17,6 +17,7 @@ namespace Workshell.PE
         private ImportDirectory dir;
         private ImportAddressTables ilt;
         private ImportAddressTables iat;
+        private ImportHintNameTable hint_name_table;
 
         internal ImportTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory,imageBase)
         {
@@ -28,6 +29,7 @@ namespace Workshell.PE
             LoadDirectory(calc,stream);
             LoadILT(calc,stream);
             LoadIAT(calc,stream);
+            LoadHintNameTable(calc, stream);
         }
 
         #region Methods
@@ -95,6 +97,61 @@ namespace Workshell.PE
             iat = new ImportAddressTables(this,section,tables);
         }
 
+        private void LoadHintNameTable(LocationCalculator calc, Stream stream)
+        {
+            Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>> entries = new Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>>();
+
+            foreach (ImportAddressTable table in ilt)
+            {
+                foreach (ImportAddressTableEntry entry in table)
+                {
+                    if (entry.Address == 0)
+                        continue;
+
+                    if (entries.ContainsKey(entry.Address))
+                        continue;
+
+                    if (!entry.IsOrdinal)
+                    {
+                        ulong offset = calc.RVAToOffset(entry.Address);
+                        uint size = 0;
+                        bool is_padded = false;
+                        ushort hint = 0;
+                        StringBuilder name = new StringBuilder();
+
+                        stream.Seek(Convert.ToInt64(offset), SeekOrigin.Begin);
+
+                        hint = Utils.ReadUInt16(stream);
+                        size += sizeof(ushort);
+
+                        while (true)
+                        {
+                            int b = stream.ReadByte();
+
+                            size++;
+
+                            if (b <= 0)
+                                break;
+
+                            name.Append((char)b);
+                        }
+
+                        if ((size % 2) != 0)
+                        {
+                            is_padded = true;
+                            size++;
+                        }
+
+                        Tuple<ulong, uint, ushort, string, bool> tuple = new Tuple<ulong, uint, ushort, string, bool>(offset, size, hint, name.ToString(), is_padded);
+
+                        entries.Add(entry.Address, tuple);
+                    }
+                }
+            }
+
+            hint_name_table = new ImportHintNameTable(this, entries.Values);
+        }
+
         #endregion
 
         #region Properties
@@ -120,6 +177,14 @@ namespace Workshell.PE
             get
             {
                 return iat;
+            }
+        }
+
+        public ImportHintNameTable HintNameTable
+        {
+            get
+            {
+                return hint_name_table;
             }
         }
 

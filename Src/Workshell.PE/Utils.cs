@@ -306,6 +306,16 @@ namespace Workshell.PE
             return result;
         }
 
+        public static byte HiByte(ushort value)
+        {
+            return Convert.ToByte((value >> 8) & 0xFF);
+        }
+
+        public static byte LoByte(ushort value)
+        {
+            return Convert.ToByte(value & 0xFF);
+        }
+
         public static ushort HiWord(uint value)
         {
             return Convert.ToUInt16((value >> 16) & 0xFFFF);
@@ -314,6 +324,16 @@ namespace Workshell.PE
         public static ushort LoWord(uint value)
         {
             return Convert.ToUInt16(value & 0xFFFF);
+        }
+
+        public static uint HiDWord(ulong value)
+        {
+            return Convert.ToUInt32((value >> 32) & 0xFFFFFFFF);
+        }
+
+        public static uint LoDWord(ulong value)
+        {
+            return Convert.ToUInt32(value & 0xFFFFFFFF);
         }
 
         #endregion
