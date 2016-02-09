@@ -17,9 +17,9 @@ namespace Workshell.PE
         private Location location;
         private FileHeader file_header;
         private OptionalHeader opt_header;
-        private DataDirectories data_dirs;
+        private DataDirectoryCollection data_dirs;
 
-        internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectories dataDirs)
+        internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
         {
             uint size = 4 + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize;
 
@@ -73,7 +73,7 @@ namespace Workshell.PE
             }
         }
 
-        public DataDirectories DataDirectories
+        public DataDirectoryCollection DataDirectories
         {
             get
             {

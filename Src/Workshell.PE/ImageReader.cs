@@ -360,7 +360,7 @@ namespace Workshell.PE
                 opt_header = new OptionalHeader64(this,preload_info.OptHeader64.Value,file_header.Location.FileOffset + file_header.Location.FileSize,image_base);
             }
 
-            DataDirectories data_dirs = new DataDirectories(opt_header,preload_info.DataDirectories);
+            DataDirectoryCollection data_dirs = new DataDirectoryCollection(opt_header,preload_info.DataDirectories);
             
             _nt_headers = new NTHeaders(this,file_header.Location.FileOffset - 4,image_base,file_header,opt_header,data_dirs);
             _section_table = new SectionTable(this,preload_info.SectionHeaders,_nt_headers.Location.FileOffset + _nt_headers.Location.FileSize,image_base);

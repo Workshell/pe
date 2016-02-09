@@ -48,16 +48,16 @@ namespace Workshell.PE
         MPX = 15
     }
 
-    public class DebugDirectory : ISupportsLocation, ISupportsBytes
+    public sealed class DebugDirectory : ISupportsLocation, ISupportsBytes
     {
 
         public static readonly int size = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>();
 
-        private DebugDirectories directories;
+        private DebugDirectoryCollection directories;
         private Location location;
         private IMAGE_DEBUG_DIRECTORY directory;
 
-        internal DebugDirectory(DebugDirectories debugDirs, Location dirLocation, IMAGE_DEBUG_DIRECTORY dir)
+        internal DebugDirectory(DebugDirectoryCollection debugDirs, Location dirLocation, IMAGE_DEBUG_DIRECTORY dir)
         {
             directories = debugDirs;
             location = dirLocation;
@@ -93,7 +93,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public DebugDirectories Directory
+        public DebugDirectoryCollection Directory
         {
             get
             {
@@ -185,7 +185,7 @@ namespace Workshell.PE
 
     }
 
-    public class DebugDirectories : IEnumerable<DebugDirectory>
+    public sealed class DebugDirectoryCollection : IEnumerable<DebugDirectory>, IReadOnlyList<DebugDirectory>
     {
 
         private DebugContent content;
@@ -193,7 +193,7 @@ namespace Workshell.PE
         private Section section;
         private List<DebugDirectory> directories;
 
-        internal DebugDirectories(DebugContent debugContent, Location dirLocation, Section dirSection, List<Tuple<ulong,IMAGE_DEBUG_DIRECTORY>> dirs)
+        internal DebugDirectoryCollection(DebugContent debugContent, Location dirLocation, Section dirSection, List<Tuple<ulong,IMAGE_DEBUG_DIRECTORY>> dirs)
         {
             content = debugContent;
             location = dirLocation;
@@ -202,6 +202,8 @@ namespace Workshell.PE
 
             LoadDirectories(dirs);
         }
+
+        #region Methods
 
         public IEnumerator<DebugDirectory> GetEnumerator()
         {
@@ -233,7 +235,13 @@ namespace Workshell.PE
 
                 directories.Add(dir);
             }
+
+            directories = directories.OrderBy(dir => dir.Location.FileOffset).ToList();
         }
+
+        #endregion
+
+        #region Properties
 
         public DebugContent Content
         {
@@ -274,6 +282,8 @@ namespace Workshell.PE
                 return this[index];
             }
         }
+
+        #endregion
 
     }
 

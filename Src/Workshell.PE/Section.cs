@@ -75,7 +75,7 @@ namespace Workshell.PE
 
     }
 
-    public class Sections : IEnumerable<Section>
+    public sealed class Sections : IEnumerable<Section>, IReadOnlyCollection<Section>
     {
 
         private ImageReader reader;

@@ -14,7 +14,8 @@ namespace Workshell.PE
     {
 
         private ulong image_base;
-        private DebugDirectories directories;
+        private DebugDirectoryCollection directories;
+        private DebugDataCollection data;
 
         internal DebugContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory,imageBase)
         {
@@ -23,7 +24,8 @@ namespace Workshell.PE
             LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
             Stream stream = DataDirectory.Directories.Reader.GetStream();
 
-            LoadDirectories(calc, stream, imageBase);
+            LoadDirectories(calc,stream,imageBase);
+            LoadData(calc,stream,imageBase);
         }
 
         #region Methods
@@ -48,18 +50,33 @@ namespace Workshell.PE
                 offset += size;
             }
 
-            directories = new DebugDirectories(this, location, section, dirs);
+            directories = new DebugDirectoryCollection(this, location, section, dirs);
+        }
+
+        private void LoadData(LocationCalculator calc, Stream stream, ulong imageBase)
+        {
+            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
+
+            data = new DebugDataCollection(this,section,imageBase);
         }
 
         #endregion
 
         #region Properties
 
-        public DebugDirectories Directories
+        public DebugDirectoryCollection Directories
         {
             get
             {
                 return directories;
+            }
+        }
+
+        public DebugDataCollection Data
+        {
+            get
+            {
+                return data;
             }
         }
 

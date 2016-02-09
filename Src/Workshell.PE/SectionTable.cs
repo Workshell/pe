@@ -100,7 +100,7 @@ namespace Workshell.PE
         MemoryWrite = 0x80000000
     }
 
-    public class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation
+    public sealed class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation
     {
 
         private static readonly uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
@@ -329,7 +329,7 @@ namespace Workshell.PE
 
     }
 
-    public class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation
+    public sealed class SectionTable : IEnumerable<SectionTableEntry>, IReadOnlyCollection<SectionTableEntry>, ISupportsLocation
     {
 
         private ImageReader reader;

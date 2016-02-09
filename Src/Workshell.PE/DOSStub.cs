@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class DOSStub : ISupportsLocation, ISupportsBytes
+    public sealed class DOSStub : ISupportsLocation, ISupportsBytes
     {
 
         private ImageReader reader;

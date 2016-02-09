@@ -30,16 +30,16 @@ namespace Workshell.PE
         CLRRuntimeHeader = 14
     }
 
-    public class DataDirectory
+    public sealed class DataDirectory
     {
 
-        private DataDirectories dirs;
+        private DataDirectoryCollection dirs;
         private DataDirectoryType dir_type;
         private IMAGE_DATA_DIRECTORY data_dir;
         private DataDirectoryContent dir_content;
         private ulong image_base;
 
-        internal DataDirectory(DataDirectories dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
+        internal DataDirectory(DataDirectoryCollection dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
             dirs = dataDirs;
             dir_type = dirType;
@@ -103,7 +103,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public DataDirectories Directories
+        public DataDirectoryCollection Directories
         {
             get
             {
@@ -150,14 +150,14 @@ namespace Workshell.PE
 
     }
 
-    public class DataDirectories : IEnumerable<DataDirectory>, ISupportsBytes
+    public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, IReadOnlyCollection<DataDirectory>, ISupportsBytes
     {
 
         private ImageReader reader;
         private Location location;
         private Dictionary<DataDirectoryType,DataDirectory> dirs;
 
-        internal DataDirectories(OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
+        internal DataDirectoryCollection(OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
         {
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length);
             ulong file_offset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
@@ -228,6 +228,14 @@ namespace Workshell.PE
             get
             {
                 return location;
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                return dirs.Count;
             }
         }
 
