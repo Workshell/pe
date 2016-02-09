@@ -36,6 +36,11 @@ namespace Workshell.PE
             return GetEnumerator();
         }
 
+        public override string ToString()
+        {
+            return String.Format("Library Count: {0}", libraries.Count);
+        }
+
         private void LoadLibraries(IEnumerable<Tuple<string,ImportAddressTable,ImportHintNameTable>> importLibraries)
         {
             foreach(Tuple<string,ImportAddressTable,ImportHintNameTable> tuple in importLibraries)
@@ -74,7 +79,7 @@ namespace Workshell.PE
             }
         }
 
-         public ImportLibrary this[string libraryName]
+        public ImportLibrary this[string libraryName]
         {
             get
             {

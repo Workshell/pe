@@ -44,6 +44,8 @@
     <Compile Include="Annotations\EnumAnnotationAttribute.cs" />
     <Compile Include="Annotations\FieldAnnotationAttribute.cs" />
     <Compile Include="Content\DataDirectoryContent.cs" />
+    <Compile Include="Content\Debug\DebugContent.cs" />
+    <Compile Include="Content\Debug\DebugDirectory.cs" />
     <Compile Include="Content\Exports\Exports.cs" />
     <Compile Include="Content\Exports\ExportDirectory.cs" />
     <Compile Include="Content\Exports\ExportTable.cs" />

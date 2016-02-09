@@ -41,7 +41,7 @@ namespace Workshell.PE.Demo
                 if (content == null)
                     continue;
 
-                if (content.DataDirectory.DirectoryType == DataDirectoryType.ImportTable)
+                if (content.DataDirectory.DirectoryType == DataDirectoryType.Debug)
                 {
                 
                 }

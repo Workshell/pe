@@ -90,6 +90,9 @@ namespace Workshell.PE
                 case DataDirectoryType.ImportTable:
                     dir_content = new ImportTableContent(this,image_base);
                     break;
+                case DataDirectoryType.Debug:
+                    dir_content = new DebugContent(this, image_base);
+                    break;
                 default:
                     dir_content = null;
                     break;
