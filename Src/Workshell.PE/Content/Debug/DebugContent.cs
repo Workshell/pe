@@ -10,7 +10,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class DebugContent : DataDirectoryContent
+    public sealed class DebugContent : DataDirectoryContent
     {
 
         private ulong image_base;

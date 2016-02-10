@@ -81,7 +81,7 @@ namespace Workshell.PE
 
     }
 
-    public class Exports : IEnumerable<Export>
+    public class Exports : IEnumerable<Export>, IReadOnlyCollection<Export>
     {
 
         private ExportTableContent content;

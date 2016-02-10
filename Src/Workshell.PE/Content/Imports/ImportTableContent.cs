@@ -10,13 +10,13 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ImportTableContent : DataDirectoryContent
+    public sealed class ImportTableContent : DataDirectoryContent
     {
 
         private ulong image_base;
         private ImportDirectory dir;
-        private ImportAddressTables ilt;
-        private ImportAddressTables iat;
+        private ImportAddressTableCollection ilt;
+        private ImportAddressTableCollection iat;
         private ImportHintNameTable hint_name_table;
         private Imports imports;
 
@@ -77,7 +77,7 @@ namespace Workshell.PE
                 tables.Add(new Tuple<ulong,ImportDirectoryEntry>(offset,dir_entry));
             }
 
-            ilt = new ImportAddressTables(this,section,tables);
+            ilt = new ImportAddressTableCollection(this,section,tables);
         }
 
         private void LoadIAT(LocationCalculator calc, Stream stream)
@@ -96,7 +96,7 @@ namespace Workshell.PE
                 tables.Add(new Tuple<ulong,ImportDirectoryEntry>(offset,dir_entry));
             }
 
-            iat = new ImportAddressTables(this,section,tables);
+            iat = new ImportAddressTableCollection(this,section,tables);
         }
 
         private void LoadHintNameTable(LocationCalculator calc, Stream stream)
@@ -195,7 +195,7 @@ namespace Workshell.PE
             }
         }
 
-        public ImportAddressTables ILT
+        public ImportAddressTableCollection ILT
         {
             get
             {
@@ -203,7 +203,7 @@ namespace Workshell.PE
             }
         }
 
-        public ImportAddressTables IAT
+        public ImportAddressTableCollection IAT
         {
             get
             {

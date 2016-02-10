@@ -58,6 +58,8 @@
     <Compile Include="Content\Imports\Imports.cs" />
     <Compile Include="Content\Imports\ImportTableContent.cs" />
     <Compile Include="Content\Imports\ImportDirectory.cs" />
+    <Compile Include="Content\LoadConfig\LoadConfigTableContent.cs" />
+    <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />

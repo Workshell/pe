@@ -52,7 +52,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportLibraryOrdinalFunction : ImportLibraryFunction
+    public sealed class ImportLibraryOrdinalFunction : ImportLibraryFunction
     {
 
         private int ordinal;
@@ -93,7 +93,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportLibraryNamedFunction : ImportLibraryFunction
+    public sealed class ImportLibraryNamedFunction : ImportLibraryFunction
     {
 
         private ImportHintNameEntry hint_entry;

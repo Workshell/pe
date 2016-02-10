@@ -82,6 +82,9 @@ namespace Workshell.PE
 
         private void LoadContent()
         {
+            if (data_dir.VirtualAddress == 0) // No content so no point...
+                return;
+
             switch (dir_type)
             {
                 case DataDirectoryType.ExportTable:
@@ -92,6 +95,9 @@ namespace Workshell.PE
                     break;
                 case DataDirectoryType.Debug:
                     dir_content = new DebugContent(this, image_base);
+                    break;
+                case DataDirectoryType.LoadConfigTable:
+                    dir_content = new LoadConfigTableContent(this, image_base);
                     break;
                 default:
                     dir_content = null;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class ImportLibrary : IEnumerable<ImportLibraryFunction>
+    public sealed class ImportLibrary : IEnumerable<ImportLibraryFunction>, IReadOnlyCollection<ImportLibraryFunction>
     {
 
         private Imports imports;

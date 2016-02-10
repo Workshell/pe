@@ -10,7 +10,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class Imports : IEnumerable<ImportLibrary>
+    public sealed class Imports : IEnumerable<ImportLibrary>, IReadOnlyCollection<ImportLibrary>
     {
 
         private ImportTableContent content;

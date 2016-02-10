@@ -10,7 +10,7 @@ using Workshell.MoreLinq;
 namespace Workshell.PE
 {
 
-    public class ImportHintNameEntry : ISupportsLocation, ISupportsBytes
+    public sealed class ImportHintNameEntry : ISupportsLocation, ISupportsBytes
     {
 
         private ImportHintNameTable table;
@@ -96,7 +96,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportHintNameTable : IEnumerable<ImportHintNameEntry>, ISupportsLocation, ISupportsBytes
+    public sealed class ImportHintNameTable : IEnumerable<ImportHintNameEntry>, IReadOnlyCollection<ImportHintNameEntry>, ISupportsLocation, ISupportsBytes
     {
 
         private ImportTableContent content;

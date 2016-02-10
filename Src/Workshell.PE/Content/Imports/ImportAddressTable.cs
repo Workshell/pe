@@ -10,7 +10,7 @@ using Workshell.MoreLinq;
 namespace Workshell.PE
 {
 
-    public class ImportAddressTableEntry : ISupportsLocation, ISupportsBytes
+    public sealed class ImportAddressTableEntry : ISupportsLocation, ISupportsBytes
     {
 
         private ImportAddressTable table;
@@ -115,15 +115,15 @@ namespace Workshell.PE
 
     }
 
-    public class ImportAddressTable : IEnumerable<ImportAddressTableEntry>, ISupportsLocation, ISupportsBytes
+    public sealed class ImportAddressTable : IEnumerable<ImportAddressTableEntry>, IReadOnlyCollection<ImportAddressTableEntry>, ISupportsLocation, ISupportsBytes
     {
 
-        private ImportAddressTables tables;
+        private ImportAddressTableCollection tables;
         private ImportDirectoryEntry dir_entry;
         private Location location;
         private List<ImportAddressTableEntry> entries;
 
-        internal ImportAddressTable(ImportAddressTables addressTables,  ImportDirectoryEntry directoryEntry, ulong tableOffset, IEnumerable<ulong> tableEntries)
+        internal ImportAddressTable(ImportAddressTableCollection addressTables,  ImportDirectoryEntry directoryEntry, ulong tableOffset, IEnumerable<ulong> tableEntries)
         {
             bool is_64bit = addressTables.Content.DataDirectory.Directories.Reader.Is64Bit;
             LocationCalculator calc = addressTables.Content.DataDirectory.Directories.Reader.GetCalculator();
@@ -221,7 +221,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImportAddressTables Tables
+        public ImportAddressTableCollection Tables
         {
             get
             {
@@ -265,7 +265,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportAddressTables : IEnumerable<ImportAddressTable>, ISupportsLocation, ISupportsBytes
+    public sealed class ImportAddressTableCollection : IEnumerable<ImportAddressTable>, ISupportsLocation, ISupportsBytes
     {
 
         private ImportTableContent content;
@@ -273,7 +273,7 @@ namespace Workshell.PE
         private List<ImportAddressTable> tables;
         private Location location;
         
-        internal ImportAddressTables(ImportTableContent tableContent, Section tablesSection, IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
+        internal ImportAddressTableCollection(ImportTableContent tableContent, Section tablesSection, IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
         {
             content = tableContent;
             location = null;

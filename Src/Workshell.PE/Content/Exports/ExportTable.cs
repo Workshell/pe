@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class ExportTable<T> : IEnumerable<T>, ISupportsLocation
+    public class ExportTable<T> : IEnumerable<T>, IReadOnlyCollection<T>, ISupportsLocation
     {
 
         private ExportTableContent content;

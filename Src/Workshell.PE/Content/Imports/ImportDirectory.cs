@@ -11,7 +11,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ImportDirectoryEntry : ISupportsLocation
+    public sealed class ImportDirectoryEntry : ISupportsLocation
     {
 
         private ImportDirectory directory;
@@ -145,7 +145,7 @@ namespace Workshell.PE
 
     }
 
-    public class ImportDirectory : IEnumerable<ImportDirectoryEntry>, ISupportsLocation
+    public sealed class ImportDirectory : IEnumerable<ImportDirectoryEntry>, IReadOnlyCollection<ImportDirectoryEntry>, ISupportsLocation
     {
 
         private ImportTableContent content;
