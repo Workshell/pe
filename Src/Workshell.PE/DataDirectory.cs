@@ -36,16 +36,16 @@ namespace Workshell.PE
         private DataDirectoryCollection dirs;
         private DataDirectoryType dir_type;
         private IMAGE_DATA_DIRECTORY data_dir;
-        private DataDirectoryContent dir_content;
         private ulong image_base;
+        private DataDirectoryContent dir_content;
 
         internal DataDirectory(DataDirectoryCollection dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
             dirs = dataDirs;
             dir_type = dirType;
             data_dir = dataDirectory;
-            dir_content = null;
             image_base = imageBase;
+            dir_content = null;
         }
 
         #region Static Methods
@@ -80,32 +80,37 @@ namespace Workshell.PE
             }
         }
 
-        private void LoadContent()
+        public DataDirectoryContent GetContent()
         {
             if (data_dir.VirtualAddress == 0) // No content so no point...
-                return;
+                return null;
 
-            switch (dir_type)
+            if (dir_content == null)
             {
-                case DataDirectoryType.ExportTable:
-                    dir_content = new ExportTableContent(this,image_base);
-                    break;
-                case DataDirectoryType.ImportTable:
-                    dir_content = new ImportTableContent(this,image_base);
-                    break;
-                case DataDirectoryType.Debug:
-                    dir_content = new DebugContent(this,image_base);
-                    break;
-                case DataDirectoryType.LoadConfigTable:
-                    dir_content = new LoadConfigTableContent(this,image_base);
-                    break;
-                case DataDirectoryType.TLSTable:
-                    dir_content = new TLSTableContent(this,image_base);
-                    break;
-                default:
-                    dir_content = null;
-                    break;
+                switch (dir_type)
+                {
+                    case DataDirectoryType.ExportTable:
+                        dir_content = new ExportTableContent(this,image_base);
+                        break;
+                    case DataDirectoryType.ImportTable:
+                        dir_content = new ImportTableContent(this,image_base);
+                        break;
+                    case DataDirectoryType.Debug:
+                        dir_content = new DebugContent(this,image_base);
+                        break;
+                    case DataDirectoryType.LoadConfigTable:
+                        dir_content = new LoadConfigTableContent(this,image_base);
+                        break;
+                    case DataDirectoryType.TLSTable:
+                        dir_content = new TLSTableContent(this,image_base);
+                        break;
+                    default:
+                        dir_content = null;
+                        break;
+                }
             }
+
+            return dir_content;
         }
 
         #endregion
@@ -141,17 +146,6 @@ namespace Workshell.PE
             get
             {
                 return data_dir.Size;
-            }
-        }
-
-        public DataDirectoryContent Content
-        {
-            get
-            {
-                if (dir_content == null)
-                    LoadContent();
-
-                return dir_content;
             }
         }
 

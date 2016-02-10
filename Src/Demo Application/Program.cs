@@ -38,7 +38,7 @@ namespace Workshell.PE.Demo
 
             foreach(DataDirectory dir in reader.NTHeaders.DataDirectories)
             {
-                DataDirectoryContent content = dir.Content;
+                DataDirectoryContent content = dir.GetContent();
 
                 if (content == null)
                     continue;
