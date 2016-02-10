@@ -60,6 +60,8 @@
     <Compile Include="Content\Imports\ImportDirectory.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigTableContent.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
+    <Compile Include="Content\TLS\TLSTableContent.cs" />
+    <Compile Include="Content\TLS\TLSDirectory.cs" />
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />

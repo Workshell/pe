@@ -94,10 +94,13 @@ namespace Workshell.PE
                     dir_content = new ImportTableContent(this,image_base);
                     break;
                 case DataDirectoryType.Debug:
-                    dir_content = new DebugContent(this, image_base);
+                    dir_content = new DebugContent(this,image_base);
                     break;
                 case DataDirectoryType.LoadConfigTable:
-                    dir_content = new LoadConfigTableContent(this, image_base);
+                    dir_content = new LoadConfigTableContent(this,image_base);
+                    break;
+                case DataDirectoryType.TLSTable:
+                    dir_content = new TLSTableContent(this,image_base);
                     break;
                 default:
                     dir_content = null;
