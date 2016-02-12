@@ -60,6 +60,10 @@
     <Compile Include="Content\Imports\ImportDirectory.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigTableContent.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
+    <Compile Include="Content\Relocation\Relocation.cs" />
+    <Compile Include="Content\Relocation\RelocationBlock.cs" />
+    <Compile Include="Content\Relocation\RelocationBlocks.cs" />
+    <Compile Include="Content\Relocation\RelocationTableContent.cs" />
     <Compile Include="Content\TLS\TLSTableContent.cs" />
     <Compile Include="Content\TLS\TLSDirectory.cs" />
     <Compile Include="DataDirectory.cs" />

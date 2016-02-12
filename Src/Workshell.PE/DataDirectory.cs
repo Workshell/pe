@@ -104,6 +104,9 @@ namespace Workshell.PE
                     case DataDirectoryType.TLSTable:
                         dir_content = new TLSTableContent(this,image_base);
                         break;
+                    case DataDirectoryType.BaseRelocationTable:
+                        dir_content = new RelocationTableContent(this,image_base);
+                        break;
                     default:
                         dir_content = null;
                         break;
