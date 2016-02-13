@@ -21,6 +21,11 @@ namespace Workshell.PE
 
         #region Methods
 
+        public override string ToString()
+        {
+            return String.Format("File Offset: 0x{0:X16}, File Size: 0x{1:X8}, RVA: 0x{2:X8}, Virtual Address: 0x{3:X16}, Virtual Size: 0x{4:X8}",FileOffset,FileSize,RelativeVirtualAddress,VirtualAddress,VirtualSize);
+        }
+
         public override bool Equals(object other)
         {
             return Equals(other as Location);

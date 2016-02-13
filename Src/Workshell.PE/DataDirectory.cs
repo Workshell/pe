@@ -107,6 +107,9 @@ namespace Workshell.PE
                     case DataDirectoryType.BaseRelocationTable:
                         dir_content = new RelocationTableContent(this,image_base);
                         break;
+                    case DataDirectoryType.CLRRuntimeHeader:
+                        dir_content = new CLRContent(this,image_base);
+                        break;
                     default:
                         dir_content = null;
                         break;
