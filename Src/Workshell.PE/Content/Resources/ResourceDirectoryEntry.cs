@@ -23,7 +23,7 @@ namespace Workshell.PE
         Data
     }
 
-    public sealed class ResourceDirectoryEntry
+    public sealed class ResourceDirectoryEntry : ISupportsLocation, ISupportsBytes
     {
 
         private ResourceDirectory parent_directory;
@@ -32,6 +32,7 @@ namespace Workshell.PE
         private ulong image_base;
         private string name;
         private ResourceDirectory directory;
+        private ResourceDataEntry data;
 
         internal ResourceDirectoryEntry(ResourceDirectory parentDirectory, ulong entryOffset, IMAGE_RESOURCE_DIRECTORY_ENTRY directoryEntry, ulong imageBase)
         {
@@ -49,7 +50,9 @@ namespace Workshell.PE
             name = String.Empty;
             directory = null;
 
+            GetName();
             GetDirectory();
+            GetData();
         }
 
         #region Methods
@@ -70,11 +73,10 @@ namespace Workshell.PE
         {
             if (String.IsNullOrWhiteSpace(name))
             {
-                LocationCalculator calc = parent_directory.Content.DataDirectory.Directories.Reader.GetCalculator();
-                Stream stream = parent_directory.Content.DataDirectory.Directories.Reader.GetStream();
-
                 if ((entry.Name & 0x80000000) == 0x80000000)
                 {
+                    LocationCalculator calc = parent_directory.Content.DataDirectory.Directories.Reader.GetCalculator();
+                    Stream stream = parent_directory.Content.DataDirectory.Directories.Reader.GetStream();
                     uint offset = entry.Name & 0x7fffffff;
                     uint rva = parent_directory.Content.DataDirectory.VirtualAddress + offset;
                     ulong file_offset = calc.RVAToOffset(rva);
@@ -103,29 +105,6 @@ namespace Workshell.PE
             return name;
         }
 
-        /*
-        public uint GetNameOrId()
-        {
-            if ((entry.Name & 0x80000000) == 0x80000000)
-            {
-                uint offset = entry.Name & 0x7fffffff;
-
-                return offset;
-            }
-            else
-            {
-                return entry.Name;
-            }
-        }
-        */
-
-        public uint GetOffset()
-        {
-            uint offset = entry.Name & 0x7fffffff;
-
-            return offset;
-        }
-
         public ResourceDirectory GetDirectory()
         {
             if (directory == null && ((entry.OffsetToData & 0x80000000) == 0x80000000))
@@ -133,7 +112,7 @@ namespace Workshell.PE
                 LocationCalculator calc = parent_directory.Content.DataDirectory.Directories.Reader.GetCalculator();
                 Stream stream = parent_directory.Content.DataDirectory.Directories.Reader.GetStream();
 
-                uint offset = GetOffset();
+                uint offset = entry.OffsetToData & 0x7fffffff;
                 uint rva = parent_directory.Content.DataDirectory.VirtualAddress + offset;
                 ulong file_offset = calc.RVAToOffset(rva);
 
@@ -141,6 +120,31 @@ namespace Workshell.PE
             }
 
             return directory;
+        }
+
+        public ResourceDataEntry GetData()
+        {
+            if (data == null && ((entry.OffsetToData & 0x80000000) != 0x80000000))
+            {
+                LocationCalculator calc = parent_directory.Content.DataDirectory.Directories.Reader.GetCalculator();
+                Stream stream = parent_directory.Content.DataDirectory.Directories.Reader.GetStream();
+
+                uint offset = entry.OffsetToData & 0x7fffffff;
+                uint rva = parent_directory.Content.DataDirectory.VirtualAddress + offset;
+                ulong file_offset = calc.RVAToOffset(rva);
+
+                data = new ResourceDataEntry(this,file_offset,image_base);
+            }
+
+            return data;
+        }
+
+        public byte[] GetBytes()
+        {
+            Stream stream = parent_directory.Content.DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         #endregion

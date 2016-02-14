@@ -16,7 +16,7 @@ namespace Workshell.PE
         private uint page_rva;
         private uint block_size;
         private Section reloc_section;
-        private List<Relocation> relocations;
+        private Relocation[] relocations;
 
         internal RelocationBlock(RelocationBlocks relocBlocks, Location blockLocation, uint pageRVA, uint blockSize, IEnumerable<ushort> relocs)
         {
@@ -27,21 +27,24 @@ namespace Workshell.PE
             page_rva = pageRVA;
             block_size = blockSize;
             reloc_section = calc.RVAToSection(pageRVA);
-            relocations = new List<Relocation>();
+
+            List<Relocation> list = new List<Relocation>();
 
             foreach(ushort reloc_offset in relocs)
             {
                 Relocation reloc = new Relocation(this,reloc_offset);
 
-                relocations.Add(reloc);
+                list.Add(reloc);
             }
+
+            relocations = list.ToArray();
         }
 
         #region Methods
 
         public IEnumerator<Relocation> GetEnumerator()
         {
-            return relocations.GetEnumerator();
+            return relocations.Cast<Relocation>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -51,7 +54,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Page RVA: 0x{0:X8}, Block Size: {1}, Relocations: {2}",page_rva,block_size,relocations.Count);
+            return String.Format("Page RVA: 0x{0:X8}, Block Size: {1}, Relocations: {2}",page_rva,block_size,relocations.Length);
         }
 
         public byte[] GetBytes()
@@ -110,7 +113,7 @@ namespace Workshell.PE
         {
             get
             {
-                return relocations.Count;
+                return relocations.Length;
             }
         }
 

@@ -71,6 +71,8 @@
     <Compile Include="Content\Relocation\RelocationBlock.cs" />
     <Compile Include="Content\Relocation\RelocationBlocks.cs" />
     <Compile Include="Content\Relocation\RelocationTableContent.cs" />
+    <Compile Include="Content\Resources\ResourceData.cs" />
+    <Compile Include="Content\Resources\ResourceDataEntry.cs" />
     <Compile Include="Content\Resources\ResourceDirectoryEntry.cs" />
     <Compile Include="Content\Resources\ResourceTableContent.cs" />
     <Compile Include="Content\Resources\ResourceDirectory.cs" />

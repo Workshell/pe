@@ -9,30 +9,33 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class Section : ISupportsLocation
+    public class Section : ISupportsLocation, ISupportsBytes
     {
 
         private Sections _sections;
-        private SectionTableEntry _table_entry;
-        private Location _location;
+        private SectionTableEntry table_entry;
+        private Location location;
 
         internal Section(Sections sections, SectionTableEntry tableEntry, ulong imageBase)
         {
             _sections = sections;
-            _table_entry = tableEntry;
-            _location = new Location(tableEntry.PointerToRawData,tableEntry.VirtualAddress,imageBase + tableEntry.VirtualAddress,tableEntry.SizeOfRawData,tableEntry.VirtualSizeOrPhysicalAddress);
+            table_entry = tableEntry;
+            location = new Location(tableEntry.PointerToRawData,tableEntry.VirtualAddress,imageBase + tableEntry.VirtualAddress,tableEntry.SizeOfRawData,tableEntry.VirtualSizeOrPhysicalAddress);
         }
 
         #region Methods
 
         public override string ToString()
         {
-            return _table_entry.Name;
+            return table_entry.Name;
         }
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = _sections.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         #endregion
@@ -51,7 +54,7 @@ namespace Workshell.PE
         {
             get
             {
-                return _table_entry;
+                return table_entry;
             }
         }
 
@@ -59,7 +62,7 @@ namespace Workshell.PE
         {
             get
             {
-                return _location;
+                return location;
             }
         }
 
@@ -67,7 +70,7 @@ namespace Workshell.PE
         {
             get
             {
-                return _table_entry.Name;
+                return table_entry.Name;
             }
         }
 
@@ -80,27 +83,30 @@ namespace Workshell.PE
 
         private ImageReader reader;
         private SectionTable table;
-        private List<Section> sections;
+        private Section[] sections;
 
         internal Sections(ImageReader exeReader, SectionTable sectionTable, ulong imageBase)
         {
             reader = exeReader;
             table = sectionTable;
-            sections = new List<Section>();
+
+            List<Section> list = new List<Section>();
 
             foreach(SectionTableEntry entry in sectionTable)
             {
                 Section section = new Section(this,entry,imageBase);
 
-                sections.Add(section);
+                list.Add(section);
             }
+
+            sections = list.ToArray();
         }
 
         #region Methods
 
         public IEnumerator<Section> GetEnumerator()
         {
-            return sections.GetEnumerator();
+            return sections.Cast<Section>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()

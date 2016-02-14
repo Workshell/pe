@@ -334,7 +334,7 @@ namespace Workshell.PE
 
         private ImageReader reader;
         private Location location;
-        private List<SectionTableEntry> table;
+        private SectionTableEntry[] table;
 
         internal SectionTable(ImageReader exeReader, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
         {
@@ -342,23 +342,29 @@ namespace Workshell.PE
 
             reader = exeReader;
             location = new Location(tableOffset,Convert.ToUInt32(tableOffset),imageBase + tableOffset,size,size);
-            table = new List<SectionTableEntry>();
 
+            List<SectionTableEntry> list = new List<SectionTableEntry>();
             ulong offset = tableOffset;
 
             foreach(IMAGE_SECTION_HEADER header in sectionHeaders)
             {
-                table.Add(new SectionTableEntry(this,header,offset,imageBase));
+                SectionTableEntry entry = new SectionTableEntry(this,header,offset,imageBase);
 
+                list.Add(entry);
                 offset += Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
             }
+
+            table = list.ToArray();
         }
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         public bool Has(string name)
@@ -368,7 +374,7 @@ namespace Workshell.PE
 
         public IEnumerator<SectionTableEntry> GetEnumerator()
         {
-            return table.GetEnumerator();
+            return table.Cast<SectionTableEntry>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -400,7 +406,7 @@ namespace Workshell.PE
         {
             get
             {
-                return table.Count;
+                return table.Length;
             }
         }
 

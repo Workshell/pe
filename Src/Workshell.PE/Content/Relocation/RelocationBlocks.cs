@@ -13,14 +13,14 @@ namespace Workshell.PE
         private RelocationTableContent content;
         private Location location;
         private Section section;
-        private List<RelocationBlock> blocks;
+        private RelocationBlock[] blocks;
 
         internal RelocationBlocks(RelocationTableContent relocContent, Location relocLocation, Section relocSection, List<Tuple<ulong,uint,uint,ushort[]>> relocBlocks, ulong imageBase)
         {
             content = relocContent;
             location = relocLocation;
             section = relocSection;
-            blocks = new List<RelocationBlock>();
+            blocks = new RelocationBlock[0];
 
             Load(relocBlocks,imageBase);
         }
@@ -29,7 +29,7 @@ namespace Workshell.PE
 
         public IEnumerator<RelocationBlock> GetEnumerator()
         {
-            return blocks.GetEnumerator();
+            return blocks.Cast<RelocationBlock>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -39,6 +39,7 @@ namespace Workshell.PE
 
         private void Load(List<Tuple<ulong,uint,uint,ushort[]>> relocBlocks, ulong imageBase)
         {
+            List<RelocationBlock> list = new List<RelocationBlock>();
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
 
             foreach(Tuple<ulong,uint,uint,ushort[]> tuple in relocBlocks)
@@ -52,8 +53,10 @@ namespace Workshell.PE
                 Location block_location = new Location(offset,rva,va,size,size);
                 RelocationBlock block = new RelocationBlock(this,block_location,page_rva,size,relocs);
 
-                blocks.Add(block);
+                list.Add(block);
             }
+
+            blocks = list.ToArray();
         }
 
         #endregion
@@ -88,7 +91,7 @@ namespace Workshell.PE
         {
             get
             {
-                return blocks.Count;
+                return blocks.Length;
             }
         }
 

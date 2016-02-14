@@ -11,14 +11,14 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class ResourceDirectory
+    public sealed class ResourceDirectory : IEnumerable<ResourceDirectoryEntry>, IReadOnlyCollection<ResourceDirectoryEntry>, ISupportsLocation, ISupportsBytes
     {
 
         private ResourceTableContent content;
         private IMAGE_RESOURCE_DIRECTORY directory;
         private Location location;
         private ResourceDirectory parent_directory;
-        private List<ResourceDirectoryEntry> entries;
+        private ResourceDirectoryEntry[] entries;
 
         internal ResourceDirectory(ResourceTableContent resourceContent, ulong directoryOffset, ulong imageBase, ResourceDirectory parentDirectory)
         {
@@ -37,22 +37,42 @@ namespace Workshell.PE
             parent_directory = parentDirectory;
 
             int count = directory.NumberOfNamedEntries + directory.NumberOfIdEntries;
-
-            entries = new List<ResourceDirectoryEntry>(count);
-
+            List<ResourceDirectoryEntry> list = new List<ResourceDirectoryEntry>(count);
             ulong offset = directoryOffset + size;
 
             for(int i = 0; i < count; i++)
             {
+                stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
+
                 IMAGE_RESOURCE_DIRECTORY_ENTRY directory_entry = Utils.Read<IMAGE_RESOURCE_DIRECTORY_ENTRY>(stream);
                 ResourceDirectoryEntry entry = new ResourceDirectoryEntry(this,offset,directory_entry,imageBase);
 
-                entries.Add(entry);
+                list.Add(entry);
                 offset += Convert.ToUInt32(Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>());
             }
+
+            entries = list.ToArray();
         }
 
         #region Methods
+
+        public IEnumerator<ResourceDirectoryEntry> GetEnumerator()
+        {
+            return entries.Cast<ResourceDirectoryEntry>().GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public byte[] GetBytes()
+        {
+            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
+        }
 
         #endregion
 
@@ -82,11 +102,19 @@ namespace Workshell.PE
             }
         }
 
-        public List<ResourceDirectoryEntry> Entries
+        public int Count
         {
             get
             {
-                return entries;
+                return entries.Length;
+            }
+        }
+
+        public ResourceDirectoryEntry this[int index]
+        {
+            get
+            {
+                return entries[index];
             }
         }
 
