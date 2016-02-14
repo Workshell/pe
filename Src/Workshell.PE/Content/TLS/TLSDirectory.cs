@@ -16,13 +16,11 @@ namespace Workshell.PE
 
         private TLSTableContent content;
         private Location location;
-        private Section section;
 
-        internal TLSDirectory(TLSTableContent tlsContent, Location tlsLocation, Section tlsSection)
+        internal TLSDirectory(TLSTableContent tlsContent, Location tlsLocation)
         {
             content = tlsContent;
             location = tlsLocation;
-            section = tlsSection;
         }
 
         #region Methods
@@ -52,14 +50,6 @@ namespace Workshell.PE
             get
             {
                 return location;
-            }
-        }
-
-        public Section Section
-        {
-            get
-            {
-                return section;
             }
         }
 
@@ -108,7 +98,7 @@ namespace Workshell.PE
 
         private IMAGE_TLS_DIRECTORY32 directory;
 
-        internal TLSDirectory32(TLSTableContent tlsContent, Location tlsLocation, Section tlsSection, IMAGE_TLS_DIRECTORY32 tlsDirectory) : base(tlsContent,tlsLocation,tlsSection)
+        internal TLSDirectory32(TLSTableContent tlsContent, Location tlsLocation, IMAGE_TLS_DIRECTORY32 tlsDirectory) : base(tlsContent,tlsLocation)
         {
             directory = tlsDirectory;
         }
@@ -172,7 +162,7 @@ namespace Workshell.PE
 
         private IMAGE_TLS_DIRECTORY64 directory;
 
-        internal TLSDirectory64(TLSTableContent tlsContent, Location tlsLocation, Section tlsSection, IMAGE_TLS_DIRECTORY64 tlsDirectory) : base(tlsContent,tlsLocation,tlsSection)
+        internal TLSDirectory64(TLSTableContent tlsContent, Location tlsLocation, IMAGE_TLS_DIRECTORY64 tlsDirectory) : base(tlsContent,tlsLocation)
         {
             directory = tlsDirectory;
         }

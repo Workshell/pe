@@ -49,10 +49,6 @@ namespace Workshell.PE
             image_base = imageBase;
             name = String.Empty;
             directory = null;
-
-            GetName();
-            GetDirectory();
-            GetData();
         }
 
         #region Methods
@@ -122,7 +118,7 @@ namespace Workshell.PE
             return directory;
         }
 
-        public ResourceDataEntry GetData()
+        public ResourceDataEntry GetDataEntry()
         {
             if (data == null && ((entry.OffsetToData & 0x80000000) != 0x80000000))
             {

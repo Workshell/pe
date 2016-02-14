@@ -19,7 +19,6 @@ namespace Workshell.PE
         internal ResourceData(ResourceDataEntry dataEntry, ulong imageBase)
         {
             LocationCalculator calc = dataEntry.DirectoryEntry.Directory.Content.DataDirectory.Directories.Reader.GetCalculator();
-
             ulong va = imageBase + dataEntry.OffsetToData;
             ulong file_offset = calc.RVAToOffset(dataEntry.Size);
 

@@ -190,15 +190,13 @@ namespace Workshell.PE
 
         private DebugContent content;
         private Location location;
-        private Section section;
-        private List<DebugDirectory> directories;
+        private DebugDirectory[] directories;
 
-        internal DebugDirectoryCollection(DebugContent debugContent, Location dirLocation, Section dirSection, List<Tuple<ulong,IMAGE_DEBUG_DIRECTORY>> dirs)
+        internal DebugDirectoryCollection(DebugContent debugContent, Location dirLocation, List<Tuple<ulong,IMAGE_DEBUG_DIRECTORY>> dirs)
         {
             content = debugContent;
             location = dirLocation;
-            section = dirSection;
-            directories = new List<DebugDirectory>();
+            directories = new DebugDirectory[0];
 
             LoadDirectories(dirs);
         }
@@ -207,7 +205,7 @@ namespace Workshell.PE
 
         public IEnumerator<DebugDirectory> GetEnumerator()
         {
-            return directories.GetEnumerator();
+            return directories.Cast<DebugDirectory>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -217,7 +215,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Debug Entry Count: {0}", directories.Count);
+            return String.Format("Debug Entry Count: {0}", directories.Length);
         }
 
         private void LoadDirectories(List<Tuple<ulong, IMAGE_DEBUG_DIRECTORY>> dirEntries)
@@ -225,18 +223,19 @@ namespace Workshell.PE
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
             ulong image_base = content.DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>());
+            List<DebugDirectory> list = new List<DebugDirectory>();
 
             foreach(Tuple<ulong, IMAGE_DEBUG_DIRECTORY> tuple in dirEntries)
             {
-                uint rva = calc.OffsetToRVA(section, tuple.Item1);
+                uint rva = calc.OffsetToRVA(content.Section, tuple.Item1);
                 ulong va = image_base + rva;
                 Location dir_location = new Location(tuple.Item1, rva, va, size, size);
                 DebugDirectory dir = new DebugDirectory(this, dir_location, tuple.Item2);
 
-                directories.Add(dir);
+                list.Add(dir);
             }
 
-            directories = directories.OrderBy(dir => dir.Location.FileOffset).ToList();
+            directories = directories.OrderBy(dir => dir.Location.FileOffset).ToArray();
         }
 
         #endregion
@@ -259,19 +258,11 @@ namespace Workshell.PE
             }
         }
 
-        public Section Section
-        {
-            get
-            {
-                return section;
-            }
-        }
-
         public int Count
         {
             get
             {
-                return directories.Count;
+                return directories.Length;
             }
         }
 

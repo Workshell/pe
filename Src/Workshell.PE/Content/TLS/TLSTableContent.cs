@@ -13,12 +13,15 @@ namespace Workshell.PE
     public sealed class TLSTableContent : DataDirectoryContent
     {
 
+        private Section section;
         private TLSDirectory directory;
 
         internal TLSTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory, imageBase)
         {
             LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
             Stream stream = DataDirectory.Directories.Reader.GetStream();
+
+            section = calc.RVAToSection(dataDirectory.VirtualAddress);
 
             LoadDirectory(calc, stream, imageBase);
         }
@@ -28,7 +31,6 @@ namespace Workshell.PE
         private void LoadDirectory(LocationCalculator calc, Stream stream, ulong imageBase)
         {
             bool is_64bit = DataDirectory.Directories.Reader.Is64Bit;
-            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
             ulong offset = calc.RVAToOffset(section, DataDirectory.VirtualAddress);
             Location location = new Location(offset, DataDirectory.VirtualAddress, imageBase + DataDirectory.VirtualAddress, DataDirectory.Size, DataDirectory.Size);
 
@@ -38,19 +40,27 @@ namespace Workshell.PE
             {
                 IMAGE_TLS_DIRECTORY32 tls_dir = Utils.Read<IMAGE_TLS_DIRECTORY32>(stream);
 
-                directory = new TLSDirectory32(this, location, section, tls_dir);
+                directory = new TLSDirectory32(this,location,tls_dir);
             }
             else
             {
                 IMAGE_TLS_DIRECTORY64 tls_dir = Utils.Read<IMAGE_TLS_DIRECTORY64>(stream);
 
-                directory = new TLSDirectory64(this, location, section, tls_dir);
+                directory = new TLSDirectory64(this,location,tls_dir);
             }
         }
 
         #endregion
 
         #region Properties
+
+        public Section Section
+        {
+            get
+            {
+                return section;
+            }
+        }
 
         public TLSDirectory Directory
         {

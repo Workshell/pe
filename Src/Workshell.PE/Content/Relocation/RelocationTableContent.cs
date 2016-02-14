@@ -13,12 +13,15 @@ namespace Workshell.PE
     public sealed class RelocationTableContent : DataDirectoryContent
     {
 
+        private Section section;
         private RelocationBlocks relocations;
 
         internal RelocationTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory, imageBase)
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = dataDirectory.Directories.Reader.GetCalculator();
+            Stream stream = dataDirectory.Directories.Reader.GetStream();
+
+            section = calc.RVAToSection(dataDirectory.VirtualAddress);
 
             LoadRelocations(calc, stream, imageBase);
         }
@@ -27,7 +30,6 @@ namespace Workshell.PE
 
         private void LoadRelocations(LocationCalculator calc, Stream stream, ulong imageBase)
         {
-            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
             ulong offset = calc.RVAToOffset(section, DataDirectory.VirtualAddress);
             Location location = new Location(offset, DataDirectory.VirtualAddress, imageBase + DataDirectory.VirtualAddress, DataDirectory.Size, DataDirectory.Size);
 
@@ -65,12 +67,20 @@ namespace Workshell.PE
                     break;
             }
 
-            relocations = new RelocationBlocks(this,location,section,block_relocs,imageBase);
+            relocations = new RelocationBlocks(this,location,block_relocs,imageBase);
         }
 
         #endregion
 
         #region Properties
+
+        public Section Section
+        {
+            get
+            {
+                return section;
+            }
+        }
 
         public RelocationBlocks Relocations
         {

@@ -12,14 +12,12 @@ namespace Workshell.PE
 
         private RelocationTableContent content;
         private Location location;
-        private Section section;
         private RelocationBlock[] blocks;
 
-        internal RelocationBlocks(RelocationTableContent relocContent, Location relocLocation, Section relocSection, List<Tuple<ulong,uint,uint,ushort[]>> relocBlocks, ulong imageBase)
+        internal RelocationBlocks(RelocationTableContent relocContent, Location relocLocation, List<Tuple<ulong,uint,uint,ushort[]>> relocBlocks, ulong imageBase)
         {
             content = relocContent;
             location = relocLocation;
-            section = relocSection;
             blocks = new RelocationBlock[0];
 
             Load(relocBlocks,imageBase);
@@ -45,7 +43,7 @@ namespace Workshell.PE
             foreach(Tuple<ulong,uint,uint,ushort[]> tuple in relocBlocks)
             {
                 ulong offset = tuple.Item1;
-                uint rva = calc.OffsetToRVA(section,offset);
+                uint rva = calc.OffsetToRVA(content.Section,offset);
                 ulong va = imageBase + rva;
                 uint size = tuple.Item2;
                 uint page_rva = tuple.Item3;
@@ -76,14 +74,6 @@ namespace Workshell.PE
             get
             {
                 return location;
-            }
-        }
-
-        public Section Section
-        {
-            get
-            {
-                return section;
             }
         }
 

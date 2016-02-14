@@ -79,14 +79,12 @@ namespace Workshell.PE
     {
 
         private DebugContent content;
-        private Section section;
-        private List<DebugData> debug_data;
+        private DebugData[] debug_data;
 
-        internal DebugDataCollection(DebugContent debugContent, Section debugSection, ulong imageBase)
+        internal DebugDataCollection(DebugContent debugContent, ulong imageBase)
         {
             content = debugContent;
-            section = debugSection;
-            debug_data = new List<DebugData>();
+            debug_data = new DebugData[0];
 
             Load(imageBase);
         }
@@ -95,7 +93,7 @@ namespace Workshell.PE
 
         public IEnumerator<DebugData> GetEnumerator()
         {
-            return debug_data.GetEnumerator();
+            return debug_data.Cast<DebugData>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -105,20 +103,22 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Debug Data Count: {0}", debug_data.Count);
+            return String.Format("Debug Data Count: {0}", debug_data.Length);
         }
 
         private void Load(ulong imageBase)
         {
+            List<DebugData> list = new List<DebugData>();
+
             foreach(DebugDirectory directory in content.Directories)
             {
                 Location location = new Location(directory.PointerToRawData,directory.AddressOfRawData,imageBase + directory.AddressOfRawData,directory.SizeOfData,directory.SizeOfData);
                 DebugData data = new DebugData(this,directory,location);
 
-                debug_data.Add(data);
+                list.Add(data);
             }
 
-            debug_data = debug_data.OrderBy(data => data.Location.FileOffset).ToList();
+            debug_data = list.OrderBy(data => data.Location.FileOffset).ToArray();
         }
 
         #endregion
@@ -133,19 +133,11 @@ namespace Workshell.PE
             }
         }
 
-        public Section Section
-        {
-            get
-            {
-                return section;
-            }
-        }
-
         public int Count
         {
             get
             {
-                return debug_data.Count;
+                return debug_data.Length;
             }
         }
 

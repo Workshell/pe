@@ -16,13 +16,11 @@ namespace Workshell.PE
 
         private LoadConfigTableContent content;
         private Location location;
-        private Section section;
 
-        internal LoadConfigDirectory(LoadConfigTableContent configContent, Location configLocation, Section configSection)
+        internal LoadConfigDirectory(LoadConfigTableContent configContent, Location configLocation)
         {
             content = configContent;
             location = configLocation;
-            section = configSection;
         }
 
         #region Methods
@@ -57,14 +55,6 @@ namespace Workshell.PE
             get
             {
                 return location;
-            }
-        }
-
-        public Section Section
-        {
-            get
-            {
-                return section;
             }
         }
 
@@ -227,7 +217,7 @@ namespace Workshell.PE
 
         private IMAGE_LOAD_CONFIG_DIRECTORY32 directory;
 
-        internal LoadConfigDirectory32(LoadConfigTableContent configContent, Location configLocation, Section configSection, IMAGE_LOAD_CONFIG_DIRECTORY32 configDirectory) : base(configContent,configLocation,configSection)
+        internal LoadConfigDirectory32(LoadConfigTableContent configContent, Location configLocation, IMAGE_LOAD_CONFIG_DIRECTORY32 configDirectory) : base(configContent,configLocation)
         {
             directory = configDirectory;
         }
@@ -443,7 +433,7 @@ namespace Workshell.PE
 
         private IMAGE_LOAD_CONFIG_DIRECTORY64 directory;
 
-        internal LoadConfigDirectory64(LoadConfigTableContent configContent, Location configLocation, Section configSection, IMAGE_LOAD_CONFIG_DIRECTORY64 configDirectory) : base(configContent,configLocation,configSection)
+        internal LoadConfigDirectory64(LoadConfigTableContent configContent, Location configLocation, IMAGE_LOAD_CONFIG_DIRECTORY64 configDirectory) : base(configContent,configLocation)
         {
             directory = configDirectory;
         }
