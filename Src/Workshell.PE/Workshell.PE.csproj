@@ -71,6 +71,9 @@
     <Compile Include="Content\Relocation\RelocationBlock.cs" />
     <Compile Include="Content\Relocation\RelocationBlocks.cs" />
     <Compile Include="Content\Relocation\RelocationTableContent.cs" />
+    <Compile Include="Content\Resources\ResourceDirectoryEntry.cs" />
+    <Compile Include="Content\Resources\ResourceTableContent.cs" />
+    <Compile Include="Content\Resources\ResourceDirectory.cs" />
     <Compile Include="Content\TLS\TLSTableContent.cs" />
     <Compile Include="Content\TLS\TLSDirectory.cs" />
     <Compile Include="DataDirectory.cs" />
@@ -83,6 +86,7 @@
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.cs" />
+    <Compile Include="Native\IMAGE_RESOURCE_DATA_ENTRY.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY_ENTRY.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY.cs" />
     <Compile Include="Native\IMAGE_DEBUG_DIRECTORY.cs" />

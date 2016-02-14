@@ -110,6 +110,9 @@ namespace Workshell.PE
                     case DataDirectoryType.CLRRuntimeHeader:
                         dir_content = new CLRContent(this,image_base);
                         break;
+                    case DataDirectoryType.ResourceTable:
+                        dir_content = new ResourceTableContent(this,image_base);
+                        break;
                     default:
                         dir_content = null;
                         break;
