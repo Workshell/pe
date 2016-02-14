@@ -150,38 +150,39 @@ namespace Workshell.PE
 
         private ImportTableContent content;
         private Location location;
-        private Section section;
-        private List<ImportDirectoryEntry> entries;
+        private ImportDirectoryEntry[] entries;
 
-        internal ImportDirectory(ImportTableContent importContent, Location dirLocation, Section dirSection, IEnumerable<IMAGE_IMPORT_DESCRIPTOR> importDescriptors, ulong imageBase)
+        internal ImportDirectory(ImportTableContent importContent, Location dirLocation, IEnumerable<IMAGE_IMPORT_DESCRIPTOR> importDescriptors, ulong imageBase)
         {
             content = importContent;
             location = dirLocation;
-            section = dirSection;
-            entries = new List<ImportDirectoryEntry>();
+            entries = new ImportDirectoryEntry[0];
 
             LocationCalculator calc = importContent.DataDirectory.Directories.Reader.GetCalculator();
             ulong offset = dirLocation.FileOffset;
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>());
+            List<ImportDirectoryEntry> list = new List<ImportDirectoryEntry>();
 
             foreach(IMAGE_IMPORT_DESCRIPTOR descriptor in importDescriptors)
             {
-                uint rva = calc.OffsetToRVA(section,offset);
+                uint rva = calc.OffsetToRVA(content.Section,offset);
                 ulong va = imageBase + rva;
                 Location descripter_location = new Location(offset,rva,va,size,size);
 
                 ImportDirectoryEntry entry = new ImportDirectoryEntry(this,descriptor,descripter_location);
 
-                entries.Add(entry);
+                list.Add(entry);
                 offset += size;
             }
+
+            entries = list.ToArray();
         }
 
         #region Methods
 
         public IEnumerator<ImportDirectoryEntry> GetEnumerator()
         {
-            return entries.GetEnumerator();
+            return entries.Cast<ImportDirectoryEntry>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -191,7 +192,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,location);
+
+            return buffer;
         }
 
         #endregion
@@ -214,19 +218,11 @@ namespace Workshell.PE
             }
         }
 
-        public Section Section
-        {
-            get
-            {
-                return section;
-            }
-        }
-
         public int Count
         {
             get
             {
-                return entries.Count;
+                return entries.Length;
             }
         }
 

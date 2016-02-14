@@ -15,7 +15,7 @@ namespace Workshell.PE
         private ImportAddressTable address_table;
         private ImportHintNameTable name_table;
         private string name;
-        private List<ImportLibraryFunction> functions;
+        private ImportLibraryFunction[] functions;
 
         internal ImportLibrary(Imports owningImports, ImportAddressTable addressTable, ImportHintNameTable nameTable, string libraryName)
         {
@@ -23,7 +23,7 @@ namespace Workshell.PE
             address_table = addressTable;
             name_table = nameTable;
             name = libraryName;
-            functions = new List<ImportLibraryFunction>();
+            functions = new ImportLibraryFunction[0];
 
             LoadFunctions();
         }
@@ -32,7 +32,7 @@ namespace Workshell.PE
 
         public IEnumerator<ImportLibraryFunction> GetEnumerator()
         {
-            return functions.GetEnumerator();
+            return functions.Cast<ImportLibraryFunction>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -42,11 +42,12 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Name: {0}, Imported Function Count: {1}", name, functions.Count);
+            return String.Format("Name: {0}, Imported Function Count: {1}",name,functions.Length);
         }
 
         private void LoadFunctions()
         {
+            List<ImportLibraryFunction> list = new List<ImportLibraryFunction>();
             LocationCalculator calc = imports.Content.DataDirectory.Directories.Reader.GetCalculator();
 
             foreach (ImportAddressTableEntry entry in address_table)
@@ -67,8 +68,10 @@ namespace Workshell.PE
                 }
 
                 if (func != null)
-                    functions.Add(func);
+                    list.Add(func);
             }
+
+            functions = list.ToArray();
         }
 
         #endregion
@@ -103,7 +106,7 @@ namespace Workshell.PE
         {
             get
             {
-                return functions.Count;
+                return functions.Length;
             }
         }
 

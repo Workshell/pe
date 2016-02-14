@@ -23,8 +23,8 @@ namespace Workshell.PE
         {
             bool is_64bit = addressTable.Tables.Content.DataDirectory.Directories.Reader.Is64Bit;
             LocationCalculator calc = addressTable.Tables.Content.DataDirectory.Directories.Reader.GetCalculator();
-            uint rva = calc.OffsetToRVA(addressTable.Tables.Section,entryOffset);
-            ulong va = calc.OffsetToVA(addressTable.Tables.Section,entryOffset);
+            uint rva = calc.OffsetToRVA(addressTable.Tables.Content.Section,entryOffset);
+            ulong va = calc.OffsetToVA(addressTable.Tables.Content.Section,entryOffset);
             uint size = Convert.ToUInt32(is_64bit ? sizeof(ulong) : sizeof(uint));
 
             table = addressTable;
@@ -121,20 +121,20 @@ namespace Workshell.PE
         private ImportAddressTableCollection tables;
         private ImportDirectoryEntry dir_entry;
         private Location location;
-        private List<ImportAddressTableEntry> entries;
+        private ImportAddressTableEntry[] entries;
 
         internal ImportAddressTable(ImportAddressTableCollection addressTables,  ImportDirectoryEntry directoryEntry, ulong tableOffset, IEnumerable<ulong> tableEntries)
         {
             bool is_64bit = addressTables.Content.DataDirectory.Directories.Reader.Is64Bit;
             LocationCalculator calc = addressTables.Content.DataDirectory.Directories.Reader.GetCalculator();
-            uint rva = calc.OffsetToRVA(addressTables.Section,tableOffset);
-            ulong va = calc.OffsetToVA(addressTables.Section,tableOffset);
+            uint rva = calc.OffsetToRVA(addressTables.Content.Section,tableOffset);
+            ulong va = calc.OffsetToVA(addressTables.Content.Section,tableOffset);
             uint size = Convert.ToUInt32(tableEntries.Count() * (is_64bit ? sizeof(ulong) : sizeof(uint)));
 
             tables = addressTables;
             dir_entry = directoryEntry;
             location = new Location(tableOffset,rva,va,size,size);
-            entries = new List<ImportAddressTableEntry>();
+            entries = new ImportAddressTableEntry[0];
 
             LoadEntries(is_64bit,tableOffset,tableEntries);
         }
@@ -143,7 +143,7 @@ namespace Workshell.PE
 
         public IEnumerator<ImportAddressTableEntry> GetEnumerator()
         {
-            return entries.GetEnumerator();
+            return entries.Cast<ImportAddressTableEntry>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -153,7 +153,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("File Offset: 0x{0:X8}, Table Entry Count: {1}",location.FileOffset,entries.Count);
+            return String.Format("File Offset: 0x{0:X8}, Table Entry Count: {1}",location.FileOffset,entries.Length);
         }
 
         public byte[] GetBytes()
@@ -166,6 +166,7 @@ namespace Workshell.PE
 
         private void LoadEntries(bool is64Bit, ulong tableOffset, IEnumerable<ulong> tableEntries)
         {
+            List<ImportAddressTableEntry> list = new List<ImportAddressTableEntry>();
             ulong offset = tableOffset;
 
             foreach(ulong addr_or_ord in tableEntries)
@@ -211,10 +212,11 @@ namespace Workshell.PE
 
                 ImportAddressTableEntry entry = new ImportAddressTableEntry(this,offset,address,ordinal,is_ordinal);
 
-                entries.Add(entry);
-
+                list.Add(entry);
                 offset += Convert.ToUInt32(is64Bit ? sizeof(ulong) : sizeof(uint));
             }
+
+            entries = list.ToArray();
         }
 
         #endregion
@@ -249,7 +251,7 @@ namespace Workshell.PE
         {
             get
             {
-                return entries.Count;
+                return entries.Length;
             }
         }
 
@@ -269,16 +271,14 @@ namespace Workshell.PE
     {
 
         private ImportTableContent content;
-        private Section section;
-        private List<ImportAddressTable> tables;
+        private ImportAddressTable[] tables;
         private Location location;
         
-        internal ImportAddressTableCollection(ImportTableContent tableContent, Section tablesSection, IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
+        internal ImportAddressTableCollection(ImportTableContent tableContent, IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
         {
             content = tableContent;
             location = null;
-            section = tablesSection;
-            tables = new List<ImportAddressTable>();
+            tables = new ImportAddressTable[0];
 
             LoadTables(tablesInfo);
 
@@ -288,8 +288,8 @@ namespace Workshell.PE
                 lowest_offset = tablesInfo.MinBy(table => table.Item1).Item1;
 
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            uint rva = calc.OffsetToRVA(section,lowest_offset);
-            ulong va = calc.OffsetToVA(section,lowest_offset);
+            uint rva = calc.OffsetToRVA(content.Section,lowest_offset);
+            ulong va = calc.OffsetToVA(content.Section,lowest_offset);
             uint size = Convert.ToUInt32(tables.Sum(table => table.Location.FileSize));
 
             location = new Location(lowest_offset,rva,va,size,size);
@@ -299,7 +299,7 @@ namespace Workshell.PE
 
         public IEnumerator<ImportAddressTable> GetEnumerator()
         {
-            return tables.GetEnumerator();
+            return tables.Cast<ImportAddressTable>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -309,7 +309,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("File Offset: 0x{0:X8}, Table Count: {1}",location.FileOffset,tables.Count);
+            return String.Format("File Offset: 0x{0:X8}, Table Count: {1}",location.FileOffset,tables.Length);
         }
 
         public byte[] GetBytes()
@@ -322,6 +322,7 @@ namespace Workshell.PE
 
         private void LoadTables(IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
         {
+            List<ImportAddressTable> list = new List<ImportAddressTable>();
             bool is_64bit = content.DataDirectory.Directories.Reader.Is64Bit;
             Stream stream = content.DataDirectory.Directories.Reader.GetStream();
 
@@ -352,8 +353,10 @@ namespace Workshell.PE
 
                 ImportAddressTable table = new ImportAddressTable(this,table_info.Item2,table_info.Item1,entries);
 
-                tables.Add(table);
+                list.Add(table);
             }
+
+            tables = list.ToArray();
         }
 
         #endregion
@@ -365,14 +368,6 @@ namespace Workshell.PE
             get
             {
                 return content;
-            }
-        }
-
-        public Section Section
-        {
-            get
-            {
-                return section;
             }
         }
 
@@ -388,7 +383,7 @@ namespace Workshell.PE
         {
             get
             {
-                return tables.Count;
+                return tables.Length;
             }
         }
 

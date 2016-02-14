@@ -25,6 +25,7 @@ namespace Workshell.PE
         }
 
         private ulong image_base;
+        private Section section;
         private ExportDirectory dir;
         private ExportTable<uint> address_table;
         private ExportTable<uint> name_pointer_table;
@@ -33,10 +34,11 @@ namespace Workshell.PE
 
         internal ExportTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory,imageBase)
         {
-            image_base = imageBase;
+            LocationCalculator calc = dataDirectory.Directories.Reader.GetCalculator();
+            Stream stream = dataDirectory.Directories.Reader.GetStream();
 
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            image_base = imageBase;
+            section = calc.RVAToSection(dataDirectory.VirtualAddress);
 
             LoadDirectory(calc,stream);
             LoadAddressTable(calc,stream);
@@ -49,7 +51,6 @@ namespace Workshell.PE
 
         private void LoadDirectory(LocationCalculator calc, Stream stream)
         {
-            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
             ulong offset = calc.RVAToOffset(section,DataDirectory.VirtualAddress);
             int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
             Location location = new Location(offset,DataDirectory.VirtualAddress,image_base + DataDirectory.VirtualAddress,Convert.ToUInt32(size),Convert.ToUInt32(size));
@@ -58,12 +59,11 @@ namespace Workshell.PE
 
             IMAGE_EXPORT_DIRECTORY export_dir = Utils.Read<IMAGE_EXPORT_DIRECTORY>(stream,size);
 
-            dir = new ExportDirectory(this,location,section,export_dir);
+            dir = new ExportDirectory(this,location,export_dir);
         }
 
         private void LoadAddressTable(LocationCalculator calc, Stream stream)
         {
-            Section section = calc.RVAToSection(dir.AddressOfFunctions);
             ulong offset = calc.RVAToOffset(section,dir.AddressOfFunctions);
             uint size = dir.NumberOfFunctions * sizeof(uint);
             Location location = new Location(offset,dir.AddressOfFunctions,image_base + dir.AddressOfFunctions,size,size);
@@ -78,12 +78,11 @@ namespace Workshell.PE
                 addresses.Add(address);
             }
 
-            address_table = new ExportTable<uint>(this,location,section,addresses);
+            address_table = new ExportTable<uint>(this,location,addresses);
         }
 
         private void LoadNamePointerTable(LocationCalculator calc, Stream stream)
-        {    
-            Section section = calc.RVAToSection(dir.AddressOfNames);
+        {
             ulong offset = calc.RVAToOffset(section,dir.AddressOfNames);
             uint size = dir.NumberOfFunctions * sizeof(uint);
             Location location = new Location(offset,dir.AddressOfNames,image_base + dir.AddressOfNames,size,size);
@@ -98,12 +97,11 @@ namespace Workshell.PE
                 addresses.Add(address);
             }
 
-            name_pointer_table = new ExportTable<uint>(this,location,section,addresses);
+            name_pointer_table = new ExportTable<uint>(this,location,addresses);
         }
 
         private void LoadOrdinalTable(LocationCalculator calc, Stream stream)
-        {    
-            Section section = calc.RVAToSection(dir.AddressOfNameOrdinals);
+        {
             ulong offset = calc.RVAToOffset(section,dir.AddressOfNameOrdinals);
             uint size = dir.NumberOfFunctions * sizeof(ushort);
             Location location = new Location(offset,dir.AddressOfNameOrdinals,image_base + dir.AddressOfNameOrdinals,size,size);
@@ -118,7 +116,7 @@ namespace Workshell.PE
                 ordinals.Add(ord);
             }
 
-            ordinal_table = new ExportTable<ushort>(this,location,section,ordinals);
+            ordinal_table = new ExportTable<ushort>(this,location,ordinals);
         }
 
         private void LoadExports(LocationCalculator calc, Stream stream)
@@ -201,6 +199,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public Section Section
+        {
+            get
+            {
+                return section;
+            }
+        }
 
         public ExportDirectory Directory
         {

@@ -14,12 +14,12 @@ namespace Workshell.PE
     {
 
         private ImportTableContent content;
-        private List<ImportLibrary> libraries;
+        private ImportLibrary[] libraries;
 
         internal Imports(ImportTableContent tableContent, IEnumerable<Tuple<string,ImportAddressTable,ImportHintNameTable>> importLibraries)
         {
             content = tableContent;
-            libraries = new List<ImportLibrary>();
+            libraries = new ImportLibrary[0];
 
             LoadLibraries(importLibraries);
         }
@@ -28,7 +28,7 @@ namespace Workshell.PE
 
         public IEnumerator<ImportLibrary> GetEnumerator()
         {
-            return libraries.GetEnumerator();
+            return libraries.Cast<ImportLibrary>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -38,17 +38,21 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Library Count: {0}", libraries.Count);
+            return String.Format("Library Count: {0}",libraries.Length);
         }
 
         private void LoadLibraries(IEnumerable<Tuple<string,ImportAddressTable,ImportHintNameTable>> importLibraries)
         {
+            List<ImportLibrary> list = new List<ImportLibrary>();
+
             foreach(Tuple<string,ImportAddressTable,ImportHintNameTable> tuple in importLibraries)
             {
                 ImportLibrary library = new ImportLibrary(this,tuple.Item2,tuple.Item3,tuple.Item1);
 
-                libraries.Add(library);
+                list.Add(library);
             }
+
+            libraries = list.ToArray();
         }
 
         #endregion
@@ -67,7 +71,7 @@ namespace Workshell.PE
         {
             get
             {
-                return libraries.Count;
+                return libraries.Length;
             }
         }
 

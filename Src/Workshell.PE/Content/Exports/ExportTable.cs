@@ -13,22 +13,20 @@ namespace Workshell.PE
 
         private ExportTableContent content;
         private Location location;
-        private Section section;
-        private List<T> table;
+        private T[] table;
 
-        internal ExportTable(ExportTableContent exportContent, Location tableLocation, Section tableSection, IEnumerable<T> tableList)
+        internal ExportTable(ExportTableContent exportContent, Location tableLocation, IEnumerable<T> tableList)
         {
             content = exportContent;
             location = tableLocation;
-            section = tableSection;
-            table = new List<T>(tableList);
+            table = tableList.ToArray();
         }
 
         #region Methods
 
         public IEnumerator<T> GetEnumerator()
         {
-            return table.GetEnumerator();
+            return table.Cast<T>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -61,19 +59,11 @@ namespace Workshell.PE
             }
         }
 
-        public Section Section
-        {
-            get
-            {
-                return section;
-            }
-        }
-
         public int Count
         {
             get
             {
-                return table.Count;
+                return table.Length;
             }
         }
 

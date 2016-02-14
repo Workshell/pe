@@ -85,19 +85,19 @@ namespace Workshell.PE
     {
 
         private ExportTableContent content;
-        private List<Export> exports;
+        private Export[] exports;
 
         internal Exports(ExportTableContent tableContent, List<Export> exportList)
         {
             content = tableContent;
-            exports = exportList;
+            exports = exportList.ToArray();
         }
 
         #region Methods
 
         public IEnumerator<Export> GetEnumerator()
         {
-            return exports.GetEnumerator();
+            return exports.Cast<Export>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -121,7 +121,7 @@ namespace Workshell.PE
         {
             get
             {
-                return exports.Count;
+                return exports.Length;
             }
         }
 

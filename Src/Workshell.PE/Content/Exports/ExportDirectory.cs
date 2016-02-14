@@ -18,15 +18,13 @@ namespace Workshell.PE
         private static readonly int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
 
         private ExportTableContent content;
-        private Section section;
         private IMAGE_EXPORT_DIRECTORY directory;
         private Location location;
 
-        internal ExportDirectory(ExportTableContent exportContent, Location dirLocation, Section dirSection, IMAGE_EXPORT_DIRECTORY dir)
+        internal ExportDirectory(ExportTableContent exportContent, Location dirLocation, IMAGE_EXPORT_DIRECTORY dir)
         {
             content = exportContent;
             location = dirLocation;
-            section = dirSection;
             directory = dir;
         }
 
@@ -55,7 +53,7 @@ namespace Workshell.PE
         {
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
             StringBuilder builder = new StringBuilder();
-            long offset = Convert.ToInt64(calc.RVAToOffset(section,directory.Name));
+            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.Name));
             Stream stream = content.DataDirectory.Directories.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
@@ -79,7 +77,7 @@ namespace Workshell.PE
         {
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
             List<uint> results = new List<uint>();
-            long offset = Convert.ToInt64(calc.RVAToOffset(section,directory.AddressOfFunctions));
+            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.AddressOfFunctions));
             Stream stream = content.DataDirectory.Directories.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
@@ -98,7 +96,7 @@ namespace Workshell.PE
         {
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
             List<uint> results = new List<uint>();
-            long offset = Convert.ToInt64(calc.RVAToOffset(section,directory.AddressOfNames));
+            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.AddressOfNames));
             Stream stream = content.DataDirectory.Directories.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
@@ -117,7 +115,7 @@ namespace Workshell.PE
         {
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
             List<ushort> results = new List<ushort>();
-            long offset = Convert.ToInt64(calc.RVAToOffset(section,directory.AddressOfNameOrdinals));
+            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.AddressOfNameOrdinals));
             Stream stream = content.DataDirectory.Directories.Reader.GetStream();
 
             stream.Seek(offset,SeekOrigin.Begin);
@@ -149,14 +147,6 @@ namespace Workshell.PE
             get
             {
                 return location;
-            }
-        }
-
-        public Section Section
-        {
-            get
-            {
-                return section;
             }
         }
 

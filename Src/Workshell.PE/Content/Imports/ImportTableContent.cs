@@ -14,6 +14,7 @@ namespace Workshell.PE
     {
 
         private ulong image_base;
+        private Section section;
         private ImportDirectory dir;
         private ImportAddressTableCollection ilt;
         private ImportAddressTableCollection iat;
@@ -22,10 +23,11 @@ namespace Workshell.PE
 
         internal ImportTableContent(DataDirectory dataDirectory, ulong imageBase) : base(dataDirectory,imageBase)
         {
-            image_base = imageBase;
+            LocationCalculator calc = dataDirectory.Directories.Reader.GetCalculator();
+            Stream stream = dataDirectory.Directories.Reader.GetStream();
 
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            image_base = imageBase;
+            section = calc.RVAToSection(dataDirectory.VirtualAddress);
 
             LoadDirectory(calc,stream);
             LoadILT(calc,stream);
@@ -39,7 +41,6 @@ namespace Workshell.PE
         private void LoadDirectory(LocationCalculator calc, Stream stream)
         {
             List<IMAGE_IMPORT_DESCRIPTOR> descriptors = new List<IMAGE_IMPORT_DESCRIPTOR>();
-            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
             ulong offset = calc.RVAToOffset(section,DataDirectory.VirtualAddress);
             int size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
 
@@ -58,13 +59,12 @@ namespace Workshell.PE
             uint total_size = Convert.ToUInt32((descriptors.Count + 1) * size);
             Location location = new Location(offset,DataDirectory.VirtualAddress,image_base + DataDirectory.VirtualAddress,total_size,total_size);
 
-            dir = new ImportDirectory(this,location,section,descriptors,image_base);
+            dir = new ImportDirectory(this,location,descriptors,image_base);
         }
 
         private void LoadILT(LocationCalculator calc, Stream stream)
         {
             bool is_64bit = DataDirectory.Directories.Reader.Is64Bit;
-            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
             List<Tuple<ulong,ImportDirectoryEntry>> tables = new List<Tuple<ulong,ImportDirectoryEntry>>();
 
             foreach(ImportDirectoryEntry dir_entry in dir)
@@ -77,13 +77,12 @@ namespace Workshell.PE
                 tables.Add(new Tuple<ulong,ImportDirectoryEntry>(offset,dir_entry));
             }
 
-            ilt = new ImportAddressTableCollection(this,section,tables);
+            ilt = new ImportAddressTableCollection(this,tables);
         }
 
         private void LoadIAT(LocationCalculator calc, Stream stream)
         {
             bool is_64bit = DataDirectory.Directories.Reader.Is64Bit;
-            Section section = calc.RVAToSection(DataDirectory.VirtualAddress);
             List<Tuple<ulong,ImportDirectoryEntry>> tables = new List<Tuple<ulong,ImportDirectoryEntry>>();
 
             foreach(ImportDirectoryEntry dir_entry in dir)
@@ -96,7 +95,7 @@ namespace Workshell.PE
                 tables.Add(new Tuple<ulong,ImportDirectoryEntry>(offset,dir_entry));
             }
 
-            iat = new ImportAddressTableCollection(this,section,tables);
+            iat = new ImportAddressTableCollection(this,tables);
         }
 
         private void LoadHintNameTable(LocationCalculator calc, Stream stream)
@@ -186,6 +185,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public Section Section
+        {
+            get
+            {
+                return section;
+            }
+        }
 
         public ImportDirectory Directory
         {

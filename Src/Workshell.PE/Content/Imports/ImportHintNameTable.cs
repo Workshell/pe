@@ -100,14 +100,13 @@ namespace Workshell.PE
     {
 
         private ImportTableContent content;
-        private List<ImportHintNameEntry> table;
+        private ImportHintNameEntry[] table;
         private Location location;
-        private Section section;
 
         internal ImportHintNameTable(ImportTableContent tableContent, IEnumerable<Tuple<ulong,uint,ushort,string,bool>> tableEntries)
         {
             content = tableContent;
-            table = new List<ImportHintNameEntry>();
+            table = new ImportHintNameEntry[0];
             location = null;
 
             LoadTable(tableEntries);
@@ -117,7 +116,7 @@ namespace Workshell.PE
 
         public IEnumerator<ImportHintNameEntry> GetEnumerator()
         {
-            return table.GetEnumerator();
+            return table.Cast<ImportHintNameEntry>().GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -127,7 +126,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("File Offset: 0x{0:X8}, Name Count: {1}", location.FileOffset, table.Count);
+            return String.Format("File Offset: 0x{0:X8}, Name Count: {1}",location.FileOffset,table.Length);
         }
 
         public byte[] GetBytes()
@@ -143,19 +142,21 @@ namespace Workshell.PE
 
         private void LoadTable(IEnumerable<Tuple<ulong, uint, ushort, string, bool>> tableEntries)
         {
+            List<ImportHintNameEntry> list = new List<ImportHintNameEntry>();
+
             foreach(var tuple in tableEntries)
             {
                 ImportHintNameEntry entry = new ImportHintNameEntry(this, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4, tuple.Item5);
 
-                table.Add(entry);
+                list.Add(entry);
             }
 
-            table = table.OrderBy(entry => entry.Location.VirtualAddress).ToList();
+            table = list.OrderBy(entry => entry.Location.VirtualAddress).ToArray();
         }
 
         private void UpdateLocation()
         {
-            if (table.Count == 0)
+            if (table.Length == 0)
             {
                 location = new Location(0,0,0,0,0);
 
@@ -174,7 +175,6 @@ namespace Workshell.PE
             ulong va = calc.OffsetToVA(offset);
 
             location = new Location(offset, rva, va, size, size);
-            section = calc.RVAToSection(rva);
         }
 
         #endregion
@@ -200,22 +200,11 @@ namespace Workshell.PE
             }
         }
 
-        public Section Section
-        {
-            get
-            {
-                if (section == null)
-                    UpdateLocation();
-
-                return section;
-            }
-        }
-
         public int Count
         {
             get
             {
-                return table.Count;
+                return table.Length;
             }
         }
 
