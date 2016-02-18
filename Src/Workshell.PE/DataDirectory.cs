@@ -113,6 +113,9 @@ namespace Workshell.PE
                     case DataDirectoryType.ResourceTable:
                         dir_content = new ResourceTableContent(this,image_base);
                         break;
+                    case DataDirectoryType.CertificateTable:
+                        dir_content = new CertificateTableContent(this,image_base);
+                        break;
                     default:
                         dir_content = null;
                         break;

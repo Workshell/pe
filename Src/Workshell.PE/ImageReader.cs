@@ -29,6 +29,7 @@ namespace Workshell.PE
             public bool Is32Bit;
             public bool Is64Bit;
             public bool IsCLR;
+            public bool IsSigned;
         
         }
 
@@ -46,6 +47,7 @@ namespace Workshell.PE
         private bool _is_32bit;
         private bool _is_64bit;
         private bool _is_clr;
+        private bool _is_signed;
 
         private ImageReader(Stream sourceStream, bool ownStream)
         {
@@ -63,6 +65,7 @@ namespace Workshell.PE
             _is_32bit = false;
             _is_64bit = false;
             _is_clr = false;
+            _is_signed = false;
 
             Load();
         }
@@ -268,6 +271,17 @@ namespace Workshell.PE
                     is_clr = true;
             }
 
+            bool is_signed = false;
+            int cert_dir_index = (int)DataDirectoryType.CertificateTable;
+
+            if (cert_dir_index < 0 || cert_dir_index > (data_directories.Length - 1))
+            {
+                IMAGE_DATA_DIRECTORY cert_dir = data_directories[cert_dir_index];
+
+                if (cert_dir.VirtualAddress > 0 && cert_dir.Size > 0)
+                    is_signed = true;
+            }
+
             PreloadedInformation info = new PreloadedInformation() {
                 DOSHeader = dos_header,
                 StubOffset = Convert.ToUInt64(stub_offset),
@@ -280,7 +294,8 @@ namespace Workshell.PE
 
                 Is32Bit = is_32bit,
                 Is64Bit = is_64bit,
-                IsCLR = is_clr
+                IsCLR = is_clr,
+                IsSigned = is_signed
             };
 
             return info;
@@ -369,6 +384,7 @@ namespace Workshell.PE
             _is_32bit = preload_info.Is32Bit;
             _is_64bit = preload_info.Is64Bit;
             _is_clr = preload_info.IsCLR;
+            _is_signed = preload_info.IsSigned;
         }
 
         #endregion
@@ -396,6 +412,14 @@ namespace Workshell.PE
             get
             {
                 return _is_clr;
+            }
+        }
+
+        public bool IsSigned
+        {
+            get
+            {
+                return _is_signed;
             }
         }
 

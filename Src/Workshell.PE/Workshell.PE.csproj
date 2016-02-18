@@ -43,6 +43,8 @@
     <Compile Include="Annotations\FieldAnnotation.cs" />
     <Compile Include="Annotations\EnumAnnotationAttribute.cs" />
     <Compile Include="Annotations\FieldAnnotationAttribute.cs" />
+    <Compile Include="Content\Certificates\Certificate.cs" />
+    <Compile Include="Content\Certificates\CertificateTableContent.cs" />
     <Compile Include="Content\CLR\CLRContent.cs" />
     <Compile Include="Content\CLR\CLRDataDirectory.cs" />
     <Compile Include="Content\CLR\CLRHeader.cs" />
@@ -88,6 +90,7 @@
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.cs" />
+    <Compile Include="Native\WIN_CERTIFICATE.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DATA_ENTRY.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY_ENTRY.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY.cs" />
