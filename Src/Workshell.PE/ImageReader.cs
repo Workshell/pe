@@ -95,9 +95,10 @@ namespace Workshell.PE
 
         public static bool IsValid(string fileName, out string errorMessage)
         {
-            FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
-
-            return IsValid(file,out errorMessage);  
+            using (FileStream file = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                return IsValid(file, out errorMessage);
+            }
         }
 
         public static ImageReader FromFile(string fileName)
@@ -203,9 +204,24 @@ namespace Workshell.PE
             }
 
             IMAGE_FILE_HEADER file_header = Utils.Read<IMAGE_FILE_HEADER>(stream,FileHeader.Size);
-            CharacteristicsType characteristics = (CharacteristicsType)file_header.Characteristics;
-            bool is_32bit = ((characteristics & CharacteristicsType.Supports32Bit) == CharacteristicsType.Supports32Bit);
-            bool is_64bit = !is_32bit;
+
+            ushort magic = 0;
+            long position = stream.Position;
+
+            try
+            {
+                magic = Utils.ReadUInt16(stream);
+            }
+            finally
+            {
+                stream.Seek(position, SeekOrigin.Begin);
+            }
+
+            bool is_32bit = (magic == (ushort)MagicType.PE32);
+            bool is_64bit = (magic == (ushort)MagicType.PE32plus);
+
+            if (!is_32bit && !is_64bit)
+                throw new ImageReaderException("Unknown PE type.");
 
             if ((stream.Position + file_header.SizeOfOptionalHeader) > stream.Length)
             {
