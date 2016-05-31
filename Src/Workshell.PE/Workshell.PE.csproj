@@ -84,6 +84,7 @@
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
     <Compile Include="FileHeader.cs" />
+    <Compile Include="GenericLocatable.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="LocationCalculator.cs" />
     <Compile Include="MoreLinq\DistinctBy.cs" />

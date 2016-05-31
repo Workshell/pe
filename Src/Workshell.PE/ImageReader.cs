@@ -319,15 +319,6 @@ namespace Workshell.PE
 
         #endregion
 
-        #region Internal Methods
-
-        internal Stream GetStream()
-        {
-            return _stream;
-        }
-
-        #endregion
-
         #region Methods
 
         public void Dispose()
@@ -339,6 +330,11 @@ namespace Workshell.PE
             
                 _disposed = true;
             }
+        }
+
+        public Stream GetStream()
+        {
+            return _stream;
         }
 
         public byte[] GetBytes()
