@@ -185,7 +185,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class DebugDirectoryCollection : IEnumerable<DebugDirectory>, IReadOnlyList<DebugDirectory>
+    public sealed class DebugDirectoryCollection : IEnumerable<DebugDirectory>, IReadOnlyList<DebugDirectory>, ISupportsLocation, ISupportsBytes
     {
 
         private DebugContent content;
@@ -218,6 +218,14 @@ namespace Workshell.PE
             return String.Format("Debug Entry Count: {0}", directories.Length);
         }
 
+        public byte[] GetBytes()
+        {
+            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream, location);
+
+            return buffer;
+        }
+
         private void LoadDirectories(List<Tuple<ulong, IMAGE_DEBUG_DIRECTORY>> dirEntries)
         {
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
@@ -235,7 +243,7 @@ namespace Workshell.PE
                 list.Add(dir);
             }
 
-            directories = directories.OrderBy(dir => dir.Location.FileOffset).ToArray();
+            directories = list.OrderBy(dir => dir.Location.FileOffset).ToArray();
         }
 
         #endregion

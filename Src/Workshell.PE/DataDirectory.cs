@@ -38,6 +38,7 @@ namespace Workshell.PE
         private IMAGE_DATA_DIRECTORY data_dir;
         private ulong image_base;
         private DataDirectoryContent dir_content;
+        private string section;
 
         internal DataDirectory(DataDirectoryCollection dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
@@ -46,6 +47,7 @@ namespace Workshell.PE
             data_dir = dataDirectory;
             image_base = imageBase;
             dir_content = null;
+            section = null;
         }
 
         #region Static Methods
@@ -125,6 +127,20 @@ namespace Workshell.PE
             return dir_content;
         }
 
+        private string GetSectionName()
+        {
+            if (data_dir.VirtualAddress == 0)
+                return String.Empty;
+
+            foreach(SectionTableEntry entry in dirs.Reader.SectionTable)
+            {
+                if (data_dir.VirtualAddress >= entry.VirtualAddress && data_dir.VirtualAddress <= (entry.VirtualAddress + entry.SizeOfRawData))
+                    return entry.Name;
+            }
+
+            return String.Empty;
+        }
+
         #endregion
 
         #region Properties
@@ -158,6 +174,17 @@ namespace Workshell.PE
             get
             {
                 return data_dir.Size;
+            }
+        }
+
+        public string Section
+        {
+            get
+            {
+                if (section == null)
+                    section = GetSectionName();
+
+                return section;
             }
         }
 

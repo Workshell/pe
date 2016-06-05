@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public sealed class RelocationBlocks : IEnumerable<RelocationBlock>, IReadOnlyCollection<RelocationBlock>
+    public sealed class RelocationBlocks : IEnumerable<RelocationBlock>, IReadOnlyCollection<RelocationBlock>, ISupportsLocation, ISupportsBytes
     {
 
         private RelocationTableContent content;
@@ -33,6 +34,14 @@ namespace Workshell.PE
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public byte[] GetBytes()
+        {
+            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream, location);
+
+            return buffer;
         }
 
         private void Load(List<Tuple<ulong,uint,uint,ushort[]>> relocBlocks, ulong imageBase)

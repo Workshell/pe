@@ -56,9 +56,9 @@ namespace Workshell.PE
         MemoryPreload = 0x00080000,
         [EnumAnnotation("IMAGE_SCN_ALIGN_1BYTES")]
         Align1Bytes = 0x00100000,
-        [EnumAnnotation("IMAGE_SCN_ALIGN_1BYTES")]
+        [EnumAnnotation("IMAGE_SCN_ALIGN_2BYTES")]
         Align2Bytes = 0x00200000,
-        [EnumAnnotation("IMAGE_SCN_ALIGN_1BYTES")]
+        [EnumAnnotation("IMAGE_SCN_ALIGN_4BYTES")]
         Align4Bytes = 0x00300000,
         [EnumAnnotation("IMAGE_SCN_ALIGN_8BYTES")]
         Align8Bytes = 0x00400000,

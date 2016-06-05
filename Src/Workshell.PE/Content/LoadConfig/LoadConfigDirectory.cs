@@ -184,7 +184,7 @@ namespace Workshell.PE
             get;
         }
 
-        [FieldAnnotation("Reservws")]
+        [FieldAnnotation("Reserved")]
         public abstract ulong Reserved2
         {
             get;
