@@ -63,7 +63,7 @@ namespace Workshell.PE
                 list.Add(block);
             }
 
-            blocks = list.ToArray();
+            blocks = list.OrderBy(block => block.Location.FileOffset).ToArray();
         }
 
         #endregion

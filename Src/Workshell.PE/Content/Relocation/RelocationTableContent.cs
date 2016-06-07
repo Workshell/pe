@@ -59,7 +59,7 @@ namespace Workshell.PE
                     block_size += sizeof(ushort);
                 }
 
-                Tuple<ulong,uint,uint,ushort[]> block = new Tuple<ulong,uint,uint,ushort[]>(block_offset,block_size,base_reloc.VirtualAddress,relocs.ToArray());
+                Tuple<ulong,uint,uint,ushort[]> block = new Tuple<ulong,uint,uint,ushort[]>(block_offset,base_reloc.SizeOfBlock,base_reloc.VirtualAddress,relocs.ToArray());
 
                 block_relocs.Add(block);
 
