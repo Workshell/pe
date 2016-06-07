@@ -43,10 +43,9 @@ namespace Workshell.PE
             {
                 IMAGE_BASE_RELOCATION base_reloc = Utils.Read<IMAGE_BASE_RELOCATION>(stream);
 
-                block_offset += sizeof(ulong);
                 block_size += sizeof(ulong);
 
-                long count = (base_reloc.SizeOfBlock - 8) / 2;
+                long count = (base_reloc.SizeOfBlock - sizeof(ulong)) / sizeof(ushort);
                 List<ushort> relocs = new List<ushort>();
 
                 for(long i = 0; i < count; i++)
@@ -55,7 +54,6 @@ namespace Workshell.PE
 
                     relocs.Add(reloc);
 
-                    block_offset += sizeof(ushort);
                     block_size += sizeof(ushort);
                 }
 
@@ -65,6 +63,9 @@ namespace Workshell.PE
 
                 if (block_size >= DataDirectory.Size)
                     break;
+
+                block_offset += sizeof(ulong);
+                block_offset += sizeof(ushort) * (uint)count;
             }
 
             relocations = new RelocationBlocks(this,location,block_relocs,imageBase);
