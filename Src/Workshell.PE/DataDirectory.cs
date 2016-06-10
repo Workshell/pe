@@ -188,6 +188,14 @@ namespace Workshell.PE
             }
         }
 
+        public bool IsEmpty
+        {
+            get
+            {
+                return (data_dir.VirtualAddress == 0 && data_dir.Size == 0);
+            }
+        }
+
         #endregion
 
     }
