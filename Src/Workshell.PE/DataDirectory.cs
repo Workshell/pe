@@ -129,12 +129,12 @@ namespace Workshell.PE
 
         private string GetSectionName()
         {
-            if (data_dir.VirtualAddress == 0)
+            if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
                 return String.Empty;
 
             foreach(SectionTableEntry entry in dirs.Reader.SectionTable)
             {
-                if (data_dir.VirtualAddress >= entry.VirtualAddress && data_dir.VirtualAddress <= (entry.VirtualAddress + entry.SizeOfRawData))
+                if (data_dir.VirtualAddress >= entry.VirtualAddress && data_dir.VirtualAddress < (entry.VirtualAddress + entry.SizeOfRawData))
                     return entry.Name;
             }
 
