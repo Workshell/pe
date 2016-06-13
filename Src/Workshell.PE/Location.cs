@@ -10,7 +10,7 @@ namespace Workshell.PE
     public sealed class Location : IEquatable<Location>
     {
 
-        internal Location(ulong fileOffset, uint rva, ulong va, uint fileSize, uint virtualSize)
+        public Location(ulong fileOffset, uint rva, ulong va, uint fileSize, uint virtualSize)
         {
             FileOffset = fileOffset;
             FileSize = fileSize;
