@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Workshell.PE.Extensions;
+
 namespace Workshell.PE
 {
 
@@ -21,7 +23,7 @@ namespace Workshell.PE
 
         internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
         {
-            uint size = 4 + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize;
+            uint size = (4U + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize).ToUInt32();
 
             reader = exeReader;
             location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,size,size);

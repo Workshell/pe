@@ -9,31 +9,33 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class Section : ISupportsLocation, ISupportsBytes
+    public sealed class Section : ISupportsLocation, ISupportsBytes
     {
 
         private Sections _sections;
-        private SectionTableEntry table_entry;
-        private Location location;
+        private SectionTableEntry _table_entry;
+        private Location _location;
 
-        internal Section(Sections sections, SectionTableEntry tableEntry, ulong imageBase)
+        internal Section(Sections sections, SectionTableEntry tableEntry)
         {
+            ulong image_base = sections.Reader.NTHeaders.OptionalHeader.ImageBase;
+
             _sections = sections;
-            table_entry = tableEntry;
-            location = new Location(tableEntry.PointerToRawData,tableEntry.VirtualAddress,imageBase + tableEntry.VirtualAddress,tableEntry.SizeOfRawData,tableEntry.VirtualSizeOrPhysicalAddress);
+            _table_entry = tableEntry;
+            _location = new Location(tableEntry.PointerToRawData,tableEntry.VirtualAddress,image_base + tableEntry.VirtualAddress,tableEntry.SizeOfRawData,tableEntry.VirtualSizeOrPhysicalAddress);
         }
 
         #region Methods
 
         public override string ToString()
         {
-            return table_entry.Name;
+            return _table_entry.Name;
         }
 
         public byte[] GetBytes()
         {
             Stream stream = _sections.Reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            byte[] buffer = Utils.ReadBytes(stream,_location);
 
             return buffer;
         }
@@ -54,7 +56,7 @@ namespace Workshell.PE
         {
             get
             {
-                return table_entry;
+                return _table_entry;
             }
         }
 
@@ -62,7 +64,7 @@ namespace Workshell.PE
         {
             get
             {
-                return location;
+                return _location;
             }
         }
 
@@ -70,7 +72,7 @@ namespace Workshell.PE
         {
             get
             {
-                return table_entry.Name;
+                return _table_entry.Name;
             }
         }
 
@@ -83,35 +85,42 @@ namespace Workshell.PE
 
         private ImageReader reader;
         private SectionTable table;
-        private Section[] sections;
+        private Dictionary<SectionTableEntry,Section> sections;
 
-        internal Sections(ImageReader exeReader, SectionTable sectionTable, ulong imageBase)
+        internal Sections(ImageReader exeReader, SectionTable sectionTable)
         {
             reader = exeReader;
             table = sectionTable;
-
-            List<Section> list = new List<Section>();
-
-            foreach(SectionTableEntry entry in sectionTable)
-            {
-                Section section = new Section(this,entry,imageBase);
-
-                list.Add(section);
-            }
-
-            sections = list.ToArray();
+            sections = new Dictionary<SectionTableEntry, Section>();
         }
 
         #region Methods
 
         public IEnumerator<Section> GetEnumerator()
         {
-            return sections.Cast<Section>().GetEnumerator();
+            for(var i = 0; i < table.Count; i++)
+            {
+                Section section = new Section(this, table[i]);
+
+                yield return section;
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        private Section GetSection(SectionTableEntry tableEntry)
+        {
+            if (!sections.ContainsKey(tableEntry))
+            {
+                Section section = new Section(this, tableEntry);
+
+                sections[tableEntry] = section;
+            }
+
+            return sections[tableEntry];
         }
 
         #endregion
@@ -146,9 +155,6 @@ namespace Workshell.PE
         {
             get
             {
-                if (index < 0 || index > (table.Count - 1))
-                    return null;
-
                 SectionTableEntry entry = table[index];
 
                 return this[entry];
@@ -169,9 +175,7 @@ namespace Workshell.PE
         {
             get
             {
-                Section section = sections.FirstOrDefault(s => s.TableEntry == tableEntry);
-
-                return section;
+                return GetSection(tableEntry);
             }
         }
 

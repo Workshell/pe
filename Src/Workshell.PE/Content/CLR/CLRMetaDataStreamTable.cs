@@ -93,7 +93,10 @@ namespace Workshell.PE
 
             uint rva = calc.OffsetToRVA(offset);
             ulong va = imageBase + rva;
-            uint size = Convert.ToUInt32(streams.Sum(s => s.Location.FileSize));
+            ulong size = 0;
+
+            foreach (var s in streams)
+                size += s.Location.FileSize;
 
             location = new Location(offset,rva,va,size,size);
         }

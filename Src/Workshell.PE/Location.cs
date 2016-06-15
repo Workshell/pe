@@ -10,13 +10,25 @@ namespace Workshell.PE
     public sealed class Location : IEquatable<Location>
     {
 
-        public Location(ulong fileOffset, uint rva, ulong va, uint fileSize, uint virtualSize)
+        private ulong _file_offset;
+        private uint _rva;
+        private ulong _va;
+        private ulong _file_size;
+        private ulong _virtual_size;
+        private Section _section;
+
+        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) : this(fileOffset,rva,va,fileSize,virtualSize,null)
         {
-            FileOffset = fileOffset;
-            FileSize = fileSize;
-            RelativeVirtualAddress = rva;
-            VirtualAddress = va;
-            VirtualSize = virtualSize;
+        }
+
+        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section)
+        {
+            _file_offset = fileOffset;
+            _file_size = fileSize;
+            _rva = rva;
+            _va = va;
+            _virtual_size = virtualSize;
+            _section = section;
         }
 
         #region Methods
@@ -36,19 +48,22 @@ namespace Workshell.PE
             if (other == null)
                 return false;
 
-            if (FileOffset != other.FileOffset)
+            if (_file_offset != other.FileOffset)
                 return false;
 
-            if (FileSize != other.FileSize)
+            if (_file_size != other.FileSize)
                 return false;
 
-            if (RelativeVirtualAddress != other.RelativeVirtualAddress)
+            if (_rva != other.RelativeVirtualAddress)
                 return false;
 
-            if (VirtualAddress != other.VirtualAddress)
+            if (_va != other.VirtualAddress)
                 return false;
 
-            if (VirtualSize != other.VirtualSize)
+            if (_virtual_size != other.VirtualSize)
+                return false;
+
+            if (_section != other.Section)
                 return false;
 
             return true;
@@ -58,11 +73,12 @@ namespace Workshell.PE
         {
             int hash = 13;
 
-            hash = (hash * 7) + FileOffset.GetHashCode();
-            hash = (hash * 7) + FileSize.GetHashCode();
-            hash = (hash * 7) + RelativeVirtualAddress.GetHashCode();
-            hash = (hash * 7) + VirtualAddress.GetHashCode();
-            hash = (hash * 7) + VirtualSize.GetHashCode();
+            hash = (hash * 7) + _file_offset.GetHashCode();
+            hash = (hash * 7) + _file_size.GetHashCode();
+            hash = (hash * 7) + _rva.GetHashCode();
+            hash = (hash * 7) + _va.GetHashCode();
+            hash = (hash * 7) + _virtual_size.GetHashCode();
+            hash = (hash * 7) + _section.GetHashCode();
 
             return hash;
         }
@@ -73,32 +89,50 @@ namespace Workshell.PE
 
         public ulong FileOffset
         {
-            get;
-            private set;
+            get
+            {
+                return _file_offset;
+            }
         }
 
-        public uint FileSize
+        public ulong FileSize
         {
-            get;
-            private set;
+            get
+            {
+                return _file_size;
+            }
         }
 
         public uint RelativeVirtualAddress
         {
-            get;
-            private set;
+            get
+            {
+                return _rva;
+            }
         }
 
         public ulong VirtualAddress
         {
-            get;
-            private set;
+            get
+            {
+                return _va;
+            }
         }
 
-        public uint VirtualSize
+        public ulong VirtualSize
         {
-            get;
-            private set;
+            get
+            {
+                return _virtual_size;
+            }
+        }
+
+        public Section Section
+        {
+            get
+            {
+                return _section;
+            }
         }
 
         #endregion

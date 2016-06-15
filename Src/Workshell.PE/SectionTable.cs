@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
@@ -202,7 +203,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = table.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream, location);
+
+            return buffer;
         }
 
         public SectionCharacteristicsType GetCharacteristics()
@@ -338,7 +342,7 @@ namespace Workshell.PE
 
         internal SectionTable(ImageReader exeReader, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
         {
-            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length);
+            uint size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
             reader = exeReader;
             location = new Location(tableOffset,Convert.ToUInt32(tableOffset),imageBase + tableOffset,size,size);
@@ -348,10 +352,9 @@ namespace Workshell.PE
 
             foreach(IMAGE_SECTION_HEADER header in sectionHeaders)
             {
-                SectionTableEntry entry = new SectionTableEntry(this,header,offset,imageBase);
+                list.Add(new SectionTableEntry(this,header,offset,imageBase));
 
-                list.Add(entry);
-                offset += Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
+                offset += Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
             }
 
             table = list.ToArray();
@@ -367,14 +370,14 @@ namespace Workshell.PE
             return buffer;
         }
 
-        public bool Has(string name)
-        {
-            return table.Any(section => String.Compare(name,section.Name,true) == 0);
-        }
-
         public IEnumerator<SectionTableEntry> GetEnumerator()
         {
-            return table.Cast<SectionTableEntry>().GetEnumerator();
+            for(var i = 0; i < table.Length; i++)
+            {
+                SectionTableEntry entry = table[i];
+
+                yield return entry;
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()

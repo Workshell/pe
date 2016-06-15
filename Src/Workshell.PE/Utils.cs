@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using Workshell.PE.Extensions;
+
 namespace Workshell.PE
 {
 
@@ -199,7 +201,7 @@ namespace Workshell.PE
 
         public static byte[] ReadBytes(Stream stream, Location location)
         {
-            return ReadBytes(stream,Convert.ToInt64(location.FileOffset),location.FileSize);
+            return ReadBytes(stream,Convert.ToInt64(location.FileOffset),location.FileSize.ToInt64());
         }
 
         public static void Write<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct

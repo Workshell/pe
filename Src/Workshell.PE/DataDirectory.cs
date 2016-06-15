@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
@@ -37,8 +38,9 @@ namespace Workshell.PE
         private DataDirectoryType dir_type;
         private IMAGE_DATA_DIRECTORY data_dir;
         private ulong image_base;
-        private DataDirectoryContent dir_content;
-        private string section;
+        private bool has_section_name;
+        private Lazy<string> section_name;
+        private Lazy<Section> section;
 
         internal DataDirectory(DataDirectoryCollection dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
@@ -46,8 +48,8 @@ namespace Workshell.PE
             dir_type = dirType;
             data_dir = dataDirectory;
             image_base = imageBase;
-            dir_content = null;
-            section = null;
+            section_name = new Lazy<string>(DoGetSectionName);
+            section = new Lazy<Section>(DoGetSection);
         }
 
         #region Static Methods
@@ -78,12 +80,13 @@ namespace Workshell.PE
             }
             else
             {
-                return String.Format("0x{0:X8}+{1}",data_dir.VirtualAddress,data_dir.Size);
+                return String.Format("0x{0:X8}:{1}",data_dir.VirtualAddress,data_dir.Size);
             }
         }
 
         public DataDirectoryContent GetContent()
         {
+            /*
             if (data_dir.VirtualAddress == 0) // No content so no point...
                 return null;
 
@@ -125,20 +128,47 @@ namespace Workshell.PE
             }
 
             return dir_content;
+            */
+
+            return null;
         }
 
-        private string GetSectionName()
+        public string GetSectionName()
+        {
+            return section_name.Value;
+        }
+
+        public Section GetSection()
+        {
+            return section.Value;
+        }
+
+        private string DoGetSectionName()
         {
             if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
                 return String.Empty;
 
-            foreach(SectionTableEntry entry in dirs.Reader.SectionTable)
+            foreach (SectionTableEntry entry in dirs.Reader.SectionTable)
             {
                 if (data_dir.VirtualAddress >= entry.VirtualAddress && data_dir.VirtualAddress < (entry.VirtualAddress + entry.SizeOfRawData))
                     return entry.Name;
             }
 
             return String.Empty;
+        }
+
+        private Section DoGetSection()
+        {
+            if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
+                return null;
+
+            foreach (Section section in dirs.Reader.Sections)
+            {
+                if (data_dir.VirtualAddress >= section.TableEntry.VirtualAddress && data_dir.VirtualAddress < (section.TableEntry.VirtualAddress + section.TableEntry.SizeOfRawData))
+                    return section;
+            }
+
+            return null;
         }
 
         #endregion
@@ -177,25 +207,6 @@ namespace Workshell.PE
             }
         }
 
-        public string Section
-        {
-            get
-            {
-                if (section == null)
-                    section = GetSectionName();
-
-                return section;
-            }
-        }
-
-        public bool IsEmpty
-        {
-            get
-            {
-                return (data_dir.VirtualAddress == 0 && data_dir.Size == 0);
-            }
-        }
-
         #endregion
 
     }
@@ -209,9 +220,9 @@ namespace Workshell.PE
 
         internal DataDirectoryCollection(OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
         {
-            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length);
+            uint size = (Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length).ToUInt32();
             ulong file_offset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
-            uint rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize;
+            uint rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize.ToUInt32();
             ulong va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
 
             reader = optHeader.Reader;

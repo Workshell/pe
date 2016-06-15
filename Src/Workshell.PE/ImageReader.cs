@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.IO;
+
 using Workshell.PE.Native;
 
 namespace Workshell.PE
@@ -33,6 +35,8 @@ namespace Workshell.PE
         
         }
 
+        static RecyclableMemoryStreamManager memory_manager;
+
         private bool _disposed;
         private Stream _stream;
         private bool _own_stream;
@@ -48,6 +52,11 @@ namespace Workshell.PE
         private bool _is_64bit;
         private bool _is_clr;
         private bool _is_signed;
+
+        static ImageReader()
+        {
+            memory_manager = new RecyclableMemoryStreamManager();
+        }
 
         private ImageReader(Stream sourceStream, bool ownStream)
         {
@@ -339,10 +348,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            using (MemoryStream mem = new MemoryStream())
+            using (var mem = memory_manager.GetStream())
             {
                 _stream.Seek(0,SeekOrigin.Begin);
-                _stream.CopyTo(mem,64 * 1024);
+                _stream.CopyTo(mem,4096);
 
                 return mem.ToArray();
             }
@@ -391,12 +400,24 @@ namespace Workshell.PE
             
             _nt_headers = new NTHeaders(this,file_header.Location.FileOffset - 4,image_base,file_header,opt_header,data_dirs);
             _section_table = new SectionTable(this,preload_info.SectionHeaders,_nt_headers.Location.FileOffset + _nt_headers.Location.FileSize,image_base);
-            _sections = new Sections(this,_section_table,image_base);
+            _sections = new Sections(this,_section_table);
 
             _is_32bit = preload_info.Is32Bit;
             _is_64bit = preload_info.Is64Bit;
             _is_clr = preload_info.IsCLR;
             _is_signed = preload_info.IsSigned;
+        }
+
+        #endregion
+
+        #region Static Properties
+
+        internal static RecyclableMemoryStreamManager MemoryManager
+        {
+            get
+            {
+                return memory_manager;
+            }
         }
 
         #endregion

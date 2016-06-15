@@ -200,6 +200,12 @@ namespace Workshell.PE
             get;
         }
 
+        [FieldAnnotation("Base of Data")]
+        public abstract uint BaseOfData
+        {
+            get;
+        }
+
         [FieldAnnotation("Image Base")]
         public abstract ulong ImageBase
         {
@@ -415,6 +421,14 @@ namespace Workshell.PE
             get
             {
                 return header.BaseOfCode;
+            }
+        }
+
+        public override uint BaseOfData
+        {
+            get
+            {
+                return header.BaseOfData;
             }
         }
 
@@ -675,6 +689,14 @@ namespace Workshell.PE
             get
             {
                 return header.BaseOfCode;
+            }
+        }
+
+        public override uint BaseOfData
+        {
+            get
+            {
+                return 0;
             }
         }
 

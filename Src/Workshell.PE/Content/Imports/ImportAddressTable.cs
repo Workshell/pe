@@ -290,7 +290,10 @@ namespace Workshell.PE
             LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
             uint rva = calc.OffsetToRVA(content.Section,lowest_offset);
             ulong va = calc.OffsetToVA(content.Section,lowest_offset);
-            uint size = Convert.ToUInt32(tables.Sum(table => table.Location.FileSize));
+            ulong size = 0;
+
+            foreach (var table in tables)
+                size += table.Location.FileSize;
 
             location = new Location(lowest_offset,rva,va,size,size);
         }
