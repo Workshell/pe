@@ -6,8 +6,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.IO;
-
 using Workshell.PE.Native;
 
 namespace Workshell.PE
@@ -16,7 +14,7 @@ namespace Workshell.PE
     public class ImageReader : IDisposable, ISupportsBytes
     {
 
-        class PreloadedInformation
+        private class PreloadedInformation
         {
 
             public IMAGE_DOS_HEADER DOSHeader;
@@ -35,12 +33,11 @@ namespace Workshell.PE
         
         }
 
-        static RecyclableMemoryStreamManager memory_manager;
-
         private bool _disposed;
         private Stream _stream;
         private bool _own_stream;
         private LocationCalculator _calc;
+        private IMemoryStreamProvider _memory_stream_provider;
 
         private DOSHeader _dos_header;
         private DOSStub _dos_stub;
@@ -53,17 +50,13 @@ namespace Workshell.PE
         private bool _is_clr;
         private bool _is_signed;
 
-        static ImageReader()
-        {
-            memory_manager = new RecyclableMemoryStreamManager();
-        }
-
         private ImageReader(Stream sourceStream, bool ownStream)
         {
             _disposed = false;
             _stream = sourceStream;
             _own_stream = ownStream;
             _calc = null;
+            _memory_stream_provider = new DefaultMemoryStreamProvider();
 
             _dos_header = null;
             _dos_stub = null;
@@ -348,7 +341,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            using (var mem = memory_manager.GetStream())
+            using (var mem = _memory_stream_provider.GetStream())
             {
                 _stream.Seek(0,SeekOrigin.Begin);
                 _stream.CopyTo(mem,4096);
@@ -410,19 +403,22 @@ namespace Workshell.PE
 
         #endregion
 
-        #region Static Properties
+        #region Properties
 
-        internal static RecyclableMemoryStreamManager MemoryManager
+        public IMemoryStreamProvider MemoryStreamProvider
         {
             get
             {
-                return memory_manager;
+                return _memory_stream_provider;
+            }
+            set
+            {
+                _memory_stream_provider = value;
+
+                if (_memory_stream_provider == null)
+                    _memory_stream_provider = new DefaultMemoryStreamProvider();
             }
         }
-
-        #endregion
-
-        #region Properties
 
         public bool Is32Bit
         {

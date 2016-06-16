@@ -88,9 +88,7 @@
     <Compile Include="GenericLocatable.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="LocationCalculator.cs" />
-    <Compile Include="Microsoft\Events.cs" />
-    <Compile Include="Microsoft\RecyclableMemoryStream.cs" />
-    <Compile Include="Microsoft\RecyclableMemoryStreamManager.cs" />
+    <Compile Include="MemoryStreamProvider.cs" />
     <Compile Include="MoreLinq\DistinctBy.cs" />
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />
