@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
@@ -14,20 +15,80 @@ namespace Workshell.PE
     public abstract class LoadConfigDirectory : ISupportsLocation, ISupportsBytes
     {
 
-        private LoadConfigTableContent content;
+        private DataDirectory directory;
         private Location location;
 
-        internal LoadConfigDirectory(LoadConfigTableContent configContent, Location configLocation)
+        internal LoadConfigDirectory(DataDirectory dataDirectory, Location configLocation)
         {
-            content = configContent;
+            directory = dataDirectory;
             location = configLocation;
         }
+
+        #region Static Methods
+
+        public static LoadConfigDirectory Get(DataDirectory directory)
+        {
+            if (directory == null)
+                throw new ArgumentNullException("directory", "No data directory was specified.");
+
+            if (directory.DirectoryType != DataDirectoryType.LoadConfigTable)
+                throw new DataDirectoryException("Cannot create instance, directory is not the Load Configuration Table.");
+
+            if (directory.VirtualAddress == 0 && directory.Size == 0)
+                throw new DataDirectoryException("Load Configuration Table address and size are 0.");
+
+            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            Section section = calc.RVAToSection(directory.VirtualAddress);
+            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
+            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            bool is_64bit = directory.Directories.Reader.Is64Bit;
+            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
+            Stream stream = directory.Directories.Reader.GetStream();
+
+            if (file_offset.ToInt64() > stream.Length)
+                throw new DataDirectoryException("Load Configuration offset is beyond end of stream.");
+
+            int size = 0;
+
+            if (!is_64bit)
+            {
+                size = Utils.SizeOf<IMAGE_LOAD_CONFIG_DIRECTORY32>();
+            }
+            else
+            {
+                size = Utils.SizeOf<IMAGE_LOAD_CONFIG_DIRECTORY64>();
+            }
+
+            if ((file_offset.ToInt64() + size) > stream.Length)
+                throw new DataDirectoryException("Load Configuration is beyond end of stream.");
+
+            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
+
+            LoadConfigDirectory load_config_dir;
+
+            if (!is_64bit)
+            {
+                IMAGE_LOAD_CONFIG_DIRECTORY32 config_dir = Utils.Read<IMAGE_LOAD_CONFIG_DIRECTORY32>(stream, size);
+
+                load_config_dir = new LoadConfigDirectory32(directory, location, config_dir);
+            }
+            else
+            {
+                IMAGE_LOAD_CONFIG_DIRECTORY64 config_dir = Utils.Read<IMAGE_LOAD_CONFIG_DIRECTORY64>(stream, size);
+
+                load_config_dir = new LoadConfigDirectory64(directory, location, config_dir);
+            }
+
+            return load_config_dir;
+        }
+
+        #endregion
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directory.Directories.Reader.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, Location);
 
             return buffer;
@@ -42,11 +103,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public LoadConfigTableContent Content
+        public DataDirectory DataDirectory
         {
             get
             {
-                return content;
+                return directory;
             }
         }
 
@@ -217,7 +278,7 @@ namespace Workshell.PE
 
         private IMAGE_LOAD_CONFIG_DIRECTORY32 directory;
 
-        internal LoadConfigDirectory32(LoadConfigTableContent configContent, Location configLocation, IMAGE_LOAD_CONFIG_DIRECTORY32 configDirectory) : base(configContent,configLocation)
+        internal LoadConfigDirectory32(DataDirectory dataDirectory, Location configLocation, IMAGE_LOAD_CONFIG_DIRECTORY32 configDirectory) : base(dataDirectory,configLocation)
         {
             directory = configDirectory;
         }
@@ -433,7 +494,7 @@ namespace Workshell.PE
 
         private IMAGE_LOAD_CONFIG_DIRECTORY64 directory;
 
-        internal LoadConfigDirectory64(LoadConfigTableContent configContent, Location configLocation, IMAGE_LOAD_CONFIG_DIRECTORY64 configDirectory) : base(configContent,configLocation)
+        internal LoadConfigDirectory64(DataDirectory dataDirectory, Location configLocation, IMAGE_LOAD_CONFIG_DIRECTORY64 configDirectory) : base(dataDirectory,configLocation)
         {
             directory = configDirectory;
         }

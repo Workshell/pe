@@ -67,7 +67,6 @@
     <Compile Include="Content\Imports\Imports.cs" />
     <Compile Include="Content\Imports\ImportTableContent.cs" />
     <Compile Include="Content\Imports\ImportDirectory.cs" />
-    <Compile Include="Content\LoadConfig\LoadConfigTableContent.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
     <Compile Include="Content\Relocation\Relocation.cs" />
     <Compile Include="Content\Relocation\RelocationBlock.cs" />
@@ -83,6 +82,7 @@
     <Compile Include="DataDirectory.cs" />
     <Compile Include="DOSHeader.cs" />
     <Compile Include="DOSStub.cs" />
+    <Compile Include="Exceptions.cs" />
     <Compile Include="Extensions\Conversion.cs" />
     <Compile Include="FileHeader.cs" />
     <Compile Include="GenericLocatable.cs" />
@@ -113,7 +113,6 @@
     <Compile Include="NTHeaders.cs" />
     <Compile Include="OptionalHeader.cs" />
     <Compile Include="ImageReader.cs" />
-    <Compile Include="ImageReaderException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Section.cs" />
     <Compile Include="SectionTable.cs" />

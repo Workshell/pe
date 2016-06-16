@@ -78,7 +78,9 @@ namespace Workshell.PE
             hash = (hash * 7) + _rva.GetHashCode();
             hash = (hash * 7) + _va.GetHashCode();
             hash = (hash * 7) + _virtual_size.GetHashCode();
-            hash = (hash * 7) + _section.GetHashCode();
+
+            if (_section != null)
+                hash = (hash * 7) + _section.GetHashCode();
 
             return hash;
         }

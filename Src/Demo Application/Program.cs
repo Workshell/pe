@@ -36,18 +36,7 @@ namespace Workshell.PE.Demo
 
             ImageReader reader = ImageReader.FromFile(file_name);
 
-            foreach(DataDirectory dir in reader.NTHeaders.DataDirectories)
-            {
-                DataDirectoryContent content = dir.GetContent();
-
-                if (content == null)
-                    continue;
-
-                if (content.DataDirectory.DirectoryType == DataDirectoryType.CertificateTable)
-                {
-                
-                }
-            }
+            LoadConfigDirectory load_config = LoadConfigDirectory.Get(reader.NTHeaders.DataDirectories[DataDirectoryType.LoadConfigTable]);
 
             Console.ReadKey();
         }

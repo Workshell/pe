@@ -38,7 +38,6 @@ namespace Workshell.PE
         private DataDirectoryType dir_type;
         private IMAGE_DATA_DIRECTORY data_dir;
         private ulong image_base;
-        private bool has_section_name;
         private Lazy<string> section_name;
         private Lazy<Section> section;
 
@@ -246,7 +245,10 @@ namespace Workshell.PE
 
         public IEnumerator<DataDirectory> GetEnumerator()
         {
-            return dirs.Values.GetEnumerator();
+            foreach(KeyValuePair<DataDirectoryType,DataDirectory> kvp in dirs)
+            {
+                yield return kvp.Value;
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
