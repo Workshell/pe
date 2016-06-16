@@ -8,43 +8,42 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public sealed class RelocationBlock : IEnumerable<Relocation>, IReadOnlyCollection<Relocation>, ISupportsLocation, ISupportsBytes
+    public sealed class RelocationBlock : IEnumerable<Relocation>, ISupportsLocation, ISupportsBytes
     {
 
-        private RelocationBlocks blocks;
+        private RelocationTable blocks;
         private Location location;
         private uint page_rva;
         private uint block_size;
-        private Section reloc_section;
+        private Lazy<Section> reloc_section;
         private Relocation[] relocations;
 
-        internal RelocationBlock(RelocationBlocks relocBlocks, Location blockLocation, uint pageRVA, uint blockSize, IEnumerable<ushort> relocs)
+        internal RelocationBlock(RelocationTable relocBlocks, Location blockLocation, uint pageRVA, uint blockSize, ushort[] relocs)
         {
-            LocationCalculator calc = relocBlocks.Content.DataDirectory.Directories.Reader.GetCalculator();
-
             blocks = relocBlocks;
             location = blockLocation;
             page_rva = pageRVA;
             block_size = blockSize;
-            reloc_section = calc.RVAToSection(pageRVA);
+            reloc_section = new Lazy<Section>(GetSection);
+            relocations = new Relocation[relocs.Length];
 
-            List<Relocation> list = new List<Relocation>();
-
-            foreach(ushort reloc_offset in relocs)
+            for(var i = 0; i < relocs.Length; i++)
             {
-                Relocation reloc = new Relocation(this,reloc_offset);
+                ushort offset = relocs[i];
+                Relocation reloc = new Relocation(this, offset);
 
-                list.Add(reloc);
+                relocations[i] = reloc;
             }
-
-            relocations = list.ToArray();
         }
 
         #region Methods
 
         public IEnumerator<Relocation> GetEnumerator()
         {
-            return relocations.Cast<Relocation>().GetEnumerator();
+            for(var i = 0; i < relocations.Length; i++)
+            {
+                yield return relocations[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -59,17 +58,25 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = blocks.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = blocks.DataDirectory.Directories.Reader.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
+        }
+
+        private Section GetSection()
+        {
+            LocationCalculator calc = blocks.DataDirectory.Directories.Reader.GetCalculator();
+            Section section = calc.RVAToSection(page_rva);
+
+            return section;
         }
 
         #endregion
 
         #region Properties
 
-        public RelocationBlocks Blocks
+        public RelocationTable Blocks
         {
             get
             {
@@ -101,11 +108,11 @@ namespace Workshell.PE
             }
         }
 
-        public Section RelocationSection
+        public Section Section
         {
             get
             {
-                return reloc_section;
+                return reloc_section.Value;
             }
         }
 

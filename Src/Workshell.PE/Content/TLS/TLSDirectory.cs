@@ -6,29 +6,71 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
 
-    public abstract class TLSDirectory : ISupportsLocation, ISupportsBytes
+    public abstract class TLSDirectory : DataDirectoryContent, ISupportsBytes
     {
 
-        private TLSTableContent content;
-        private Location location;
-
-        internal TLSDirectory(TLSTableContent tlsContent, Location tlsLocation)
+        internal TLSDirectory(DataDirectory dataDirectory, Location tlsLocation) : base(dataDirectory,tlsLocation)
         {
-            content = tlsContent;
-            location = tlsLocation;
         }
+
+        #region Static Methods
+
+        public static TLSDirectory Get(DataDirectory directory)
+        {
+            if (directory == null)
+                throw new ArgumentNullException("directory", "No data directory was specified.");
+
+            if (directory.DirectoryType != DataDirectoryType.TLSTable)
+                throw new DataDirectoryException("Cannot create instance, directory is not the TLS Table.");
+
+            if (directory.VirtualAddress == 0 && directory.Size == 0)
+                throw new DataDirectoryException("TLS Table address and size are 0.");
+
+            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            Section section = calc.RVAToSection(directory.VirtualAddress);
+            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
+            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
+            Stream stream = directory.Directories.Reader.GetStream();
+
+            if (file_offset.ToInt64() > stream.Length)
+                throw new DataDirectoryException("TLS Table offset is beyond end of stream.");
+
+            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
+
+            bool is_64bit = directory.Directories.Reader.Is64Bit;
+            TLSDirectory tls_directory;
+
+            if (!is_64bit)
+            {
+                IMAGE_TLS_DIRECTORY32 tls_dir = Utils.Read<IMAGE_TLS_DIRECTORY32>(stream);
+
+                tls_directory = new TLSDirectory32(directory, location, tls_dir);
+            }
+            else
+            {
+                IMAGE_TLS_DIRECTORY64 tls_dir = Utils.Read<IMAGE_TLS_DIRECTORY64>(stream);
+
+                tls_directory = new TLSDirectory64(directory, location, tls_dir);
+            }
+
+            return tls_directory;
+        }
+
+        #endregion
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
@@ -36,22 +78,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public TLSTableContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         [FieldAnnotation("Start Address of Raw Data")]
         public abstract ulong StartAddress
@@ -98,7 +124,7 @@ namespace Workshell.PE
 
         private IMAGE_TLS_DIRECTORY32 directory;
 
-        internal TLSDirectory32(TLSTableContent tlsContent, Location tlsLocation, IMAGE_TLS_DIRECTORY32 tlsDirectory) : base(tlsContent,tlsLocation)
+        internal TLSDirectory32(DataDirectory dataDirectory, Location tlsLocation, IMAGE_TLS_DIRECTORY32 tlsDirectory) : base(dataDirectory,tlsLocation)
         {
             directory = tlsDirectory;
         }
@@ -157,12 +183,12 @@ namespace Workshell.PE
 
     }
 
-    public class TLSDirectory64 : TLSDirectory
+    public sealed class TLSDirectory64 : TLSDirectory
     {
 
         private IMAGE_TLS_DIRECTORY64 directory;
 
-        internal TLSDirectory64(TLSTableContent tlsContent, Location tlsLocation, IMAGE_TLS_DIRECTORY64 tlsDirectory) : base(tlsContent,tlsLocation)
+        internal TLSDirectory64(DataDirectory dataDirectory, Location tlsLocation, IMAGE_TLS_DIRECTORY64 tlsDirectory) : base(dataDirectory,tlsLocation)
         {
             directory = tlsDirectory;
         }

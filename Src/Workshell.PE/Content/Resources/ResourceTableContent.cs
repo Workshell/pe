@@ -10,6 +10,8 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
+    /*
+
     public sealed class ResourceTableContent : DataDirectoryContent
     {
 
@@ -51,5 +53,7 @@ namespace Workshell.PE
         #endregion
 
     }
+
+    */
 
 }

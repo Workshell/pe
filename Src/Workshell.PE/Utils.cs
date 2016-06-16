@@ -193,15 +193,15 @@ namespace Workshell.PE
         {
             byte[] buffer = new byte[size];
 
-            stream.Seek(offset,SeekOrigin.Begin);
-            stream.Read(buffer,0,buffer.Length);
+            stream.Seek(offset, SeekOrigin.Begin);
+            stream.Read(buffer, 0, buffer.Length);
 
             return buffer;
         }
 
         public static byte[] ReadBytes(Stream stream, Location location)
         {
-            return ReadBytes(stream,Convert.ToInt64(location.FileOffset),location.FileSize.ToInt64());
+            return ReadBytes(stream, location.FileOffset.ToInt64(), location.FileSize.ToInt64());
         }
 
         public static void Write<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct

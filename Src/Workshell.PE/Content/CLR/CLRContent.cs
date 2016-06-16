@@ -10,6 +10,8 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
+    /*
+
     public sealed class CLRContent : DataDirectoryContent
     {
 
@@ -69,5 +71,7 @@ namespace Workshell.PE
         #endregion
 
     }
+
+    */
 
 }

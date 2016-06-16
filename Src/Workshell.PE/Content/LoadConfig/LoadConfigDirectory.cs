@@ -12,16 +12,11 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public abstract class LoadConfigDirectory : ISupportsLocation, ISupportsBytes
+    public abstract class LoadConfigDirectory : DataDirectoryContent, ISupportsBytes
     {
 
-        private DataDirectory directory;
-        private Location location;
-
-        internal LoadConfigDirectory(DataDirectory dataDirectory, Location configLocation)
+        internal LoadConfigDirectory(DataDirectory dataDirectory, Location configLocation) : base(dataDirectory,configLocation)
         {
-            directory = dataDirectory;
-            location = configLocation;
         }
 
         #region Static Methods
@@ -40,41 +35,27 @@ namespace Workshell.PE
             LocationCalculator calc = directory.Directories.Reader.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
             ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
-            bool is_64bit = directory.Directories.Reader.Is64Bit;
+            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;           
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
             Stream stream = directory.Directories.Reader.GetStream();
 
             if (file_offset.ToInt64() > stream.Length)
                 throw new DataDirectoryException("Load Configuration offset is beyond end of stream.");
 
-            int size = 0;
-
-            if (!is_64bit)
-            {
-                size = Utils.SizeOf<IMAGE_LOAD_CONFIG_DIRECTORY32>();
-            }
-            else
-            {
-                size = Utils.SizeOf<IMAGE_LOAD_CONFIG_DIRECTORY64>();
-            }
-
-            if ((file_offset.ToInt64() + size) > stream.Length)
-                throw new DataDirectoryException("Load Configuration is beyond end of stream.");
+            bool is_64bit = directory.Directories.Reader.Is64Bit;
+            LoadConfigDirectory load_config_dir = null;
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
-            LoadConfigDirectory load_config_dir;
-
             if (!is_64bit)
             {
-                IMAGE_LOAD_CONFIG_DIRECTORY32 config_dir = Utils.Read<IMAGE_LOAD_CONFIG_DIRECTORY32>(stream, size);
+                IMAGE_LOAD_CONFIG_DIRECTORY32 config_dir = Utils.Read<IMAGE_LOAD_CONFIG_DIRECTORY32>(stream);
 
                 load_config_dir = new LoadConfigDirectory32(directory, location, config_dir);
             }
             else
             {
-                IMAGE_LOAD_CONFIG_DIRECTORY64 config_dir = Utils.Read<IMAGE_LOAD_CONFIG_DIRECTORY64>(stream, size);
+                IMAGE_LOAD_CONFIG_DIRECTORY64 config_dir = Utils.Read<IMAGE_LOAD_CONFIG_DIRECTORY64>(stream);
 
                 load_config_dir = new LoadConfigDirectory64(directory, location, config_dir);
             }
@@ -88,7 +69,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = directory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, Location);
 
             return buffer;
@@ -102,22 +83,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public DataDirectory DataDirectory
-        {
-            get
-            {
-                return directory;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         [FieldAnnotation("Size")]
         public abstract uint Size

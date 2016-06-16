@@ -7,12 +7,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
 
-    public enum DebugDirectoryType
+    public enum DebugDirectoryEntryType
     {
         [EnumAnnotation("IMAGE_DEBUG_TYPE_UNKNOWN")]
         Unknown = 0,
@@ -48,32 +49,34 @@ namespace Workshell.PE
         MPX = 15
     }
 
-    public sealed class DebugDirectory : ISupportsLocation, ISupportsBytes
+    public sealed class DebugDirectoryEntry : ISupportsLocation, ISupportsBytes
     {
 
         public static readonly int size = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>();
 
-        private DebugDirectoryCollection directories;
+        private DebugDirectory directories;
         private Location location;
         private IMAGE_DEBUG_DIRECTORY directory;
+        private DebugData data;
 
-        internal DebugDirectory(DebugDirectoryCollection debugDirs, Location dirLocation, IMAGE_DEBUG_DIRECTORY dir)
+        internal DebugDirectoryEntry(DebugDirectory debugDirs, Location dirLocation, IMAGE_DEBUG_DIRECTORY dir)
         {
             directories = debugDirs;
             location = dirLocation;
             directory = dir;
+            data = null;
         }
 
         #region Methods
 
         public override string ToString()
         {
-            return String.Format("Debug Type: {0}", GetDirectoryType());
+            return String.Format("Debug Type: {0}", GetEntryType());
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = directories.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directories.DataDirectory.Directories.Reader.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, location);
 
             return buffer;
@@ -84,16 +87,24 @@ namespace Workshell.PE
             return Utils.ConvertTimeDateStamp(directory.TimeDateStamp);
         }
 
-        public DebugDirectoryType GetDirectoryType()
+        public DebugDirectoryEntryType GetEntryType()
         {
-            return (DebugDirectoryType)directory.Type;
+            return (DebugDirectoryEntryType)directory.Type;
+        }
+
+        public DebugData GetData()
+        {
+            if (data == null)
+                data = DebugData.Get(this);
+
+            return data;
         }
 
         #endregion
 
         #region Properties
 
-        public DebugDirectoryCollection Directory
+        public DebugDirectory Directory
         {
             get
             {
@@ -185,27 +196,70 @@ namespace Workshell.PE
 
     }
 
-    public sealed class DebugDirectoryCollection : IEnumerable<DebugDirectory>, IReadOnlyList<DebugDirectory>, ISupportsLocation, ISupportsBytes
+    public sealed class DebugDirectory : DataDirectoryContent, IEnumerable<DebugDirectoryEntry>, ISupportsBytes
     {
 
-        private DebugContent content;
-        private Location location;
-        private DebugDirectory[] directories;
+        private DebugDirectoryEntry[] entries;
 
-        internal DebugDirectoryCollection(DebugContent debugContent, Location dirLocation, List<Tuple<ulong,IMAGE_DEBUG_DIRECTORY>> dirs)
+        internal DebugDirectory(DataDirectory dataDirectory, Location dirLocation, Tuple<ulong,IMAGE_DEBUG_DIRECTORY>[] dirs) : base(dataDirectory,dirLocation)
         {
-            content = debugContent;
-            location = dirLocation;
-            directories = new DebugDirectory[0];
-
-            LoadDirectories(dirs);
+            entries = LoadEntries(dirs);
         }
+
+        #region Static Methods
+
+        public static DebugDirectory Get(DataDirectory directory)
+        {
+            if (directory == null)
+                throw new ArgumentNullException("directory", "No data directory was specified.");
+
+            if (directory.DirectoryType != DataDirectoryType.Debug)
+                throw new DataDirectoryException("Cannot create instance, directory is not the Debug Directory.");
+
+            if (directory.VirtualAddress == 0 && directory.Size == 0)
+                throw new DataDirectoryException("Debug Directory address and size are 0.");
+
+            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            Section section = calc.RVAToSection(directory.VirtualAddress);
+            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
+            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
+            Stream stream = directory.Directories.Reader.GetStream();
+
+            if (file_offset.ToInt64() > stream.Length)
+                throw new DataDirectoryException("Debug Directory offset is beyond end of stream.");
+
+            if ((file_offset.ToInt64() + directory.Size) > stream.Length)
+                throw new DataDirectoryException("Debug Directory is beyond end of stream.");
+
+            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
+
+            int size = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>();
+            long count = directory.Size / size;
+            Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[] directories = new Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                IMAGE_DEBUG_DIRECTORY entry = Utils.Read<IMAGE_DEBUG_DIRECTORY>(stream, size);
+
+                directories[i] = new Tuple<ulong, IMAGE_DEBUG_DIRECTORY>(file_offset, entry);
+            }
+
+            DebugDirectory debug_dir = new DebugDirectory(directory, location, directories);
+
+            return debug_dir;
+        }
+
+        #endregion
 
         #region Methods
 
-        public IEnumerator<DebugDirectory> GetEnumerator()
+        public IEnumerator<DebugDirectoryEntry> GetEnumerator()
         {
-            return directories.Cast<DebugDirectory>().GetEnumerator();
+            for(var i = 0; i < entries.Length; i++)
+            {
+                yield return entries[i];
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -215,66 +269,52 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Debug Entry Count: {0}", directories.Length);
+            return String.Format("Debug Entry Count: {0}", entries.Length);
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream, location);
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream, Location);
 
             return buffer;
         }
 
-        private void LoadDirectories(List<Tuple<ulong, IMAGE_DEBUG_DIRECTORY>> dirEntries)
+        private DebugDirectoryEntry[] LoadEntries(Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[] directoryEntries)
         {
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            ulong image_base = content.DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
-            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>());
-            List<DebugDirectory> list = new List<DebugDirectory>();
+            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            ulong image_base = DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            uint size = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>().ToUInt32();
+            DebugDirectoryEntry[] results = new DebugDirectoryEntry[directoryEntries.Length];
 
-            foreach(Tuple<ulong, IMAGE_DEBUG_DIRECTORY> tuple in dirEntries)
+            for(var i = 0; i < directoryEntries.Length; i++)
             {
-                uint rva = calc.OffsetToRVA(content.Section, tuple.Item1);
+                Tuple<ulong, IMAGE_DEBUG_DIRECTORY> tuple = directoryEntries[i];
+                uint rva = calc.OffsetToRVA(tuple.Item1);
+                Section section = calc.RVAToSection(rva);
                 ulong va = image_base + rva;
-                Location dir_location = new Location(tuple.Item1, rva, va, size, size);
-                DebugDirectory dir = new DebugDirectory(this, dir_location, tuple.Item2);
+                Location dir_location = new Location(tuple.Item1, rva, va, size, size, section);
+                DebugDirectoryEntry entry = new DebugDirectoryEntry(this, dir_location, tuple.Item2);
 
-                list.Add(dir);
+                results[i] = entry;
             }
 
-            directories = list.OrderBy(dir => dir.Location.FileOffset).ToArray();
+            return results;
         }
 
         #endregion
 
         #region Properties
 
-        public DebugContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
-
         public int Count
         {
             get
             {
-                return directories.Length;
+                return entries.Length;
             }
         }
 
-        public DebugDirectory this[int index]
+        public DebugDirectoryEntry this[int index]
         {
             get
             {

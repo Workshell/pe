@@ -8,25 +8,24 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public class ExportTable<T> : IEnumerable<T>, IReadOnlyCollection<T>, ISupportsLocation
+    public class ExportTable<T> : DataDirectoryContent, IEnumerable<T>, ISupportsBytes
     {
 
-        private ExportTableContent content;
-        private Location location;
         private T[] table;
 
-        internal ExportTable(ExportTableContent exportContent, Location tableLocation, IEnumerable<T> tableList)
+        internal ExportTable(DataDirectory dataDirectory, Location tableLocation, T[] tableContent) : base(dataDirectory,tableLocation)
         {
-            content = exportContent;
-            location = tableLocation;
-            table = tableList.ToArray();
+            table = tableContent;
         }
 
         #region Methods
 
         public IEnumerator<T> GetEnumerator()
         {
-            return table.Cast<T>().GetEnumerator();
+            for(var i = 0; i < table.Length; i++)
+            {
+                yield return table[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -36,28 +35,15 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            return null;
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream, Location);
+
+            return buffer;
         }
 
         #endregion
 
         #region Properties
-
-        public ExportTableContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         public int Count
         {

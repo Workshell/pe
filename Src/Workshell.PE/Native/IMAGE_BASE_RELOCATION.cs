@@ -9,7 +9,7 @@ namespace Workshell.PE.Native
 {
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct IMAGE_BASE_RELOCATION
+    internal struct IMAGE_BASE_RELOCATION
     {
 
         public uint VirtualAddress;

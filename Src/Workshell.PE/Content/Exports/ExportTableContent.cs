@@ -10,6 +10,8 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
+    /*
+
     public class ExportTableContent : DataDirectoryContent
     {
 
@@ -251,5 +253,7 @@ namespace Workshell.PE
         #endregion
 
     }
+
+    */
 
 }

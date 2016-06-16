@@ -7,26 +7,68 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
 
-    public class ExportDirectory : ISupportsLocation
+    public class ExportDirectory : DataDirectoryContent, ISupportsBytes
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
 
-        private ExportTableContent content;
         private IMAGE_EXPORT_DIRECTORY directory;
-        private Location location;
+        private Lazy<string> name;
+        private Lazy<uint[]> function_addresses;
+        private Lazy<uint[]> function_name_addresses;
+        private Lazy<ushort[]> function_ordinals;
 
-        internal ExportDirectory(ExportTableContent exportContent, Location dirLocation, IMAGE_EXPORT_DIRECTORY dir)
+        internal ExportDirectory(DataDirectory dataDirectory, Location dirLocation, IMAGE_EXPORT_DIRECTORY exportDirectory) : base(dataDirectory,dirLocation)
         {
-            content = exportContent;
-            location = dirLocation;
-            directory = dir;
+            directory = exportDirectory;
+            name = new Lazy<string>(DoGetName);
+            function_addresses = new Lazy<uint[]>(DoGetFunctionAddresses);
+            function_name_addresses = new Lazy<uint[]>(DoGetFunctionNameAddresses);
+            function_ordinals = new Lazy<ushort[]>(DoGetFunctionOrdinals);
         }
+
+        #region Static Methods
+
+        public static ExportDirectory Get(DataDirectory directory)
+        {
+            if (directory == null)
+                throw new ArgumentNullException("directory", "No data directory was specified.");
+
+            if (directory.DirectoryType != DataDirectoryType.ExportTable)
+                throw new DataDirectoryException("Cannot create instance, directory is not the Export Table.");
+
+            if (directory.VirtualAddress == 0 && directory.Size == 0)
+                throw new DataDirectoryException("Export Table address and size are 0.");
+
+            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            Section section = calc.RVAToSection(directory.VirtualAddress);
+            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
+            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
+            Stream stream = directory.Directories.Reader.GetStream();
+
+            if (file_offset.ToInt64() > stream.Length)
+                throw new DataDirectoryException("Export Table offset is beyond end of stream.");
+
+            int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
+
+            if ((file_offset.ToInt64() + size) > stream.Length)
+                throw new DataDirectoryException("Export directory extends beyond end of stream.");
+
+            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
+
+            IMAGE_EXPORT_DIRECTORY export_directory = Utils.Read<IMAGE_EXPORT_DIRECTORY>(stream, size);
+
+            return new ExportDirectory(directory, location, export_directory);
+        }
+
+        #endregion
 
         #region Methods
 
@@ -51,12 +93,32 @@ namespace Workshell.PE
 
         public string GetName()
         {
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            StringBuilder builder = new StringBuilder();
-            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.Name));
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            return name.Value;
+        }
 
-            stream.Seek(offset,SeekOrigin.Begin);
+        public uint[] GetFunctionAddresses()
+        {
+            return function_addresses.Value;
+        }
+
+        public uint[] GetFunctionNameAddresses()
+        {
+            return function_name_addresses.Value;
+        }
+
+        public ushort[] GetFunctionOrdinals()
+        {
+            return function_ordinals.Value;
+        }
+
+        private string DoGetName()
+        {
+            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            StringBuilder builder = new StringBuilder(256);
+            long offset = calc.RVAToOffset(directory.Name).ToInt64();
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
+
+            stream.Seek(offset, SeekOrigin.Begin);
 
             while (true)
             {
@@ -73,82 +135,69 @@ namespace Workshell.PE
             return builder.ToString();
         }
 
-        public uint[] GetFunctionAddresses()
+        private uint[] DoGetFunctionAddresses()
         {
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            List<uint> results = new List<uint>();
-            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.AddressOfFunctions));
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            long offset = calc.RVAToOffset(directory.AddressOfFunctions).ToInt64();
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
 
-            stream.Seek(offset,SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
-            for(int i = 0; i < directory.NumberOfFunctions; i++)
+            uint[] results = new uint[directory.NumberOfFunctions];
+
+            for (int i = 0; i < directory.NumberOfFunctions; i++)
             {
                 uint address = Utils.ReadUInt32(stream);
 
-                results.Add(address);
+                results[i] = address;
             }
 
-            return results.ToArray();
+            return results;
         }
 
-        public uint[] GetFunctionNameAddresses()
+        private uint[] DoGetFunctionNameAddresses()
         {
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            List<uint> results = new List<uint>();
-            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.AddressOfNames));
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            long offset = calc.RVAToOffset(directory.AddressOfNames).ToInt64();
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
 
-            stream.Seek(offset,SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
-            for(int i = 0; i < directory.NumberOfNames; i++)
+            uint[] results = new uint[directory.NumberOfNames];
+
+            for (int i = 0; i < directory.NumberOfNames; i++)
             {
                 uint address = Utils.ReadUInt32(stream);
 
-                results.Add(address);
+                results[i] = address;
             }
 
-            return results.ToArray();
+            return results;
         }
 
-        public ushort[] GetFunctionOrdinals()
+        private ushort[] DoGetFunctionOrdinals()
         {
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            List<ushort> results = new List<ushort>();
-            long offset = Convert.ToInt64(calc.RVAToOffset(content.Section,directory.AddressOfNameOrdinals));
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            long offset = calc.RVAToOffset(directory.AddressOfNameOrdinals).ToInt64();
+            Stream stream = DataDirectory.Directories.Reader.GetStream();
 
-            stream.Seek(offset,SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
-            for(int i = 0; i < directory.NumberOfNames; i++)
+            ushort[] results = new ushort[directory.NumberOfNames];
+
+            for (int i = 0; i < directory.NumberOfNames; i++)
             {
                 ushort ord = Utils.ReadUInt16(stream);
 
-                results.Add(ord);
+                results[i] = ord;
             }
 
-            return results.ToArray();
+            return results;
         }
 
         #endregion
 
         #region Properties
-
-        public ExportTableContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         [FieldAnnotation("Characteristics")]
         public uint Characteristics

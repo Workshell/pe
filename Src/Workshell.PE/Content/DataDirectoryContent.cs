@@ -7,14 +7,16 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public abstract class DataDirectoryContent
+    public abstract class DataDirectoryContent : ISupportsLocation
     {
 
-        private DataDirectory data_dir;
+        private DataDirectory directory;
+        private Location location;
 
-        public DataDirectoryContent(DataDirectory dataDirectory, ulong imageBase)
+        public DataDirectoryContent(DataDirectory dataDirectory, Location dataLocation)
         {
-            data_dir = dataDirectory;
+            directory = dataDirectory;
+            location = dataLocation;
         }
 
         #region Properties
@@ -23,7 +25,15 @@ namespace Workshell.PE
         {
             get
             {
-                return data_dir;
+                return directory;
+            }
+        }
+
+        public Location Location
+        {
+            get
+            {
+                return location;
             }
         }
 

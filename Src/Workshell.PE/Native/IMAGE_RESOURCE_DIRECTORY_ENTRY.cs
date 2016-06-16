@@ -9,7 +9,7 @@ namespace Workshell.PE.Native
 {
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct IMAGE_RESOURCE_DIRECTORY_ENTRY
+    internal struct IMAGE_RESOURCE_DIRECTORY_ENTRY
     {
 
         public uint Name;

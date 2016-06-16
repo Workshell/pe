@@ -80,7 +80,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class Sections : IEnumerable<Section>, IReadOnlyCollection<Section>
+    public sealed class Sections : IEnumerable<Section>
     {
 
         private ImageReader reader;
@@ -100,7 +100,7 @@ namespace Workshell.PE
         {
             for(var i = 0; i < table.Count; i++)
             {
-                Section section = new Section(this, table[i]);
+                Section section = GetSection(table[i]);
 
                 yield return section;
             }

@@ -104,7 +104,7 @@ namespace Workshell.PE
     public sealed class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation
     {
 
-        private static readonly uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_SECTION_HEADER>());
+        private static readonly uint size = Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
 
         private SectionTable table;
         private IMAGE_SECTION_HEADER header;
@@ -216,7 +216,7 @@ namespace Workshell.PE
 
         private string GetName()
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder(16);
 
             for(var i = 0; i < header.Name.Length; i++)
             {
@@ -333,7 +333,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class SectionTable : IEnumerable<SectionTableEntry>, IReadOnlyCollection<SectionTableEntry>, ISupportsLocation
+    public sealed class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation
     {
 
         private ImageReader reader;
@@ -346,18 +346,17 @@ namespace Workshell.PE
 
             reader = exeReader;
             location = new Location(tableOffset,Convert.ToUInt32(tableOffset),imageBase + tableOffset,size,size);
+            table = new SectionTableEntry[sectionHeaders.Length];
 
-            List<SectionTableEntry> list = new List<SectionTableEntry>();
             ulong offset = tableOffset;
 
-            foreach(IMAGE_SECTION_HEADER header in sectionHeaders)
+            for(var i = 0; i < sectionHeaders.Length; i++)
             {
-                list.Add(new SectionTableEntry(this,header,offset,imageBase));
+                SectionTableEntry entry = new SectionTableEntry(this, sectionHeaders[i], offset, imageBase);
 
+                table[i] = entry;
                 offset += Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
             }
-
-            table = list.ToArray();
         }
 
         #region Methods
@@ -374,9 +373,7 @@ namespace Workshell.PE
         {
             for(var i = 0; i < table.Length; i++)
             {
-                SectionTableEntry entry = table[i];
-
-                yield return entry;
+                yield return table[i];
             }
         }
 

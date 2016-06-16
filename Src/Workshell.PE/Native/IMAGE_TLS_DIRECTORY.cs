@@ -9,7 +9,7 @@ namespace Workshell.PE.Native
 {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct IMAGE_TLS_DIRECTORY32
+    internal struct IMAGE_TLS_DIRECTORY32
     {
 
         public uint StartAddress;
@@ -22,7 +22,7 @@ namespace Workshell.PE.Native
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct IMAGE_TLS_DIRECTORY64
+    internal struct IMAGE_TLS_DIRECTORY64
     {
 
         public ulong StartAddress;
