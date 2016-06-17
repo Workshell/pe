@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 
 namespace Workshell.PE.Annotations
 {

@@ -62,6 +62,7 @@
     <Compile Include="DOSStub.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Extensions\Conversion.cs" />
+    <Compile Include="Extensions\Attributes.cs" />
     <Compile Include="FileHeader.cs" />
     <Compile Include="GenericLocatable.cs" />
     <Compile Include="Location.cs" />

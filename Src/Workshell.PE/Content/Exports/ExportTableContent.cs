@@ -51,38 +51,6 @@ namespace Workshell.PE
 
         #region Methods
 
-        private void LoadDirectory(LocationCalculator calc, Stream stream)
-        {
-            ulong offset = calc.RVAToOffset(section,DataDirectory.VirtualAddress);
-            int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
-            Location location = new Location(offset,DataDirectory.VirtualAddress,image_base + DataDirectory.VirtualAddress,Convert.ToUInt32(size),Convert.ToUInt32(size));
-            
-            stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
-
-            IMAGE_EXPORT_DIRECTORY export_dir = Utils.Read<IMAGE_EXPORT_DIRECTORY>(stream,size);
-
-            dir = new ExportDirectory(this,location,export_dir);
-        }
-
-        private void LoadAddressTable(LocationCalculator calc, Stream stream)
-        {
-            ulong offset = calc.RVAToOffset(section,dir.AddressOfFunctions);
-            uint size = dir.NumberOfFunctions * sizeof(uint);
-            Location location = new Location(offset,dir.AddressOfFunctions,image_base + dir.AddressOfFunctions,size,size);
-            List<uint> addresses = new List<uint>();
-
-            stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
-
-            for(int i = 0; i < Directory.NumberOfFunctions; i++)
-            {
-                uint address = Utils.ReadUInt32(stream);
-
-                addresses.Add(address);
-            }
-
-            address_table = new ExportTable<uint>(this,location,addresses);
-        }
-
         private void LoadNamePointerTable(LocationCalculator calc, Stream stream)
         {
             ulong offset = calc.RVAToOffset(section,dir.AddressOfNames);

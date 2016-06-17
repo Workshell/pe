@@ -210,7 +210,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, IReadOnlyCollection<DataDirectory>, ISupportsLocation, ISupportsBytes
+    public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, ISupportsLocation, ISupportsBytes
     {
 
         private ImageReader reader;

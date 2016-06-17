@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 
 namespace Workshell.PE.Annotations
 {
@@ -162,7 +163,7 @@ namespace Workshell.PE.Annotations
                         size = Marshal.SizeOf(type);
                     }
 
-                    object value = prop.GetValue(annotatedObject);
+                    object value = prop.GetValue(annotatedObject,null);
                     FieldAnnotation annotation = new FieldAnnotation(desc,attr.ArrayLength,attr.Flags,name,type,value,size);
 
                     annotations.Add(annotation);
