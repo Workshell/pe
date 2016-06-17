@@ -51,7 +51,6 @@
     <Compile Include="Content\Exports\Exports.cs" />
     <Compile Include="Content\Exports\ExportDirectory.cs" />
     <Compile Include="Content\Exports\ExportTable.cs" />
-    <Compile Include="Content\Exports\ExportTableContent.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
     <Compile Include="Content\Relocation\Relocation.cs" />
     <Compile Include="Content\Relocation\RelocationBlock.cs" />
