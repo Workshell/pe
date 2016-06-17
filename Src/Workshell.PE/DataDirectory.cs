@@ -147,7 +147,7 @@ namespace Workshell.PE
             if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
                 return String.Empty;
 
-            foreach (SectionTableEntry entry in dirs.Reader.SectionTable)
+            foreach (SectionTableEntry entry in dirs.Image.SectionTable)
             {
                 if (data_dir.VirtualAddress >= entry.VirtualAddress && data_dir.VirtualAddress < (entry.VirtualAddress + entry.SizeOfRawData))
                     return entry.Name;
@@ -161,7 +161,7 @@ namespace Workshell.PE
             if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
                 return null;
 
-            foreach (Section section in dirs.Reader.Sections)
+            foreach (Section section in dirs.Image.Sections)
             {
                 if (data_dir.VirtualAddress >= section.TableEntry.VirtualAddress && data_dir.VirtualAddress < (section.TableEntry.VirtualAddress + section.TableEntry.SizeOfRawData))
                     return section;
@@ -213,18 +213,18 @@ namespace Workshell.PE
     public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, ISupportsLocation, ISupportsBytes
     {
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private Location location;
         private Dictionary<DataDirectoryType,DataDirectory> dirs;
 
-        internal DataDirectoryCollection(OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
+        internal DataDirectoryCollection(ExecutableImage exeImage, OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
         {
             uint size = (Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length).ToUInt32();
             ulong file_offset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
             uint rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize.ToUInt32();
             ulong va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
 
-            reader = optHeader.Reader;
+            image = exeImage;
             location = new Location(file_offset,rva,va,size,size);
             dirs = new Dictionary<DataDirectoryType,DataDirectory>();
 
@@ -258,7 +258,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
+            Stream stream = image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -278,11 +278,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ExecutableImage Reader
+        public ExecutableImage Image
         {
             get
             {
-                return reader;
+                return image;
             }
         }
 

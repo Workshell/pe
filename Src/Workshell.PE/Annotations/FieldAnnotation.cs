@@ -12,7 +12,7 @@ using Workshell.PE.Extensions;
 namespace Workshell.PE.Annotations
 {
 
-    public class FieldAnnotation
+    public sealed class FieldAnnotation
     {
 
         internal FieldAnnotation(string desc, int arrayLen, bool flags, string name, Type type, object value, int size)
@@ -129,7 +129,7 @@ namespace Workshell.PE.Annotations
 
     }
 
-    public class FieldAnnotations : IEnumerable<FieldAnnotation>
+    public sealed class FieldAnnotations : IEnumerable<FieldAnnotation>
     {
 
         private List<FieldAnnotation> annotations;

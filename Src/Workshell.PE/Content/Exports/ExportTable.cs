@@ -29,13 +29,13 @@ namespace Workshell.PE
             if (directory == null)
                 throw new ArgumentNullException("directory", "No export directory was specified.");
 
-            LocationCalculator calc = directory.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.AddressOfFunctions);
             ulong file_offset = calc.RVAToOffset(section, directory.AddressOfFunctions);
-            ulong image_base = directory.DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             uint size = directory.AddressOfFunctions * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfFunctions, image_base + directory.AddressOfFunctions, size, size, section);
-            Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -58,13 +58,13 @@ namespace Workshell.PE
             if (directory == null)
                 throw new ArgumentNullException("directory", "No export directory was specified.");
 
-            LocationCalculator calc = directory.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.AddressOfNames);
             ulong file_offset = calc.RVAToOffset(section, directory.AddressOfNames);
-            ulong image_base = directory.DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             uint size = directory.NumberOfFunctions * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfNames, image_base + directory.AddressOfNames, size, size, section);
-            Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -87,13 +87,13 @@ namespace Workshell.PE
             if (directory == null)
                 throw new ArgumentNullException("directory", "No export directory was specified.");
 
-            LocationCalculator calc = directory.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.AddressOfNameOrdinals);
             ulong file_offset = calc.RVAToOffset(section, directory.AddressOfNameOrdinals);
-            ulong image_base = directory.DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             uint size = directory.NumberOfFunctions * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfNameOrdinals, image_base + directory.AddressOfNames, size, size, section);
-            Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -130,7 +130,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, Location);
 
             return buffer;

@@ -45,12 +45,12 @@ namespace Workshell.PE
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
 
-            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
             ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
-            Stream stream = directory.Directories.Reader.GetStream();
+            Stream stream = directory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -105,10 +105,10 @@ namespace Workshell.PE
 
         private string DoGetName()
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             StringBuilder builder = new StringBuilder(256);
             long offset = calc.RVAToOffset(directory.Name).ToInt64();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(offset, SeekOrigin.Begin);
 
@@ -129,9 +129,9 @@ namespace Workshell.PE
 
         private uint[] DoGetFunctionAddresses()
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             long offset = calc.RVAToOffset(directory.AddressOfFunctions).ToInt64();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(offset, SeekOrigin.Begin);
 
@@ -149,9 +149,9 @@ namespace Workshell.PE
 
         private uint[] DoGetFunctionNameAddresses()
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             long offset = calc.RVAToOffset(directory.AddressOfNames).ToInt64();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(offset, SeekOrigin.Begin);
 
@@ -169,9 +169,9 @@ namespace Workshell.PE
 
         private ushort[] DoGetFunctionOrdinals()
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             long offset = calc.RVAToOffset(directory.AddressOfNameOrdinals).ToInt64();
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(offset, SeekOrigin.Begin);
 

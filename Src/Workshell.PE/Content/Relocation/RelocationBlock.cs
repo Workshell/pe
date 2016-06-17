@@ -58,7 +58,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = blocks.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = blocks.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -66,7 +66,7 @@ namespace Workshell.PE
 
         private Section GetSection()
         {
-            LocationCalculator calc = blocks.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = blocks.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(page_rva);
 
             return section;

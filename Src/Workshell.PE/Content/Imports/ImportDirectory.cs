@@ -6,12 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
 
-    public sealed class ImportDirectoryEntry : ISupportsLocation
+    public sealed class ImportDirectoryEntry : ISupportsLocation, ISupportsBytes
     {
 
         private ImportDirectory directory;
@@ -36,12 +37,12 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            using (MemoryStream mem = new MemoryStream())
-            {
-                Utils.Write<IMAGE_IMPORT_DESCRIPTOR>(descriptor,mem);
+            int size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
+            byte[] buffer = new byte[size];
 
-                return mem.ToArray();
-            }
+            Utils.Write<IMAGE_IMPORT_DESCRIPTOR>(descriptor, buffer, 0, size);
+
+            return buffer;
         }
         
         public DateTime GetTimeDateStamp()
@@ -53,24 +54,14 @@ namespace Workshell.PE
         {
             if (String.IsNullOrWhiteSpace(name))
             {           
-                StringBuilder builder = new StringBuilder();
-                LocationCalculator calc = directory.Content.DataDirectory.Directories.Reader.GetCalculator();
-                Stream stream = directory.Content.DataDirectory.Directories.Reader.GetStream();
+                StringBuilder builder = new StringBuilder(256);
+                LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
+                Stream stream = directory.DataDirectory.Directories.Image.GetStream();
                 ulong offset = calc.RVAToOffset(descriptor.Name);
 
-                stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
+                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
 
-                while (true)
-                {
-                    int b = stream.ReadByte();
-
-                    if (b <= 0)
-                        break;
-
-                    builder.Append((char)b);
-                }
-
-                name = builder.ToString();
+                name = Utils.ReadString(stream);
             }
 
             return name;
@@ -145,44 +136,85 @@ namespace Workshell.PE
 
     }
 
-    public sealed class ImportDirectory : IEnumerable<ImportDirectoryEntry>, IReadOnlyCollection<ImportDirectoryEntry>, ISupportsLocation
+    public sealed class ImportDirectory : ExecutableImageContent, IEnumerable<ImportDirectoryEntry>, ISupportsBytes
     {
 
-        private ImportTableContent content;
-        private Location location;
         private ImportDirectoryEntry[] entries;
 
-        internal ImportDirectory(ImportTableContent importContent, Location dirLocation, IEnumerable<IMAGE_IMPORT_DESCRIPTOR> importDescriptors, ulong imageBase)
+        internal ImportDirectory(DataDirectory dataDirectory, Location dataLocation, IMAGE_IMPORT_DESCRIPTOR[] importDescriptors) : base(dataDirectory,dataLocation)
         {
-            content = importContent;
-            location = dirLocation;
             entries = new ImportDirectoryEntry[0];
 
-            LocationCalculator calc = importContent.DataDirectory.Directories.Reader.GetCalculator();
-            ulong offset = dirLocation.FileOffset;
-            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>());
-            List<ImportDirectoryEntry> list = new List<ImportDirectoryEntry>();
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
+            ulong image_base = dataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            ulong offset = dataLocation.FileOffset;
+            uint size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>().ToUInt32();
 
-            foreach(IMAGE_IMPORT_DESCRIPTOR descriptor in importDescriptors)
+            entries = new ImportDirectoryEntry[importDescriptors.Length];
+
+            for(var i = 0; i < importDescriptors.Length; i++)
             {
-                uint rva = calc.OffsetToRVA(content.Section,offset);
-                ulong va = imageBase + rva;
-                Location descripter_location = new Location(offset,rva,va,size,size);
+                IMAGE_IMPORT_DESCRIPTOR descriptor = importDescriptors[i];
+                uint rva = calc.OffsetToRVA(dataLocation.Section, offset);
+                Section entry_section = calc.RVAToSection(rva);
+                Location entry_location = new Location(offset, rva, image_base + rva, size, size, entry_section);
+                ImportDirectoryEntry entry = new ImportDirectoryEntry(this, descriptor, entry_location);
 
-                ImportDirectoryEntry entry = new ImportDirectoryEntry(this,descriptor,descripter_location);
-
-                list.Add(entry);
+                entries[i] = entry;
                 offset += size;
             }
-
-            entries = list.ToArray();
         }
+
+        #region Static Methods
+
+        public static ImportDirectory Get(ExecutableImage image)
+        {
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ImportTable))
+                return null;
+
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.ImportTable];
+
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
+
+            LocationCalculator calc = directory.Directories.Image.GetCalculator();
+            Section section = calc.RVAToSection(directory.VirtualAddress);
+            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);          
+            Stream stream = directory.Directories.Image.GetStream();
+
+            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
+
+            int size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
+            List<IMAGE_IMPORT_DESCRIPTOR> descriptors = new List<IMAGE_IMPORT_DESCRIPTOR>();
+
+            while (true)
+            {
+                IMAGE_IMPORT_DESCRIPTOR descriptor = Utils.Read<IMAGE_IMPORT_DESCRIPTOR>(stream, size);
+
+                if (descriptor.OriginalFirstThunk == 0 && descriptor.FirstThunk == 0)
+                    break;
+
+                descriptors.Add(descriptor);
+            }
+
+            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            uint total_size = Convert.ToUInt32((descriptors.Count + 1) * size);
+            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, total_size, total_size, section);
+            ImportDirectory result = new ImportDirectory(directory, location, descriptors.ToArray());
+
+            return result;
+        }
+
+        #endregion
 
         #region Methods
 
         public IEnumerator<ImportDirectoryEntry> GetEnumerator()
         {
-            return entries.Cast<ImportDirectoryEntry>().GetEnumerator();
+            for(var i = 0; i < entries.Length; i++)
+            {
+                yield return entries[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -192,8 +224,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            Stream stream = DataDirectory.Directories.Image.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
@@ -201,22 +233,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public ImportTableContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         public int Count
         {

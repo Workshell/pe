@@ -33,12 +33,12 @@ namespace Workshell.PE
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
 
-            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
             ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
-            Stream stream = directory.Directories.Reader.GetStream();
+            Stream stream = directory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -98,7 +98,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, Location);
 
             return buffer;
@@ -106,7 +106,7 @@ namespace Workshell.PE
 
         private RelocationBlock[] Load(Tuple<ulong,uint,uint,ushort[]>[] relocBlocks)
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             RelocationBlock[] results = new RelocationBlock[relocBlocks.Length];
 
             for(var i = 0; i < relocBlocks.Length; i++)
@@ -115,7 +115,7 @@ namespace Workshell.PE
                 ulong offset = tuple.Item1;
                 uint rva = calc.OffsetToRVA(offset);
                 Section section = calc.RVAToSection(rva);
-                ulong va = DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase + rva;
+                ulong va = DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
                 uint size = tuple.Item2;
                 uint page_rva = tuple.Item3;
                 ushort[] relocs = tuple.Item4;

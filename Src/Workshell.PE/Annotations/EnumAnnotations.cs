@@ -11,7 +11,7 @@ using Workshell.PE.Extensions;
 namespace Workshell.PE.Annotations
 {
 
-    public class EnumAnnotation<T>
+    public sealed class EnumAnnotation<T>
     {
 
         internal EnumAnnotation(string headerName, Type type, T value, bool isFlags)
@@ -52,7 +52,7 @@ namespace Workshell.PE.Annotations
 
     }
 
-    public class EnumAnnotations<T> : IEnumerable<EnumAnnotation<T>>
+    public sealed class EnumAnnotations<T> : IEnumerable<EnumAnnotation<T>>
     {
 
         private List<EnumAnnotation<T>> list;

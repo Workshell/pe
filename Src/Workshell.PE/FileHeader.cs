@@ -65,13 +65,13 @@ namespace Workshell.PE
 
         internal static readonly int Size = Utils.SizeOf<IMAGE_FILE_HEADER>();
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private IMAGE_FILE_HEADER header;
         private Location location;
 
-        internal FileHeader(ExecutableImage exeReader, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
+        internal FileHeader(ExecutableImage exeImage, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
         {
-            reader = exeReader;
+            image = exeImage;
             header = fileHeader;
 
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_FILE_HEADER>());
@@ -88,7 +88,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
+            Stream stream = image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;

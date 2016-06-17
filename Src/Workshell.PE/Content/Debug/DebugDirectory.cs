@@ -76,7 +76,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = directories.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directories.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, location);
 
             return buffer;
@@ -218,12 +218,12 @@ namespace Workshell.PE
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
 
-            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
             ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
-            Stream stream = directory.Directories.Reader.GetStream();
+            Stream stream = directory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -267,7 +267,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, Location);
 
             return buffer;
@@ -275,8 +275,8 @@ namespace Workshell.PE
 
         private DebugDirectoryEntry[] LoadEntries(Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[] directoryEntries)
         {
-            LocationCalculator calc = DataDirectory.Directories.Reader.GetCalculator();
-            ulong image_base = DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
+            ulong image_base = DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             uint size = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>().ToUInt32();
             DebugDirectoryEntry[] results = new DebugDirectoryEntry[directoryEntries.Length];
 

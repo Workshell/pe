@@ -18,7 +18,7 @@ namespace Workshell.PE
 
         internal Section(Sections sections, SectionTableEntry tableEntry)
         {
-            ulong image_base = sections.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = tableEntry.Table.Image.NTHeaders.OptionalHeader.ImageBase;
 
             _sections = sections;
             _table_entry = tableEntry;
@@ -34,7 +34,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = _sections.Reader.GetStream();
+            Stream stream = _table_entry.Table.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,_location);
 
             return buffer;
@@ -83,13 +83,11 @@ namespace Workshell.PE
     public sealed class Sections : IEnumerable<Section>
     {
 
-        private ExecutableImage reader;
         private SectionTable table;
         private Dictionary<SectionTableEntry,Section> sections;
 
-        internal Sections(ExecutableImage exeReader, SectionTable sectionTable)
+        internal Sections(SectionTable sectionTable)
         {
-            reader = exeReader;
             table = sectionTable;
             sections = new Dictionary<SectionTableEntry, Section>();
         }
@@ -126,14 +124,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public ExecutableImage Reader
-        {
-            get
-            {
-                return reader;
-            }
-        }
 
         public SectionTable Table
         {

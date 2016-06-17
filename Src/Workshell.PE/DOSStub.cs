@@ -11,12 +11,12 @@ namespace Workshell.PE
     public sealed class DOSStub : ISupportsLocation, ISupportsBytes
     {
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private Location location;
 
-        internal DOSStub(ExecutableImage exeReader, ulong stubOffset, uint stubSize, ulong imageBase)
+        internal DOSStub(ExecutableImage exeImage, ulong stubOffset, uint stubSize, ulong imageBase)
         {
-            reader = exeReader;
+            image = exeImage;
             location = new Location(stubOffset,Convert.ToUInt32(stubOffset),imageBase + stubOffset,stubSize,stubSize);
         }
 
@@ -29,7 +29,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
+            Stream stream = image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -38,6 +38,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
 
         public Location Location
         {

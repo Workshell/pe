@@ -42,12 +42,12 @@ namespace Workshell.PE
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
 
-            Stream stream = directory.Directories.Reader.GetStream();
+            Stream stream = directory.Directories.Image.GetStream();
             long file_offset = directory.VirtualAddress.ToInt64();
 
             stream.Seek(file_offset, SeekOrigin.Begin);
 
-            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(directory.VirtualAddress, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size);
             WIN_CERTIFICATE win_cert = Utils.Read<WIN_CERTIFICATE>(stream);
             Certificate cert = new Certificate(directory, location, win_cert);
@@ -61,7 +61,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
@@ -74,7 +74,7 @@ namespace Workshell.PE
 
         public byte[] GetData()
         {
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
             ulong offset = Location.FileOffset + Utils.SizeOf<WIN_CERTIFICATE>().ToUInt32();
             byte[] buffer = Utils.ReadBytes(stream, offset.ToInt64(), cert.dwLength);
 

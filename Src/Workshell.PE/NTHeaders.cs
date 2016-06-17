@@ -15,17 +15,17 @@ namespace Workshell.PE
 
         public const uint PE_MAGIC_MZ = 17744;
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private Location location;
         private FileHeader file_header;
         private OptionalHeader opt_header;
         private DataDirectoryCollection data_dirs;
 
-        internal NTHeaders(ExecutableImage exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
+        internal NTHeaders(ExecutableImage exeImage, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
         {
             uint size = (4U + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize).ToUInt32();
 
-            reader = exeReader;
+            image = exeImage;
             location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,size,size);
             file_header = fileHeader;
             opt_header = optHeader;
@@ -41,7 +41,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
+            Stream stream = image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -50,6 +50,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
 
         public Location Location
         {

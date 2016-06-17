@@ -31,16 +31,16 @@ namespace Workshell.PE
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
 
-            LocationCalculator calc = directory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = directory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
             ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-            ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
-            Stream stream = directory.Directories.Reader.GetStream();
+            Stream stream = directory.Directories.Image.GetStream();
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
-            bool is_64bit = directory.Directories.Reader.Is64Bit;
+            bool is_64bit = directory.Directories.Image.Is64Bit;
             TLSDirectory tls_directory;
 
             if (!is_64bit)
@@ -65,7 +65,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = DataDirectory.Directories.Reader.GetStream();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;

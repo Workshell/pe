@@ -143,8 +143,8 @@ namespace Workshell.PE
                     items[i].Ordinal = Convert.ToInt32(i + directory.Base);
             }
 
-            Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
-            LocationCalculator calc = directory.DataDirectory.Directories.Reader.GetCalculator();
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
+            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
 
             foreach (ExportItem item in items)
             {

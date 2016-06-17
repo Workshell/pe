@@ -48,6 +48,9 @@ namespace Workshell.PE.Demo
             ExportTable<ushort> ordinals = ExportTable<ushort>.GetOrdinalTable(export_dir);
             Exports exports = Exports.Get(export_dir, function_addresses, name_addresses, ordinals);
 
+            ImportDirectory import_dir = ImportDirectory.Get(image);
+            ImportAddressTables ilt = ImportAddressTables.GetLookupTable(import_dir);
+
             Console.ReadKey();
         }
 

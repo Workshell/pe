@@ -84,12 +84,12 @@ namespace Workshell.PE
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
         public static readonly int Size64 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private Location location;
 
-        internal OptionalHeader(ExecutableImage exeReader, ulong headerOffset, uint headerSize, ulong imageBase)
+        internal OptionalHeader(ExecutableImage exeImage, ulong headerOffset, uint headerSize, ulong imageBase)
         {
-            reader = exeReader;
+            image = exeImage;
             location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,headerSize,headerSize);
         }
 
@@ -135,14 +135,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public ExecutableImage Reader
-        {
-            get
-            {
-                return reader;
-            }
-        }
 
         public Location Location
         {
@@ -332,6 +324,14 @@ namespace Workshell.PE
             get;
         }
 
+        protected ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
+
         #endregion
 
     }
@@ -350,7 +350,7 @@ namespace Workshell.PE
 
         public override byte[] GetBytes()
         {
-            Stream stream = Reader.GetStream();
+            Stream stream = Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
@@ -609,7 +609,7 @@ namespace Workshell.PE
 
         private IMAGE_OPTIONAL_HEADER64 header;
 
-        internal OptionalHeader64(ExecutableImage exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
+        internal OptionalHeader64(ExecutableImage exeImage, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeImage,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
         {
             header = optHeader;
         }
@@ -618,7 +618,7 @@ namespace Workshell.PE
 
         public override byte[] GetBytes()
         {
-            Stream stream = Reader.GetStream();
+            Stream stream = Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;

@@ -203,7 +203,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = table.Reader.GetStream();
+            Stream stream = table.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, location);
 
             return buffer;
@@ -336,15 +336,15 @@ namespace Workshell.PE
     public sealed class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation
     {
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private Location location;
         private SectionTableEntry[] table;
 
-        internal SectionTable(ExecutableImage exeReader, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
+        internal SectionTable(ExecutableImage exeImage, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
         {
             uint size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
-            reader = exeReader;
+            image = exeImage;
             location = new Location(tableOffset,Convert.ToUInt32(tableOffset),imageBase + tableOffset,size,size);
             table = new SectionTableEntry[sectionHeaders.Length];
 
@@ -363,7 +363,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
+            Stream stream = image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -386,11 +386,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ExecutableImage Reader
+        public ExecutableImage Image
         {
             get
             {
-                return reader;
+                return image;
             }
         }
 

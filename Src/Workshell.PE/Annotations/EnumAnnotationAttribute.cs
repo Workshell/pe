@@ -8,7 +8,7 @@ namespace Workshell.PE.Annotations
 {
 
     [AttributeUsage(AttributeTargets.Field)]
-    public class EnumAnnotationAttribute : Attribute
+    public sealed class EnumAnnotationAttribute : Attribute
     {
 
         public EnumAnnotationAttribute(string name)

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
+    /*
+
     public sealed class ImportLibrary : IEnumerable<ImportLibraryFunction>, IReadOnlyCollection<ImportLibraryFunction>
     {
 
@@ -121,5 +123,7 @@ namespace Workshell.PE
         #endregion
 
     }
+
+    */
 
 }

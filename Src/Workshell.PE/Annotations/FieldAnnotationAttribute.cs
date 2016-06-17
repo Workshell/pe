@@ -8,7 +8,7 @@ namespace Workshell.PE.Annotations
 {
 
     [AttributeUsage(AttributeTargets.Property)]
-    public class FieldAnnotationAttribute : Attribute
+    public sealed class FieldAnnotationAttribute : Attribute
     {
 
         public FieldAnnotationAttribute(string desc)

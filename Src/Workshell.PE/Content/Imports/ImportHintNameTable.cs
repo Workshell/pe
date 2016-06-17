@@ -10,6 +10,8 @@ using Workshell.MoreLinq;
 namespace Workshell.PE
 {
 
+    /*
+
     public sealed class ImportHintNameEntry : ISupportsLocation, ISupportsBytes
     {
 
@@ -219,5 +221,7 @@ namespace Workshell.PE
         #endregion
 
     }
+
+    */
 
 }

@@ -31,10 +31,10 @@ namespace Workshell.PE
             if (entry.PointerToRawData == 0 && entry.SizeOfData == 0)
                 return null;
 
-            LocationCalculator calc = entry.Directory.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = entry.Directory.DataDirectory.Directories.Image.GetCalculator();
             uint rva = entry.AddressOfRawData;
             Section section = calc.RVAToSection(rva);
-            ulong image_base = entry.Directory.DataDirectory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
+            ulong image_base = entry.Directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(entry.PointerToRawData, rva, image_base + rva, entry.SizeOfData, entry.SizeOfData, section);
             DebugData data = new DebugData(entry, location);
 
@@ -54,7 +54,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = entry.Directory.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = entry.Directory.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream, location);
 
             return buffer;

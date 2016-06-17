@@ -10,6 +10,8 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
+    /*
+
     public sealed class Imports : IEnumerable<ImportLibrary>, IReadOnlyCollection<ImportLibrary>
     {
 
@@ -96,5 +98,7 @@ namespace Workshell.PE
         #endregion
 
     }
+
+    */
 
 }

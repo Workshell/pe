@@ -40,6 +40,16 @@ namespace Workshell.PE.Extensions
             return Convert.ToUInt32(value);
         }
 
+        public static ulong ToUInt64(this int value)
+        {
+            return Convert.ToUInt32(value);
+        }
+
+        public static ulong ToUInt64(this long value)
+        {
+            return Convert.ToUInt32(value);
+        }
+
     }
 
 }

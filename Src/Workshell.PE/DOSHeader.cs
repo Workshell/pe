@@ -19,13 +19,13 @@ namespace Workshell.PE
 
         private static readonly int size = Utils.SizeOf<IMAGE_DOS_HEADER>();
 
-        private ExecutableImage reader;
+        private ExecutableImage image;
         private IMAGE_DOS_HEADER header;
         private Location location;
 
-        internal DOSHeader(ExecutableImage exeReader, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
+        internal DOSHeader(ExecutableImage exeImage, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
         {
-            reader = exeReader;
+            image = exeImage;
             header = dosHeader;
             location = new Location(0,0,imageBase,Convert.ToUInt32(DOSHeader.Size),Convert.ToUInt32(DOSHeader.Size));
         }
@@ -39,7 +39,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = reader.GetStream();
+            Stream stream = image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -60,6 +60,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
 
         public Location Location
         {

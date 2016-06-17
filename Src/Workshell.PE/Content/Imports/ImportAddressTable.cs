@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 using Workshell.MoreLinq;
 
+using Workshell.PE.Extensions;
+
 namespace Workshell.PE
 {
 
@@ -21,11 +23,12 @@ namespace Workshell.PE
 
         internal ImportAddressTableEntry(ImportAddressTable addressTable, ulong entryOffset, uint entryAddress, ushort entryOrdinal, bool isOrdinal)
         {
-            bool is_64bit = addressTable.Tables.Content.DataDirectory.Directories.Reader.Is64Bit;
-            LocationCalculator calc = addressTable.Tables.Content.DataDirectory.Directories.Reader.GetCalculator();
-            uint rva = calc.OffsetToRVA(addressTable.Tables.Content.Section,entryOffset);
-            ulong va = calc.OffsetToVA(addressTable.Tables.Content.Section,entryOffset);
-            uint size = Convert.ToUInt32(is_64bit ? sizeof(ulong) : sizeof(uint));
+            bool is_64bit = addressTable.Tables.DataDirectory.Directories.Image.Is64Bit;
+            LocationCalculator calc = addressTable.Tables.DataDirectory.Directories.Image.GetCalculator();
+            uint rva = calc.OffsetToRVA(entryOffset);
+            ulong image_base = addressTable.Tables.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            ulong va = image_base + rva;
+            ulong size = (is_64bit ? sizeof(ulong) : sizeof(uint)).ToUInt64();
 
             table = addressTable;
             location = new Location(entryOffset,rva,va,size,size);
@@ -61,7 +64,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = table.Tables.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = table.Tables.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -115,35 +118,38 @@ namespace Workshell.PE
 
     }
 
-    public sealed class ImportAddressTable : IEnumerable<ImportAddressTableEntry>, IReadOnlyCollection<ImportAddressTableEntry>, ISupportsLocation, ISupportsBytes
+    public sealed class ImportAddressTable : IEnumerable<ImportAddressTableEntry>, ISupportsLocation, ISupportsBytes
     {
 
-        private ImportAddressTableCollection tables;
+        private ImportAddressTables tables;
         private ImportDirectoryEntry dir_entry;
         private Location location;
         private ImportAddressTableEntry[] entries;
 
-        internal ImportAddressTable(ImportAddressTableCollection addressTables,  ImportDirectoryEntry directoryEntry, ulong tableOffset, IEnumerable<ulong> tableEntries)
+        internal ImportAddressTable(ImportAddressTables addressTables,  ImportDirectoryEntry directoryEntry, ulong tableOffset, ulong[] tableEntries)
         {
-            bool is_64bit = addressTables.Content.DataDirectory.Directories.Reader.Is64Bit;
-            LocationCalculator calc = addressTables.Content.DataDirectory.Directories.Reader.GetCalculator();
-            uint rva = calc.OffsetToRVA(addressTables.Content.Section,tableOffset);
-            ulong va = calc.OffsetToVA(addressTables.Content.Section,tableOffset);
-            uint size = Convert.ToUInt32(tableEntries.Count() * (is_64bit ? sizeof(ulong) : sizeof(uint)));
+            bool is_64bit = addressTables.DataDirectory.Directories.Image.Is64Bit;
+            LocationCalculator calc = addressTables.DataDirectory.Directories.Image.GetCalculator();
+            uint rva = directoryEntry.OriginalFirstThunk;
+            ulong image_base = addressTables.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            ulong va = image_base + rva;
+            ulong size = (tableEntries.Count() * (is_64bit ? sizeof(ulong) : sizeof(uint))).ToUInt64();
+            Section section = calc.RVAToSection(rva);
 
             tables = addressTables;
             dir_entry = directoryEntry;
-            location = new Location(tableOffset,rva,va,size,size);
-            entries = new ImportAddressTableEntry[0];
-
-            LoadEntries(is_64bit,tableOffset,tableEntries);
+            location = new Location(tableOffset,rva,va,size,size,section);
+            entries = LoadEntries(is_64bit,tableOffset,tableEntries);
         }
 
         #region Methods
 
         public IEnumerator<ImportAddressTableEntry> GetEnumerator()
         {
-            return entries.Cast<ImportAddressTableEntry>().GetEnumerator();
+            for(var i = 0; i < entries.Length; i++)
+            {
+                yield return entries[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -158,19 +164,20 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = tables.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = tables.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }
 
-        private void LoadEntries(bool is64Bit, ulong tableOffset, IEnumerable<ulong> tableEntries)
+        private ImportAddressTableEntry[] LoadEntries(bool is64Bit, ulong tableOffset, ulong[] tableEntries)
         {
-            List<ImportAddressTableEntry> list = new List<ImportAddressTableEntry>();
+            ImportAddressTableEntry[] results = new ImportAddressTableEntry[tableEntries.Length];
             ulong offset = tableOffset;
 
-            foreach(ulong addr_or_ord in tableEntries)
+            for(var i = 0; i < tableEntries.Length; i++)
             {
+                ulong addr_or_ord = tableEntries[i];
                 ushort ordinal = 0;
                 bool is_ordinal = false;
 
@@ -210,20 +217,20 @@ namespace Workshell.PE
                     address = Utils.LoDWord(addr_or_ord);
                 }
 
-                ImportAddressTableEntry entry = new ImportAddressTableEntry(this,offset,address,ordinal,is_ordinal);
+                ImportAddressTableEntry entry = new ImportAddressTableEntry(this, offset, address, ordinal, is_ordinal);
 
-                list.Add(entry);
+                results[i] = entry;
                 offset += Convert.ToUInt32(is64Bit ? sizeof(ulong) : sizeof(uint));
             }
 
-            entries = list.ToArray();
+            return results;
         }
 
         #endregion
 
         #region Properties
 
-        public ImportAddressTableCollection Tables
+        public ImportAddressTables Tables
         {
             get
             {
@@ -267,19 +274,16 @@ namespace Workshell.PE
 
     }
 
-    public sealed class ImportAddressTableCollection : IEnumerable<ImportAddressTable>, ISupportsLocation, ISupportsBytes
+    public sealed class ImportAddressTables : ExecutableImageContent, IEnumerable<ImportAddressTable>, ISupportsLocation, ISupportsBytes
     {
 
-        private ImportTableContent content;
         private ImportAddressTable[] tables;
-        private Location location;
-        
-        internal ImportAddressTableCollection(ImportTableContent tableContent, IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
-        {
-            content = tableContent;
-            location = null;
-            tables = new ImportAddressTable[0];
 
+        internal ImportAddressTables(DataDirectory dataDirectory, Location dataLocation, Tuple<ImportDirectoryEntry, ulong[]>[] addressTables) : base(dataDirectory,dataLocation)
+        {
+            tables = new ImportAddressTable[addressTables.Length];
+
+            /*
             LoadTables(tablesInfo);
 
             ulong lowest_offset = 0;
@@ -296,13 +300,87 @@ namespace Workshell.PE
                 size += table.Location.FileSize;
 
             location = new Location(lowest_offset,rva,va,size,size);
+            */
+
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
+
+            for (var i = 0; i < addressTables.Length; i++)
+            {
+                ulong offset = calc.RVAToOffset(addressTables[i].Item1.OriginalFirstThunk);
+                ImportAddressTable table = new ImportAddressTable(this, addressTables[i].Item1, offset, addressTables[i].Item2);
+
+                tables[i] = table;
+            }
         }
+
+        #region Static Methods
+
+        public static ImportAddressTables GetLookupTable(ImportDirectory directory)
+        {
+            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();          
+            bool is_64bit = directory.DataDirectory.Directories.Image.Is64Bit;
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
+            List<Tuple<ImportDirectoryEntry, ulong[]>> tables = new List<Tuple<ImportDirectoryEntry, ulong[]>>();
+
+            foreach (ImportDirectoryEntry dir_entry in directory)
+            {
+                if (dir_entry.OriginalFirstThunk == 0)
+                    continue;
+
+                List<ulong> entries = new List<ulong>();
+                ulong offset = calc.RVAToOffset(dir_entry.OriginalFirstThunk);
+
+                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+
+                while (true)
+                {
+                    ulong entry = (!is_64bit ? Utils.ReadUInt32(stream) : Utils.ReadUInt64(stream));
+
+                    entries.Add(entry);
+
+                    if (entry == 0)
+                        break;
+                }
+
+                Tuple<ImportDirectoryEntry, ulong[]> table = new Tuple<ImportDirectoryEntry, ulong[]>(dir_entry, entries.ToArray());
+
+                tables.Add(table);
+            }
+
+            uint rva = 0;
+
+            if (tables.Count > 0)
+                rva = tables.MinBy(table => table.Item1.OriginalFirstThunk).Item1.OriginalFirstThunk;
+
+            ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            ulong va = image_base + rva;
+            ulong file_offset = calc.RVAToOffset(rva);
+            ulong file_size = 0;
+
+            foreach (var table in tables)
+            {
+                int size = table.Item2.Length * (!is_64bit ? sizeof(uint) : sizeof(ulong));
+
+                file_size += size.ToUInt32();
+            }
+
+            Section section = calc.RVAToSection(rva);
+            Location location = new Location(file_offset, rva, va, file_size, file_size, section);
+            ImportAddressTables result = new ImportAddressTables(directory.DataDirectory, location, tables.ToArray());
+
+            return result;
+        }
+
+        #endregion
 
         #region Methods
 
         public IEnumerator<ImportAddressTable> GetEnumerator()
         {
-            return tables.Cast<ImportAddressTable>().GetEnumerator();
+            for(var i = 0; i < tables.Length; i++)
+            {
+                yield return tables[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -312,17 +390,18 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("File Offset: 0x{0:X8}, Table Count: {1}",location.FileOffset,tables.Length);
+            return String.Format("File Offset: 0x{0:X8}, Table Count: {1}",Location.FileOffset,tables.Length);
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            Stream stream = DataDirectory.Directories.Image.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
 
+        /*
         private void LoadTables(IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
         {
             List<ImportAddressTable> list = new List<ImportAddressTable>();
@@ -361,26 +440,11 @@ namespace Workshell.PE
 
             tables = list.ToArray();
         }
+        */
 
         #endregion
 
         #region Properties
-
-        public ImportTableContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         public int Count
         {
