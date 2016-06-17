@@ -12,7 +12,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public abstract class LoadConfigDirectory : DataDirectoryContent, ISupportsBytes
+    public abstract class LoadConfigDirectory : ExecutableImageContent, ISupportsBytes
     {
 
         internal LoadConfigDirectory(DataDirectory dataDirectory, Location configLocation) : base(dataDirectory,configLocation)
@@ -21,16 +21,15 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static LoadConfigDirectory Get(DataDirectory directory)
+        public static LoadConfigDirectory Get(ExecutableImage image)
         {
-            if (directory == null)
-                throw new ArgumentNullException("directory", "No data directory was specified.");
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.LoadConfigTable))
+                return null;
 
-            if (directory.DirectoryType != DataDirectoryType.LoadConfigTable)
-                throw new DataDirectoryException("Cannot create instance, directory is not the Load Configuration Table.");
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.LoadConfigTable];
 
-            if (directory.VirtualAddress == 0 && directory.Size == 0)
-                throw new DataDirectoryException("Load Configuration Table address and size are 0.");
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
 
             LocationCalculator calc = directory.Directories.Reader.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
@@ -39,13 +38,10 @@ namespace Workshell.PE
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
             Stream stream = directory.Directories.Reader.GetStream();
 
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("Load Configuration offset is beyond end of stream.");
+            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
             bool is_64bit = directory.Directories.Reader.Is64Bit;
             LoadConfigDirectory load_config_dir = null;
-
-            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
             if (!is_64bit)
             {

@@ -83,7 +83,7 @@ namespace Workshell.PE
             }
         }
 
-        public DataDirectoryContent GetContent()
+        public ExecutableImageContent GetContent()
         {
             /*
             if (data_dir.VirtualAddress == 0) // No content so no point...
@@ -213,7 +213,7 @@ namespace Workshell.PE
     public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, ISupportsLocation, ISupportsBytes
     {
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private Location location;
         private Dictionary<DataDirectoryType,DataDirectory> dirs;
 
@@ -278,7 +278,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImageReader Reader
+        public ExecutableImage Reader
         {
             get
             {

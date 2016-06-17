@@ -83,11 +83,11 @@ namespace Workshell.PE
     public sealed class Sections : IEnumerable<Section>
     {
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private SectionTable table;
         private Dictionary<SectionTableEntry,Section> sections;
 
-        internal Sections(ImageReader exeReader, SectionTable sectionTable)
+        internal Sections(ExecutableImage exeReader, SectionTable sectionTable)
         {
             reader = exeReader;
             table = sectionTable;
@@ -127,7 +127,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImageReader Reader
+        public ExecutableImage Reader
         {
             get
             {

@@ -9,22 +9,22 @@ namespace Workshell.PE
 {
 
     [Serializable]
-    public class ImageReaderException : Exception
+    public class ExecutableImageException : Exception
     {
 
-        public ImageReaderException() : base()
+        public ExecutableImageException() : base()
         {
         }
 
-        public ImageReaderException(string message) : base(message)
+        public ExecutableImageException(string message) : base(message)
         {
         }
 
-        public ImageReaderException(string message, Exception innerException) : base(message, innerException)
+        public ExecutableImageException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        protected ImageReaderException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected ExecutableImageException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
 

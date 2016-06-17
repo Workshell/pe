@@ -336,11 +336,11 @@ namespace Workshell.PE
     public sealed class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation
     {
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private Location location;
         private SectionTableEntry[] table;
 
-        internal SectionTable(ImageReader exeReader, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
+        internal SectionTable(ExecutableImage exeReader, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
         {
             uint size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
@@ -386,7 +386,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImageReader Reader
+        public ExecutableImage Reader
         {
             get
             {

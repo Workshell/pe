@@ -90,7 +90,7 @@
     <Compile Include="Native\IMAGE_SECTION_HEADER.cs" />
     <Compile Include="NTHeaders.cs" />
     <Compile Include="OptionalHeader.cs" />
-    <Compile Include="ImageReader.cs" />
+    <Compile Include="ExecutableImage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Section.cs" />
     <Compile Include="SectionTable.cs" />

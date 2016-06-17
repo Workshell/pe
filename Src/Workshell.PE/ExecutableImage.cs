@@ -11,7 +11,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ImageReader : IDisposable, ISupportsBytes
+    public class ExecutableImage : IDisposable, ISupportsBytes
     {
 
         private class PreloadedInformation
@@ -50,7 +50,7 @@ namespace Workshell.PE
         private bool _is_clr;
         private bool _is_signed;
 
-        private ImageReader(Stream sourceStream, bool ownStream)
+        private ExecutableImage(Stream sourceStream, bool ownStream)
         {
             _disposed = false;
             _stream = sourceStream;
@@ -103,21 +103,21 @@ namespace Workshell.PE
             }
         }
 
-        public static ImageReader FromFile(string fileName)
+        public static ExecutableImage FromFile(string fileName)
         {
             FileStream file = new FileStream(fileName,FileMode.Open,FileAccess.Read);
 
             return FromStream(file,true);
         }
 
-        public static ImageReader FromStream(Stream stream)
+        public static ExecutableImage FromStream(Stream stream)
         {
             return FromStream(stream,false);
         }
 
-        public static ImageReader FromStream(Stream stream, bool ownStream)
+        public static ExecutableImage FromStream(Stream stream, bool ownStream)
         {
-            return new ImageReader(stream,ownStream);
+            return new ExecutableImage(stream,ownStream);
         }
 
         private static PreloadedInformation TryPreload(Stream stream, out string errorMessage)
@@ -223,7 +223,7 @@ namespace Workshell.PE
             bool is_64bit = (magic == (ushort)MagicType.PE32plus);
 
             if (!is_32bit && !is_64bit)
-                throw new ImageReaderException("Unknown PE type.");
+                throw new ExecutableImageException("Unknown PE type.");
 
             if ((stream.Position + file_header.SizeOfOptionalHeader) > stream.Length)
             {
@@ -364,7 +364,7 @@ namespace Workshell.PE
             PreloadedInformation preload_info = TryPreload(_stream,out error_message);
 
             if (preload_info == null)
-                throw new ImageReaderException(error_message);
+                throw new ExecutableImageException(error_message);
 
             ulong image_base = 0;
 

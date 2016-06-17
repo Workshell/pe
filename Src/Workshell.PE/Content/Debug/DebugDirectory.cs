@@ -196,7 +196,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class DebugDirectory : DataDirectoryContent, IEnumerable<DebugDirectoryEntry>, ISupportsBytes
+    public sealed class DebugDirectory : ExecutableImageContent, IEnumerable<DebugDirectoryEntry>, ISupportsBytes
     {
 
         private DebugDirectoryEntry[] entries;
@@ -208,16 +208,15 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static DebugDirectory Get(DataDirectory directory)
+        public static DebugDirectory Get(ExecutableImage image)
         {
-            if (directory == null)
-                throw new ArgumentNullException("directory", "No data directory was specified.");
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.Debug))
+                return null;
 
-            if (directory.DirectoryType != DataDirectoryType.Debug)
-                throw new DataDirectoryException("Cannot create instance, directory is not the Debug Directory.");
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.Debug];
 
-            if (directory.VirtualAddress == 0 && directory.Size == 0)
-                throw new DataDirectoryException("Debug Directory address and size are 0.");
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
 
             LocationCalculator calc = directory.Directories.Reader.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
@@ -225,12 +224,6 @@ namespace Workshell.PE
             ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
             Stream stream = directory.Directories.Reader.GetStream();
-
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("Debug Directory offset is beyond end of stream.");
-
-            if ((file_offset.ToInt64() + directory.Size) > stream.Length)
-                throw new DataDirectoryException("Debug Directory is beyond end of stream.");
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 

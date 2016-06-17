@@ -11,10 +11,10 @@ namespace Workshell.PE
     public sealed class DOSStub : ISupportsLocation, ISupportsBytes
     {
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private Location location;
 
-        internal DOSStub(ImageReader exeReader, ulong stubOffset, uint stubSize, ulong imageBase)
+        internal DOSStub(ExecutableImage exeReader, ulong stubOffset, uint stubSize, ulong imageBase)
         {
             reader = exeReader;
             location = new Location(stubOffset,Convert.ToUInt32(stubOffset),imageBase + stubOffset,stubSize,stubSize);

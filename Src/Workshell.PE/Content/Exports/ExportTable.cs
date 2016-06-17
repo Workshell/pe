@@ -10,7 +10,7 @@ using Workshell.PE.Extensions;
 namespace Workshell.PE
 {
 
-    public sealed class ExportTable<T> : DataDirectoryContent, IEnumerable<T>, ISupportsBytes
+    public sealed class ExportTable<T> : ExecutableImageContent, IEnumerable<T>, ISupportsBytes
     {
 
         private ExportDirectory directory;
@@ -36,12 +36,6 @@ namespace Workshell.PE
             uint size = directory.AddressOfFunctions * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfFunctions, image_base + directory.AddressOfFunctions, size, size, section);
             Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
-
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("Function addresses are beyond end of stream.");
-
-            if ((file_offset.ToInt64() + size) > stream.Length)
-                throw new DataDirectoryException("Function addresses extend beyond end of stream.");
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
@@ -72,12 +66,6 @@ namespace Workshell.PE
             Location location = new Location(file_offset, directory.AddressOfNames, image_base + directory.AddressOfNames, size, size, section);
             Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
 
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("Name pointer addresses are beyond end of stream.");
-
-            if ((file_offset.ToInt64() + size) > stream.Length)
-                throw new DataDirectoryException("Name pointer addresses extend beyond end of stream.");
-
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
             uint[] addresses = new uint[directory.NumberOfFunctions];
@@ -106,12 +94,6 @@ namespace Workshell.PE
             uint size = directory.NumberOfFunctions * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfNameOrdinals, image_base + directory.AddressOfNames, size, size, section);
             Stream stream = directory.DataDirectory.Directories.Reader.GetStream();
-
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("Ordinals are beyond end of stream.");
-
-            if ((file_offset.ToInt64() + size) > stream.Length)
-                throw new DataDirectoryException("Ordinals extend beyond end of stream.");
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 

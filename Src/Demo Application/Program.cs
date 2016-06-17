@@ -28,21 +28,21 @@ namespace Workshell.PE.Demo
             //string file_name = @"D:\Lloyd\Downloads\Win32DiskImager-0.9.5-install.exe";
             string error_message;
 
-            if (!ImageReader.IsValid(file_name,out error_message))
+            if (!ExecutableImage.IsValid(file_name,out error_message))
             {
                 Console.WriteLine("Invalid executable image: " + error_message);
 
                 return;
             }
 
-            ImageReader reader = ImageReader.FromFile(file_name);
+            ExecutableImage image = ExecutableImage.FromFile(file_name);
 
-            LoadConfigDirectory load_config = LoadConfigDirectory.Get(reader.NTHeaders.DataDirectories[DataDirectoryType.LoadConfigTable]);
-            Certificate cert = Certificate.Get(reader.NTHeaders.DataDirectories[DataDirectoryType.CertificateTable]);
-            DebugDirectory debug_dir = DebugDirectory.Get(reader.NTHeaders.DataDirectories[DataDirectoryType.Debug]);
-            //TLSDirectory tls_dir = TLSDirectory.Get(reader.NTHeaders.DataDirectories[DataDirectoryType.TLSTable]);
+            LoadConfigDirectory load_config = LoadConfigDirectory.Get(image);
+            Certificate cert = Certificate.Get(image);
+            DebugDirectory debug_dir = DebugDirectory.Get(image);
+            TLSDirectory tls_dir = TLSDirectory.Get(image);
 
-            ExportDirectory export_dir = ExportDirectory.Get(reader.NTHeaders.DataDirectories[DataDirectoryType.ExportTable]);
+            ExportDirectory export_dir = ExportDirectory.Get(image);
             ExportTable<uint> function_addresses = ExportTable<uint>.GetFunctionAddressTable(export_dir);
             ExportTable<uint> name_addresses = ExportTable<uint>.GetNameAddressTable(export_dir);
             ExportTable<ushort> ordinals = ExportTable<ushort>.GetOrdinalTable(export_dir);

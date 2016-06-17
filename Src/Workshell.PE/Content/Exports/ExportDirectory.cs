@@ -13,7 +13,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public class ExportDirectory : DataDirectoryContent, ISupportsBytes
+    public class ExportDirectory : ExecutableImageContent, ISupportsBytes
     {
 
         private static readonly int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
@@ -35,16 +35,15 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static ExportDirectory Get(DataDirectory directory)
+        public static ExportDirectory Get(ExecutableImage image)
         {
-            if (directory == null)
-                throw new ArgumentNullException("directory", "No data directory was specified.");
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ExportTable))
+                return null;
 
-            if (directory.DirectoryType != DataDirectoryType.ExportTable)
-                throw new DataDirectoryException("Cannot create instance, directory is not the Export Table.");
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.ExportTable];
 
-            if (directory.VirtualAddress == 0 && directory.Size == 0)
-                throw new DataDirectoryException("Export Table address and size are 0.");
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
 
             LocationCalculator calc = directory.Directories.Reader.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
@@ -53,19 +52,12 @@ namespace Workshell.PE
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
             Stream stream = directory.Directories.Reader.GetStream();
 
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("Export Table offset is beyond end of stream.");
-
-            int size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
-
-            if ((file_offset.ToInt64() + size) > stream.Length)
-                throw new DataDirectoryException("Export directory extends beyond end of stream.");
-
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
-            IMAGE_EXPORT_DIRECTORY export_directory = Utils.Read<IMAGE_EXPORT_DIRECTORY>(stream, size);
+            IMAGE_EXPORT_DIRECTORY export_directory = Utils.Read<IMAGE_EXPORT_DIRECTORY>(stream);
+            ExportDirectory result = new ExportDirectory(directory, location, export_directory);
 
-            return new ExportDirectory(directory, location, export_directory);
+            return result;
         }
 
         #endregion

@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    public abstract class DataDirectoryContent : ISupportsLocation
+    public abstract class ExecutableImageContent : ISupportsLocation
     {
 
         private DataDirectory directory;
         private Location location;
 
-        public DataDirectoryContent(DataDirectory dataDirectory, Location dataLocation)
+        public ExecutableImageContent(DataDirectory dataDirectory, Location dataLocation)
         {
             directory = dataDirectory;
             location = dataLocation;

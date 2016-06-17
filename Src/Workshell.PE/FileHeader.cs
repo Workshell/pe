@@ -65,11 +65,11 @@ namespace Workshell.PE
 
         internal static readonly int Size = Utils.SizeOf<IMAGE_FILE_HEADER>();
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private IMAGE_FILE_HEADER header;
         private Location location;
 
-        internal FileHeader(ImageReader exeReader, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
+        internal FileHeader(ExecutableImage exeReader, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
         {
             reader = exeReader;
             header = fileHeader;

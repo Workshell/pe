@@ -15,13 +15,13 @@ namespace Workshell.PE
 
         public const uint PE_MAGIC_MZ = 17744;
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private Location location;
         private FileHeader file_header;
         private OptionalHeader opt_header;
         private DataDirectoryCollection data_dirs;
 
-        internal NTHeaders(ImageReader exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
+        internal NTHeaders(ExecutableImage exeReader, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
         {
             uint size = (4U + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize).ToUInt32();
 

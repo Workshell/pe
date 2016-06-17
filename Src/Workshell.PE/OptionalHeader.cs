@@ -84,10 +84,10 @@ namespace Workshell.PE
         public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
         public static readonly int Size64 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private Location location;
 
-        internal OptionalHeader(ImageReader exeReader, ulong headerOffset, uint headerSize, ulong imageBase)
+        internal OptionalHeader(ExecutableImage exeReader, ulong headerOffset, uint headerSize, ulong imageBase)
         {
             reader = exeReader;
             location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,headerSize,headerSize);
@@ -136,7 +136,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImageReader Reader
+        public ExecutableImage Reader
         {
             get
             {
@@ -341,7 +341,7 @@ namespace Workshell.PE
 
         private IMAGE_OPTIONAL_HEADER32 header;
 
-        internal OptionalHeader32(ImageReader exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size32),imageBase)
+        internal OptionalHeader32(ExecutableImage exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size32),imageBase)
         {
             header = optHeader;
         }
@@ -609,7 +609,7 @@ namespace Workshell.PE
 
         private IMAGE_OPTIONAL_HEADER64 header;
 
-        internal OptionalHeader64(ImageReader exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
+        internal OptionalHeader64(ExecutableImage exeReader, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
         {
             header = optHeader;
         }

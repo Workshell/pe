@@ -155,7 +155,7 @@ namespace Workshell.PE
 
         public static string ReadString(Stream stream)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder(256);
 
             while (true)
             {
@@ -176,7 +176,7 @@ namespace Workshell.PE
 
             stream.Read(buffer,0,buffer.Length);
 
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new StringBuilder(256);
 
             foreach(byte b in buffer)
             {

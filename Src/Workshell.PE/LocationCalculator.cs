@@ -10,9 +10,9 @@ namespace Workshell.PE
     public class LocationCalculator
     {
 
-        private ImageReader reader;
+        private ExecutableImage reader;
 
-        internal LocationCalculator(ImageReader imageReader)
+        internal LocationCalculator(ExecutableImage imageReader)
         {
             reader = imageReader;
         }

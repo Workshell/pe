@@ -12,7 +12,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public abstract class TLSDirectory : DataDirectoryContent, ISupportsBytes
+    public abstract class TLSDirectory : ExecutableImageContent, ISupportsBytes
     {
 
         internal TLSDirectory(DataDirectory dataDirectory, Location tlsLocation) : base(dataDirectory,tlsLocation)
@@ -21,16 +21,15 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static TLSDirectory Get(DataDirectory directory)
+        public static TLSDirectory Get(ExecutableImage image)
         {
-            if (directory == null)
-                throw new ArgumentNullException("directory", "No data directory was specified.");
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.TLSTable))
+                return null;
 
-            if (directory.DirectoryType != DataDirectoryType.TLSTable)
-                throw new DataDirectoryException("Cannot create instance, directory is not the TLS Table.");
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.TLSTable];
 
-            if (directory.VirtualAddress == 0 && directory.Size == 0)
-                throw new DataDirectoryException("TLS Table address and size are 0.");
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
 
             LocationCalculator calc = directory.Directories.Reader.GetCalculator();
             Section section = calc.RVAToSection(directory.VirtualAddress);
@@ -38,9 +37,6 @@ namespace Workshell.PE
             ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
             Stream stream = directory.Directories.Reader.GetStream();
-
-            if (file_offset.ToInt64() > stream.Length)
-                throw new DataDirectoryException("TLS Table offset is beyond end of stream.");
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 

@@ -19,11 +19,11 @@ namespace Workshell.PE
 
         private static readonly int size = Utils.SizeOf<IMAGE_DOS_HEADER>();
 
-        private ImageReader reader;
+        private ExecutableImage reader;
         private IMAGE_DOS_HEADER header;
         private Location location;
 
-        internal DOSHeader(ImageReader exeReader, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
+        internal DOSHeader(ExecutableImage exeReader, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
         {
             reader = exeReader;
             header = dosHeader;

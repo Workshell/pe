@@ -20,7 +20,7 @@ namespace Workshell.PE
         PKCS1ModuleSign = 0x0009
     }
 
-    public sealed class Certificate : DataDirectoryContent, ISupportsBytes
+    public sealed class Certificate : ExecutableImageContent, ISupportsBytes
     {
 
         private WIN_CERTIFICATE cert;
@@ -32,28 +32,23 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static Certificate Get(DataDirectory directory)
+        public static Certificate Get(ExecutableImage image)
         {
-            if (directory == null)
-                throw new ArgumentNullException("directory", "No data directory was specified.");
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.CertificateTable))
+                return null;
 
-            if (directory.DirectoryType != DataDirectoryType.CertificateTable)
-                throw new DataDirectoryException("Cannot create instance, directory is not the Certificate Table.");
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.CertificateTable];
 
-            if (directory.VirtualAddress == 0 && directory.Size == 0)
-                throw new DataDirectoryException("Certificate Table address and size are 0.");
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
 
             Stream stream = directory.Directories.Reader.GetStream();
             long file_offset = directory.VirtualAddress.ToInt64();
 
-            if (file_offset > stream.Length)
-                throw new DataDirectoryException("Certificate Table offset is beyond end of stream.");
+            stream.Seek(file_offset, SeekOrigin.Begin);
 
             ulong image_base = directory.Directories.Reader.NTHeaders.OptionalHeader.ImageBase;
             Location location = new Location(directory.VirtualAddress, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size);
-
-            stream.Seek(file_offset, SeekOrigin.Begin);
-
             WIN_CERTIFICATE win_cert = Utils.Read<WIN_CERTIFICATE>(stream);
             Certificate cert = new Certificate(directory, location, win_cert);
 
