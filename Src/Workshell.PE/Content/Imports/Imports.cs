@@ -10,27 +10,61 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    /*
-
-    public sealed class Imports : IEnumerable<ImportLibrary>, IReadOnlyCollection<ImportLibrary>
+    public sealed class Imports : IEnumerable<ImportLibrary>
     {
 
-        private ImportTableContent content;
         private ImportLibrary[] libraries;
 
-        internal Imports(ImportTableContent tableContent, IEnumerable<Tuple<string,ImportAddressTable,ImportHintNameTable>> importLibraries)
+        internal Imports(Tuple<string,ImportAddressTable,ImportHintNameTable>[] importLibraries)
         {
-            content = tableContent;
-            libraries = new ImportLibrary[0];
-
-            LoadLibraries(importLibraries);
+            libraries = LoadLibraries(importLibraries);
         }
+
+        #region Static Methods
+
+        public static Imports Get(ImportAddressTables ilt, ImportHintNameTable hnTable)
+        {
+            List<Tuple<string, ImportAddressTable, ImportHintNameTable>> libraries = new List<Tuple<string, ImportAddressTable, ImportHintNameTable>>();
+            LocationCalculator calc = ilt.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = ilt.DataDirectory.Directories.Image.GetStream();
+
+            foreach (ImportAddressTable table in ilt)
+            {
+                StringBuilder builder = new StringBuilder(256);
+                ulong offset = calc.RVAToOffset(table.DirectoryEntry.Name);
+
+                stream.Seek(Convert.ToInt64(offset), SeekOrigin.Begin);
+
+                while (true)
+                {
+                    int b = stream.ReadByte();
+
+                    if (b <= 0)
+                        break;
+
+                    builder.Append((char)b);
+                }
+
+                Tuple<string, ImportAddressTable, ImportHintNameTable> tuple = new Tuple<string, ImportAddressTable, ImportHintNameTable>(builder.ToString(), table, hnTable);
+
+                libraries.Add(tuple);
+            }
+
+            Imports imports = new Imports(libraries.ToArray());
+
+            return imports;
+        }
+
+        #endregion
 
         #region Methods
 
         public IEnumerator<ImportLibrary> GetEnumerator()
         {
-            return libraries.Cast<ImportLibrary>().GetEnumerator();
+            for(var i = 0; i < libraries.Length; i++)
+            {
+                yield return libraries[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -43,31 +77,24 @@ namespace Workshell.PE
             return String.Format("Library Count: {0}",libraries.Length);
         }
 
-        private void LoadLibraries(IEnumerable<Tuple<string,ImportAddressTable,ImportHintNameTable>> importLibraries)
+        private ImportLibrary[] LoadLibraries(Tuple<string,ImportAddressTable,ImportHintNameTable>[] importLibraries)
         {
-            List<ImportLibrary> list = new List<ImportLibrary>();
+            ImportLibrary[] results = new ImportLibrary[importLibraries.Length];
 
-            foreach(Tuple<string,ImportAddressTable,ImportHintNameTable> tuple in importLibraries)
+            for(var i = 0; i < importLibraries.Length; i++)
             {
-                ImportLibrary library = new ImportLibrary(this,tuple.Item2,tuple.Item3,tuple.Item1);
+                Tuple<string, ImportAddressTable, ImportHintNameTable> tuple = importLibraries[i];
+                ImportLibrary library = new ImportLibrary(this, tuple.Item2, tuple.Item3, tuple.Item1);
 
-                list.Add(library);
+                results[i] = library;
             }
 
-            libraries = list.ToArray();
+            return results;
         }
 
         #endregion
 
         #region Properties
-
-        public ImportTableContent Content
-        {
-            get
-            {
-                return content;
-            }
-        }
 
         public int Count
         {
@@ -98,7 +125,5 @@ namespace Workshell.PE
         #endregion
 
     }
-
-    */
 
 }

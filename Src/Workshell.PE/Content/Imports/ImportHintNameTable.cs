@@ -226,31 +226,6 @@ namespace Workshell.PE
             return results.OrderBy(entry => entry.Location.FileOffset).ToArray();
         }
 
-        /*
-        private void UpdateLocation()
-        {
-            if (table.Length == 0)
-            {
-                location = new Location(0,0,0,0,0);
-
-                return;
-            }
-
-            ImportHintNameEntry first_entry = table.MinBy(entry => entry.Location.VirtualAddress);
-            ImportHintNameEntry last_entry = table.MaxBy(entry => entry.Location.VirtualAddress);
-
-            ulong offset = first_entry.Location.FileOffset;
-            uint size = Convert.ToUInt32((last_entry.Location.FileOffset + last_entry.Location.FileSize) - offset);
-
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-
-            uint rva = calc.OffsetToRVA(offset);
-            ulong va = calc.OffsetToVA(offset);
-
-            location = new Location(offset, rva, va, size, size);
-        }
-        */
-
         #endregion
 
         #region Properties

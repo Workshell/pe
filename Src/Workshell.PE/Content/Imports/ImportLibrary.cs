@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    /*
-
-    public sealed class ImportLibrary : IEnumerable<ImportLibraryFunction>, IReadOnlyCollection<ImportLibraryFunction>
+    public sealed class ImportLibrary : IEnumerable<ImportLibraryFunction>
     {
 
         private Imports imports;
@@ -25,16 +23,17 @@ namespace Workshell.PE
             address_table = addressTable;
             name_table = nameTable;
             name = libraryName;
-            functions = new ImportLibraryFunction[0];
-
-            LoadFunctions();
+            functions = LoadFunctions();
         }
 
         #region Methods
 
         public IEnumerator<ImportLibraryFunction> GetEnumerator()
         {
-            return functions.Cast<ImportLibraryFunction>().GetEnumerator();
+            for(var i = 0; i < functions.Length; i++)
+            {
+                yield return functions[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -47,10 +46,9 @@ namespace Workshell.PE
             return String.Format("Name: {0}, Imported Function Count: {1}",name,functions.Length);
         }
 
-        private void LoadFunctions()
+        private ImportLibraryFunction[] LoadFunctions()
         {
             List<ImportLibraryFunction> list = new List<ImportLibraryFunction>();
-            LocationCalculator calc = imports.Content.DataDirectory.Directories.Reader.GetCalculator();
 
             foreach (ImportAddressTableEntry entry in address_table)
             {
@@ -62,8 +60,7 @@ namespace Workshell.PE
                 }
                 else
                 {
-                    ulong offset = calc.RVAToOffset(entry.Address);
-                    ImportHintNameEntry hint_entry = name_table.FirstOrDefault(hne => hne.Location.FileOffset == offset);
+                    ImportHintNameEntry hint_entry = name_table.FirstOrDefault(hne => hne.Location.RelativeVirtualAddress == entry.Address);
 
                     if (hint_entry != null)
                         func = new ImportLibraryNamedFunction(this, entry, hint_entry);
@@ -73,7 +70,9 @@ namespace Workshell.PE
                     list.Add(func);
             }
 
-            functions = list.ToArray();
+            ImportLibraryFunction[] functions = list.ToArray();
+
+            return functions;
         }
 
         #endregion
@@ -123,7 +122,5 @@ namespace Workshell.PE
         #endregion
 
     }
-
-    */
 
 }

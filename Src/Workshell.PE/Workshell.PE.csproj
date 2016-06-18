@@ -57,7 +57,6 @@
     <Compile Include="Content\Imports\ImportHintNameTable.cs" />
     <Compile Include="Content\Imports\ImportLibrary.cs" />
     <Compile Include="Content\Imports\Imports.cs" />
-    <Compile Include="Content\Imports\ImportTableContent.cs" />
     <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
     <Compile Include="Content\Relocation\Relocation.cs" />
     <Compile Include="Content\Relocation\RelocationBlock.cs" />

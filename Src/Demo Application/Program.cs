@@ -52,6 +52,7 @@ namespace Workshell.PE.Demo
             ImportAddressTables ilt = ImportAddressTables.GetLookupTable(import_dir);
             ImportAddressTables iat = ImportAddressTables.GetAddressTable(import_dir);
             ImportHintNameTable hint_name_table = ImportHintNameTable.Get(import_dir);
+            Imports imports = Imports.Get(ilt,hint_name_table);
 
             Console.ReadKey();
         }

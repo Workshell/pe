@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    /*
-
     public enum ImportLibraryBindingType
     {
         Name,
@@ -143,7 +141,5 @@ namespace Workshell.PE
         #endregion
 
     }
-
-    */
 
 }
