@@ -17,33 +17,31 @@ namespace Workshell.PE
         private ResourceDirectoryEntry directory_entry;
         private IMAGE_RESOURCE_DATA_ENTRY entry;
         private Location location;
-        private ulong image_base;
         private ResourceData data;
 
-        internal ResourceDataEntry(ResourceDirectoryEntry directoryEntry, ulong entryOffset, ulong imageBase)
+        internal ResourceDataEntry(ResourceDirectoryEntry directoryEntry, ulong entryOffset)
         {
-            LocationCalculator calc = directoryEntry.Directory.Content.DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = directoryEntry.Directory.Content.DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = directoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = directoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(Convert.ToInt64(entryOffset),SeekOrigin.Begin);
 
             uint rva = calc.OffsetToRVA(entryOffset);
-            ulong va = imageBase + rva;
+            ulong va = directoryEntry.Directory.Resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_RESOURCE_DATA_ENTRY>());
+            Section section = calc.RVAToSection(rva);
 
             directory_entry = directoryEntry;
             entry = Utils.Read<IMAGE_RESOURCE_DATA_ENTRY>(stream);
-            location = new Location(entryOffset,rva,va,size,size);
-            image_base = imageBase;
-
-            GetData();
+            location = new Location(entryOffset,rva,va,size,size,section);
+            data = GetData();
         }
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = directory_entry.Directory.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = directory_entry.Directory.Resources.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -52,7 +50,11 @@ namespace Workshell.PE
         public ResourceData GetData()
         {
             if (data == null)
-                data = new ResourceData(this,image_base);
+            {
+                ulong image_base = directory_entry.Directory.Resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+
+                data = new ResourceData(this, image_base);
+            }
 
             return data;
         }

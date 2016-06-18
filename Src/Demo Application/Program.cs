@@ -54,6 +54,8 @@ namespace Workshell.PE.Demo
             ImportHintNameTable hint_name_table = ImportHintNameTable.Get(import_dir);
             Imports imports = Imports.Get(ilt,hint_name_table);
 
+            Resources resources = Resources.Get(image);
+
             Console.ReadKey();
         }
 

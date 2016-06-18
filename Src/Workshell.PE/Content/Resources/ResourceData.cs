@@ -18,7 +18,7 @@ namespace Workshell.PE
 
         internal ResourceData(ResourceDataEntry dataEntry, ulong imageBase)
         {
-            LocationCalculator calc = dataEntry.DirectoryEntry.Directory.Content.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = dataEntry.DirectoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetCalculator();
             ulong va = imageBase + dataEntry.OffsetToData;
             ulong file_offset = calc.RVAToOffset(dataEntry.Size);
 
@@ -30,7 +30,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = data_entry.DirectoryEntry.Directory.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = data_entry.DirectoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;

@@ -6,49 +6,52 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
 
-    public sealed class ResourceDirectory : IEnumerable<ResourceDirectoryEntry>, IReadOnlyCollection<ResourceDirectoryEntry>, ISupportsLocation, ISupportsBytes
+    public sealed class ResourceDirectory : IEnumerable<ResourceDirectoryEntry>, ISupportsLocation, ISupportsBytes
     {
 
-        private ResourceTableContent content;
+        private Resources res;
         private IMAGE_RESOURCE_DIRECTORY directory;
         private Location location;
         private ResourceDirectory parent_directory;
         private ResourceDirectoryEntry[] entries;
 
-        internal ResourceDirectory(ResourceTableContent resourceContent, ulong directoryOffset, ulong imageBase, ResourceDirectory parentDirectory)
+        internal ResourceDirectory(Resources resources, ulong directoryOffset, ResourceDirectory parentDirectory)
         {
-            LocationCalculator calc = resourceContent.DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = resourceContent.DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = resources.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = resources.DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(Convert.ToInt64(directoryOffset),SeekOrigin.Begin);
 
             uint rva = calc.OffsetToRVA(directoryOffset);
-            ulong va = imageBase + rva;
-            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>());
+            ulong va = resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
+            uint size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
+            Section section = calc.RVAToSection(rva);
 
-            content = resourceContent;
+            res = resources;
             directory = Utils.Read<IMAGE_RESOURCE_DIRECTORY>(stream);
-            location = new Location(directoryOffset,rva,va,size,size);
+            location = new Location(directoryOffset,rva,va,size,size,section);
             parent_directory = parentDirectory;
 
             int count = directory.NumberOfNamedEntries + directory.NumberOfIdEntries;
             List<ResourceDirectoryEntry> list = new List<ResourceDirectoryEntry>(count);
             ulong offset = directoryOffset + size;
+            uint entry_size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>().ToUInt32();
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
 
                 IMAGE_RESOURCE_DIRECTORY_ENTRY directory_entry = Utils.Read<IMAGE_RESOURCE_DIRECTORY_ENTRY>(stream);
-                ResourceDirectoryEntry entry = new ResourceDirectoryEntry(this,offset,directory_entry,imageBase);
+                ResourceDirectoryEntry entry = new ResourceDirectoryEntry(this,offset,directory_entry);
 
                 list.Add(entry);
-                offset += Convert.ToUInt32(Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>());
+                offset += entry_size;
             }
 
             entries = list.ToArray();
@@ -58,7 +61,10 @@ namespace Workshell.PE
 
         public IEnumerator<ResourceDirectoryEntry> GetEnumerator()
         {
-            return entries.Cast<ResourceDirectoryEntry>().GetEnumerator();
+            for(var i = 0; i < entries.Length; i++)
+            {
+                yield return entries[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -68,7 +74,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = res.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -78,11 +84,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ResourceTableContent Content
+        public Resources Resources
         {
             get
             {
-                return content;
+                return res;
             }
         }
 
