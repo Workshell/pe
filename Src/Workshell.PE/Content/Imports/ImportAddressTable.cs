@@ -126,20 +126,21 @@ namespace Workshell.PE
         private Location location;
         private ImportAddressTableEntry[] entries;
 
-        internal ImportAddressTable(ImportAddressTables addressTables,  ImportDirectoryEntry directoryEntry, ulong tableOffset, ulong[] tableEntries)
+        internal ImportAddressTable(ImportAddressTables addressTables,  ImportDirectoryEntry directoryEntry, uint tableRVA/*, ulong tableOffset*/, ulong[] tableEntries)
         {
             bool is_64bit = addressTables.DataDirectory.Directories.Image.Is64Bit;
             LocationCalculator calc = addressTables.DataDirectory.Directories.Image.GetCalculator();
-            uint rva = directoryEntry.OriginalFirstThunk;
+            uint rva = tableRVA;
             ulong image_base = addressTables.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             ulong va = image_base + rva;
+            ulong offset = calc.RVAToOffset(rva);
             ulong size = (tableEntries.Count() * (is_64bit ? sizeof(ulong) : sizeof(uint))).ToUInt64();
             Section section = calc.RVAToSection(rva);
 
             tables = addressTables;
             dir_entry = directoryEntry;
-            location = new Location(tableOffset,rva,va,size,size,section);
-            entries = LoadEntries(is_64bit,tableOffset,tableEntries);
+            location = new Location(offset, rva, va, size, size, section);
+            entries = LoadEntries(is_64bit, offset, tableEntries);
         }
 
         #region Methods
@@ -274,40 +275,22 @@ namespace Workshell.PE
 
     }
 
-    public sealed class ImportAddressTables : ExecutableImageContent, IEnumerable<ImportAddressTable>, ISupportsLocation, ISupportsBytes
+    public sealed class ImportAddressTables : ExecutableImageContent, IEnumerable<ImportAddressTable>, ISupportsBytes
     {
 
         private ImportAddressTable[] tables;
 
-        internal ImportAddressTables(DataDirectory dataDirectory, Location dataLocation, Tuple<ImportDirectoryEntry, ulong[]>[] addressTables) : base(dataDirectory,dataLocation)
+        internal ImportAddressTables(DataDirectory dataDirectory, Location dataLocation, Tuple<uint, ImportDirectoryEntry, ulong[]>[] addressTables) : base(dataDirectory,dataLocation)
         {
             tables = new ImportAddressTable[addressTables.Length];
-
-            /*
-            LoadTables(tablesInfo);
-
-            ulong lowest_offset = 0;
-
-            if (tablesInfo.Count() > 0)
-                lowest_offset = tablesInfo.MinBy(table => table.Item1).Item1;
-
-            LocationCalculator calc = content.DataDirectory.Directories.Reader.GetCalculator();
-            uint rva = calc.OffsetToRVA(content.Section,lowest_offset);
-            ulong va = calc.OffsetToVA(content.Section,lowest_offset);
-            ulong size = 0;
-
-            foreach (var table in tables)
-                size += table.Location.FileSize;
-
-            location = new Location(lowest_offset,rva,va,size,size);
-            */
 
             LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
 
             for (var i = 0; i < addressTables.Length; i++)
             {
-                ulong offset = calc.RVAToOffset(addressTables[i].Item1.OriginalFirstThunk);
-                ImportAddressTable table = new ImportAddressTable(this, addressTables[i].Item1, offset, addressTables[i].Item2);
+                Tuple<uint, ImportDirectoryEntry, ulong[]> tuple = addressTables[i];
+                ulong offset = calc.RVAToOffset(tuple.Item1);
+                ImportAddressTable table = new ImportAddressTable(this, tuple.Item2, tuple.Item1, tuple.Item3);
 
                 tables[i] = table;
             }
@@ -320,7 +303,7 @@ namespace Workshell.PE
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();          
             bool is_64bit = directory.DataDirectory.Directories.Image.Is64Bit;
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();
-            List<Tuple<ImportDirectoryEntry, ulong[]>> tables = new List<Tuple<ImportDirectoryEntry, ulong[]>>();
+            List<Tuple<uint, ImportDirectoryEntry, ulong[]>> tables = new List<Tuple<uint, ImportDirectoryEntry, ulong[]>>();
 
             foreach (ImportDirectoryEntry dir_entry in directory)
             {
@@ -342,7 +325,7 @@ namespace Workshell.PE
                         break;
                 }
 
-                Tuple<ImportDirectoryEntry, ulong[]> table = new Tuple<ImportDirectoryEntry, ulong[]>(dir_entry, entries.ToArray());
+                Tuple<uint, ImportDirectoryEntry, ulong[]> table = new Tuple<uint, ImportDirectoryEntry, ulong[]>(dir_entry.OriginalFirstThunk, dir_entry, entries.ToArray());
 
                 tables.Add(table);
             }
@@ -350,7 +333,7 @@ namespace Workshell.PE
             uint rva = 0;
 
             if (tables.Count > 0)
-                rva = tables.MinBy(table => table.Item1.OriginalFirstThunk).Item1.OriginalFirstThunk;
+                rva = tables.MinBy(table => table.Item1).Item1;
 
             ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             ulong va = image_base + rva;
@@ -359,7 +342,63 @@ namespace Workshell.PE
 
             foreach (var table in tables)
             {
-                int size = table.Item2.Length * (!is_64bit ? sizeof(uint) : sizeof(ulong));
+                int size = table.Item3.Length * (!is_64bit ? sizeof(uint) : sizeof(ulong));
+
+                file_size += size.ToUInt32();
+            }
+
+            Section section = calc.RVAToSection(rva);
+            Location location = new Location(file_offset, rva, va, file_size, file_size, section);
+            ImportAddressTables result = new ImportAddressTables(directory.DataDirectory, location, tables.ToArray());
+
+            return result;
+        }
+
+        public static ImportAddressTables GetAddressTable(ImportDirectory directory)
+        {
+            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
+            bool is_64bit = directory.DataDirectory.Directories.Image.Is64Bit;
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
+            List<Tuple<uint, ImportDirectoryEntry, ulong[]>> tables = new List<Tuple<uint, ImportDirectoryEntry, ulong[]>>();
+
+            foreach (ImportDirectoryEntry dir_entry in directory)
+            {
+                if (dir_entry.FirstThunk == 0)
+                    continue;
+
+                List<ulong> entries = new List<ulong>();
+                ulong offset = calc.RVAToOffset(dir_entry.FirstThunk);
+
+                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+
+                while (true)
+                {
+                    ulong entry = (!is_64bit ? Utils.ReadUInt32(stream) : Utils.ReadUInt64(stream));
+
+                    entries.Add(entry);
+
+                    if (entry == 0)
+                        break;
+                }
+
+                Tuple<uint, ImportDirectoryEntry, ulong[]> table = new Tuple<uint, ImportDirectoryEntry, ulong[]>(dir_entry.FirstThunk, dir_entry, entries.ToArray());
+
+                tables.Add(table);
+            }
+
+            uint rva = 0;
+
+            if (tables.Count > 0)
+                rva = tables.MinBy(table => table.Item1).Item1;
+
+            ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            ulong va = image_base + rva;
+            ulong file_offset = calc.RVAToOffset(rva);
+            ulong file_size = 0;
+
+            foreach (var table in tables)
+            {
+                int size = table.Item3.Length * (!is_64bit ? sizeof(uint) : sizeof(ulong));
 
                 file_size += size.ToUInt32();
             }
@@ -400,47 +439,6 @@ namespace Workshell.PE
 
             return buffer;
         }
-
-        /*
-        private void LoadTables(IEnumerable<Tuple<ulong,ImportDirectoryEntry>> tablesInfo)
-        {
-            List<ImportAddressTable> list = new List<ImportAddressTable>();
-            bool is_64bit = content.DataDirectory.Directories.Reader.Is64Bit;
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
-
-            foreach(Tuple<ulong,ImportDirectoryEntry> table_info in tablesInfo)
-            {
-                stream.Seek(Convert.ToInt64(table_info.Item1),SeekOrigin.Begin);
-
-                List<ulong> entries = new List<ulong>();
-
-                while (true)
-                {
-                    ulong entry;
-
-                    if (!is_64bit)
-                    {
-                        entry = Utils.ReadUInt32(stream);
-                    }
-                    else
-                    {
-                        entry = Utils.ReadUInt64(stream);
-                    }
-
-                    entries.Add(entry);
-
-                    if (entry == 0)
-                        break;
-                }
-
-                ImportAddressTable table = new ImportAddressTable(this,table_info.Item2,table_info.Item1,entries);
-
-                list.Add(table);
-            }
-
-            tables = list.ToArray();
-        }
-        */
 
         #endregion
 
