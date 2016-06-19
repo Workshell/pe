@@ -37,7 +37,6 @@ namespace Workshell.PE.Demo
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
 
-            /*
             LoadConfigDirectory load_config = LoadConfigDirectory.Get(image);
             Certificate cert = Certificate.Get(image);
             DebugDirectory debug_dir = DebugDirectory.Get(image);
@@ -56,7 +55,6 @@ namespace Workshell.PE.Demo
             Imports imports = Imports.Get(ilt,hint_name_table);
 
             Resources resources = Resources.Get(image);
-            */
 
             CLR clr = CLR.Get(image);
             CLRHeader header = CLRHeader.Get(clr);
