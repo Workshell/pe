@@ -28,7 +28,7 @@ namespace Workshell.PE
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.Debug))
                 return null;
 
-            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.Debug];
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.BaseRelocationTable];
 
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
