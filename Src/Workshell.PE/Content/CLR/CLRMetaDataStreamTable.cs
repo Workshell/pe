@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Workshell.PE.Extensions;
+
 namespace Workshell.PE
 {
 
@@ -29,7 +31,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = Table.MetaData.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = Table.MetaData.CLR.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
@@ -73,39 +75,43 @@ namespace Workshell.PE
 
     }
 
-    public sealed class CLRMetaDataStreamTable : IEnumerable<CLRMetaDataStreamTableEntry>, IReadOnlyCollection<CLRMetaDataStreamTableEntry>, ISupportsLocation, ISupportsBytes
+    public sealed class CLRMetaDataStreamTable : IEnumerable<CLRMetaDataStreamTableEntry>, ISupportsLocation, ISupportsBytes
     {
 
         private CLRMetaData meta_data;
-        private List<CLRMetaDataStreamTableEntry> streams;
+        private CLRMetaDataStreamTableEntry[] entries;
         private Location location;
 
-        internal CLRMetaDataStreamTable(CLRMetaData metaData, ulong imageBase)
+        internal CLRMetaDataStreamTable(CLRMetaData metaData)
         {
-            LocationCalculator calc = metaData.Content.DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = metaData.Content.DataDirectory.Directories.Reader.GetStream();
+            LocationCalculator calc = metaData.CLR.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = metaData.CLR.DataDirectory.Directories.Image.GetStream();
+            ulong image_base = metaData.CLR.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             ulong offset = metaData.Header.Location.FileOffset + metaData.Header.Location.FileSize;
 
             meta_data = metaData;
-            streams = new List<CLRMetaDataStreamTableEntry>();
-
-            LoadTable(metaData,calc,stream,offset,imageBase);
+            entries = LoadTable(metaData,calc,stream,offset,image_base);
 
             uint rva = calc.OffsetToRVA(offset);
-            ulong va = imageBase + rva;
+            ulong va = image_base + rva;
             ulong size = 0;
 
-            foreach (var s in streams)
-                size += s.Location.FileSize;
+            foreach (var strm in entries)
+                size += strm.Location.FileSize;
 
-            location = new Location(offset,rva,va,size,size);
+            Section section = calc.RVAToSection(rva);
+
+            location = new Location(offset,rva,va,size,size,section);
         }
 
         #region Methods
 
         public IEnumerator<CLRMetaDataStreamTableEntry> GetEnumerator()
         {
-            return streams.GetEnumerator();
+            for(var i = 0; i < entries.Length; i++)
+            {
+                yield return entries[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -115,21 +121,22 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Stream Entry Count: {0}",streams.Count);
+            return String.Format("Stream Entry Count: {0}",entries.Length);
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = meta_data.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = meta_data.CLR.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
         }
 
-        private void LoadTable(CLRMetaData metaData, LocationCalculator calc, Stream stream, ulong baseOffset, ulong imageBase)
+        private CLRMetaDataStreamTableEntry[] LoadTable(CLRMetaData metaData, LocationCalculator calc, Stream stream, ulong baseOffset, ulong imageBase)
         {
-            stream.Seek(Convert.ToInt64(baseOffset),SeekOrigin.Begin);
+            stream.Seek(baseOffset.ToInt64(),SeekOrigin.Begin);
 
+            List<CLRMetaDataStreamTableEntry> entries = new List<CLRMetaDataStreamTableEntry>();
             ulong offset = baseOffset;
 
             for(int i = 0; i < metaData.Header.Streams; i++)
@@ -143,7 +150,7 @@ namespace Workshell.PE
 
                 size += sizeof(uint);
 
-                StringBuilder stream_name = new StringBuilder();
+                StringBuilder stream_name = new StringBuilder(256);
 
                 while (true)
                 {
@@ -171,13 +178,15 @@ namespace Workshell.PE
 
                 uint rva = calc.OffsetToRVA(offset);
                 ulong va = imageBase + rva;
-
-                Location entry_location = new Location(offset,rva,va,size,size);
+                Section section = calc.RVAToSection(rva);
+                Location entry_location = new Location(offset,rva,va,size,size,section);
                 CLRMetaDataStreamTableEntry entry = new CLRMetaDataStreamTableEntry(this,entry_location,stream_offset,stream_size,stream_name.ToString());
 
-                streams.Add(entry);
+                entries.Add(entry);
                 offset += size;
             }
+
+            return entries.ToArray();
         }
 
         #endregion
@@ -204,7 +213,7 @@ namespace Workshell.PE
         {
             get
             {
-                return streams.Count;
+                return entries.Length;
             }
         }
 
@@ -212,7 +221,7 @@ namespace Workshell.PE
         {
             get
             {
-                return streams[index];
+                return entries[index];
             }
         }
 
@@ -220,7 +229,7 @@ namespace Workshell.PE
         {
             get
             {
-                CLRMetaDataStreamTableEntry entry = streams.FirstOrDefault(stream => String.Compare(name,stream.Name,StringComparison.OrdinalIgnoreCase) == 0);
+                CLRMetaDataStreamTableEntry entry = entries.FirstOrDefault(stream => String.Compare(name,stream.Name,StringComparison.OrdinalIgnoreCase) == 0);
 
                 return entry;
             }

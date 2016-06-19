@@ -45,6 +45,13 @@
     <Compile Include="Annotations\EnumAnnotationAttribute.cs" />
     <Compile Include="Annotations\FieldAnnotationAttribute.cs" />
     <Compile Include="Content\Certificates\Certificate.cs" />
+    <Compile Include="Content\CLR\CLR.cs" />
+    <Compile Include="Content\CLR\CLRDataDirectory.cs" />
+    <Compile Include="Content\CLR\CLRHeader.cs" />
+    <Compile Include="Content\CLR\CLRMetaData.cs" />
+    <Compile Include="Content\CLR\CLRMetaDataHeader.cs" />
+    <Compile Include="Content\CLR\CLRMetaDataStream.cs" />
+    <Compile Include="Content\CLR\CLRMetaDataStreamTable.cs" />
     <Compile Include="Content\ExecutableImageContent.cs" />
     <Compile Include="Content\Debug\DebugData.cs" />
     <Compile Include="Content\Debug\DebugDirectory.cs" />

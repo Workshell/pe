@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
@@ -33,24 +34,60 @@ namespace Workshell.PE
     public sealed class CLRHeader : ISupportsLocation, ISupportsBytes
     {
 
-        private CLRContent content;
-        private IMAGE_COR20_HEADER header;
+        private CLR clr;
         private Location location;
-        private Section section;
+        private IMAGE_COR20_HEADER header;
+        private Version runtime_version;
+        private CLRDataDirectory meta_data;
+        private CLRDataDirectory resources;
+        private CLRDataDirectory sn_sig;
+        private CLRDataDirectory code_man_table;
+        private CLRDataDirectory vtable_fixups;
+        private CLRDataDirectory export_address_table;
+        private CLRDataDirectory native_header;
 
-        internal CLRHeader(CLRContent clrContent, IMAGE_COR20_HEADER clrHeader, Location clrLocation, Section clrSection)
+        internal CLRHeader(CLR clrContent, Location clrLocation, IMAGE_COR20_HEADER clrHeader)
         {
-            content = clrContent;
-            header = clrHeader;
+            clr = clrContent;           
             location = clrLocation;
-            section = clrSection;
+            header = clrHeader;
+            runtime_version = null;
+            meta_data = null;
+            resources = null;
+            sn_sig = null;
+            code_man_table = null;
+            vtable_fixups = null;
+            export_address_table = null;
+            native_header = null;
         }
+
+        #region Static Methods
+
+        public static CLRHeader Get(CLR clr)
+        {
+            LocationCalculator calc = clr.DataDirectory.Directories.Image.GetCalculator();
+            ulong offset = calc.RVAToOffset(clr.DataDirectory.VirtualAddress);
+            uint size = Utils.SizeOf<IMAGE_COR20_HEADER>().ToUInt32();
+            ulong image_base = clr.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            Section section = calc.RVAToSection(clr.DataDirectory.VirtualAddress);
+            Location location = new Location(offset, clr.DataDirectory.VirtualAddress, image_base + clr.DataDirectory.VirtualAddress, size, size, section);
+            Stream stream = clr.DataDirectory.Directories.Image.GetStream();
+
+            stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+
+            IMAGE_COR20_HEADER clr_header = Utils.Read<IMAGE_COR20_HEADER>(stream, Convert.ToInt32(size));
+            CLRHeader result = new CLRHeader(clr, location, clr_header);
+
+            return result;
+        }
+
+        #endregion
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = clr.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -58,12 +95,18 @@ namespace Workshell.PE
 
         public Version GetRuntimeVersion()
         {
-            return new Version(header.MajorRuntimeVersion,header.MinorRuntimeVersion);
+            if (runtime_version == null)
+                runtime_version = new Version(header.MajorRuntimeVersion, header.MinorRuntimeVersion);
+
+            return runtime_version;
         }
 
         public CLRDataDirectory GetMetaData()
         {
-            return new CLRDataDirectory(header.MetaData);
+            if (meta_data == null)
+                meta_data = new CLRDataDirectory(header.MetaData);
+
+            return meta_data;
         }
 
         public COMImageFlags GetFlags()
@@ -73,43 +116,61 @@ namespace Workshell.PE
 
         public CLRDataDirectory GetResources()
         {
-            return new CLRDataDirectory(header.Resources);
+            if (resources == null)
+                resources = new CLRDataDirectory(header.Resources);
+
+            return resources;
         }
 
         public CLRDataDirectory GetStrongNameSignature()
         {
-            return new CLRDataDirectory(header.StrongNameSignature);
+            if (sn_sig == null)
+                sn_sig = new CLRDataDirectory(header.StrongNameSignature);
+
+            return sn_sig;
         }
 
         public CLRDataDirectory GetCodeManagerTable()
         {
-            return new CLRDataDirectory(header.CodeManagerTable);
+            if (code_man_table == null)
+                code_man_table = new CLRDataDirectory(header.CodeManagerTable);
+
+            return code_man_table;
         }
 
         public CLRDataDirectory GetVTableFixups()
         {
-            return new CLRDataDirectory(header.VTableFixups);
+            if (vtable_fixups == null)
+                vtable_fixups = new CLRDataDirectory(header.VTableFixups);
+
+            return vtable_fixups;
         }
 
         public CLRDataDirectory GetExportAddressTableJumps()
         {
-            return new CLRDataDirectory(header.ExportAddressTableJumps);
+            if (export_address_table == null)
+                export_address_table = new CLRDataDirectory(header.ExportAddressTableJumps);
+
+            return export_address_table;
         }
 
         public CLRDataDirectory GetManagedNativeHeader()
         {
-            return new CLRDataDirectory(header.ManagedNativeHeader);
+            if (native_header == null)
+                native_header = new CLRDataDirectory(header.ManagedNativeHeader);
+
+            return native_header;
         }
 
         #endregion
 
         #region Properties
 
-        public CLRContent Content
+        public CLR CLR
         {
             get
             {
-                return content;
+                return clr;
             }
         }
 
@@ -118,14 +179,6 @@ namespace Workshell.PE
             get
             {
                 return location;
-            }
-        }
-
-        public Section Section
-        {
-            get
-            {
-                return section;
             }
         }
 

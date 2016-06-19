@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 
 namespace Workshell.PE
 {
@@ -15,42 +16,43 @@ namespace Workshell.PE
 
         private const uint CLR_METADATA_SIGNATURE = 0x424A5342;
 
-        internal CLRMetaDataHeader(CLRMetaData metaData, ulong imageBase)
+        internal CLRMetaDataHeader(CLRMetaData metaData)
         {
-            LocationCalculator calc = metaData.Content.DataDirectory.Directories.Reader.GetCalculator();
-            Stream stream = metaData.Content.DataDirectory.Directories.Reader.GetStream();
-
-            uint rva = metaData.Content.Header.MetaDataAddress;
-            ulong va = imageBase + rva;
+            LocationCalculator calc = metaData.CLR.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = metaData.CLR.DataDirectory.Directories.Image.GetStream();
+            ulong image_base = metaData.CLR.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+            uint rva = metaData.Location.RelativeVirtualAddress;
+            ulong va = metaData.Location.VirtualAddress;  
+            ulong offset = metaData.Location.FileOffset;
             uint size = 0;
-            ulong offset = calc.RVAToOffset(rva);
+            Section section = metaData.Location.Section;
 
-            stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
+            stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
 
             MetaData = metaData;
             Signature = Utils.ReadUInt32(stream);
 
             if (Signature != CLR_METADATA_SIGNATURE)
-                throw new ImageReaderException("Incorrect signature found in CLR meta-data header.");
+                throw new ExecutableImageException("Incorrect signature found in CLR meta-data header.");
 
             MajorVersion = Utils.ReadUInt16(stream);
             MinorVersion = Utils.ReadUInt16(stream);
             Reserved = Utils.ReadUInt32(stream);
             VersionLength = Utils.ReadUInt32(stream);
-            Version = Utils.ReadString(stream,VersionLength);
+            Version = Utils.ReadString(stream, VersionLength);
             Flags = Utils.ReadUInt16(stream);
             Streams = Utils.ReadUInt16(stream);
 
             size = sizeof(uint) + sizeof(ushort) + sizeof(ushort) + sizeof(uint) + sizeof(uint) + VersionLength + sizeof(ushort) + sizeof(ushort);
 
-            Location = new Location(offset,rva,va,size,size);
+            Location = new Location(offset, rva, va, size, size, section);
         }
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = MetaData.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = MetaData.CLR.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;

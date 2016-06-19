@@ -13,12 +13,12 @@ namespace Workshell.PE
     public sealed class CLRMetaDataStream : ISupportsLocation, ISupportsBytes
     {
 
-        internal CLRMetaDataStream(CLRMetaDataStreamCollection streams, CLRMetaDataStreamTableEntry tableEntry, ulong imageBase)
+        internal CLRMetaDataStream(CLRMetaDataStreams streams, CLRMetaDataStreamTableEntry tableEntry, ulong imageBase)
         {
             Streams = streams;
             TableEntry = tableEntry;
 
-            LocationCalculator calc = streams.MetaData.Content.DataDirectory.Directories.Reader.GetCalculator();
+            LocationCalculator calc = streams.MetaData.CLR.DataDirectory.Directories.Image.GetCalculator();
             ulong offset = streams.MetaData.Location.FileOffset + tableEntry.Offset;
             uint rva = calc.OffsetToRVA(offset);
             ulong va = imageBase + rva;
@@ -36,7 +36,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = Streams.MetaData.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = Streams.MetaData.CLR.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
@@ -46,7 +46,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public CLRMetaDataStreamCollection Streams
+        public CLRMetaDataStreams Streams
         {
             get;
             private set;
@@ -74,51 +74,58 @@ namespace Workshell.PE
 
     }
 
-    public sealed class CLRMetaDataStreamCollection : IEnumerable<CLRMetaDataStream>, IReadOnlyCollection<CLRMetaDataStream>, ISupportsLocation, ISupportsBytes
+    public sealed class CLRMetaDataStreams : IEnumerable<CLRMetaDataStream>, ISupportsLocation, ISupportsBytes
     {
 
         private CLRMetaData meta_data;
-        private List<CLRMetaDataStream> streams;
+        private CLRMetaDataStream[] streams;
         private Location location;
 
-        internal CLRMetaDataStreamCollection(CLRMetaData metaData, ulong imageBase)
+        internal CLRMetaDataStreams(CLRMetaData metaData)
         {
+            ulong image_base = metaData.CLR.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+
             meta_data = metaData;
-            streams = new List<CLRMetaDataStream>();
+            streams = new CLRMetaDataStream[metaData.StreamTable.Count];
 
-            foreach(CLRMetaDataStreamTableEntry entry in metaData.StreamTable)
+            for(var i = 0; i < streams.Length; i++)
             {
-                CLRMetaDataStream stream = new CLRMetaDataStream(this,entry,imageBase);
+                CLRMetaDataStreamTableEntry entry = metaData.StreamTable[i];
+                CLRMetaDataStream stream = new CLRMetaDataStream(this, entry, image_base);
 
-                streams.Add(stream);
+                streams[i] = stream;
             }
 
-            LocationCalculator calc = metaData.Content.DataDirectory.Directories.Reader.GetCalculator();
+            Section section = null;
+            uint rva = 0;
+            ulong va = 0;
             ulong offset = 0;
+            ulong size = 0;
 
-            if (streams.Count > 0)
+            if (streams.Length > 0)
             {
                 CLRMetaDataStream stream = streams.MinBy(s => s.Location.FileOffset);
 
+                section = stream.Location.Section;
+                rva = stream.Location.RelativeVirtualAddress;
+                va = stream.Location.VirtualAddress;
                 offset = stream.Location.FileOffset;
             }
-
-            ulong size = 0;
 
             foreach (var stream in streams)
                 size += stream.Location.FileSize;
 
-            uint rva = calc.OffsetToRVA(offset);
-            ulong va = imageBase + rva;
-
-            location = new Location(offset,rva,va,size,size);
+            location = new Location(offset, rva, va, size, size, section);
         }
 
         #region Methods
 
         public IEnumerator<CLRMetaDataStream> GetEnumerator()
         {
-            return streams.GetEnumerator();
+            for(var i = 0; i < streams.Length; i++)
+            {
+                yield return streams[i];
+            }
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -128,12 +135,12 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("Stream Count: {0}",streams.Count);
+            return String.Format("Stream Count: {0}",streams.Length);
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = meta_data.Content.DataDirectory.Directories.Reader.GetStream();
+            Stream stream = meta_data.CLR.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -163,7 +170,7 @@ namespace Workshell.PE
         {
             get
             {
-                return streams.Count;
+                return streams.Length;
             }
         }
 
