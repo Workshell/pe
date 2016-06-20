@@ -46,13 +46,16 @@ namespace Workshell.PE
                 return null;
 
             LocationCalculator calc = directory.Directories.Image.GetCalculator();
-            Section section = calc.RVAToSection(directory.VirtualAddress);
-            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
+            uint rva = directory.VirtualAddress;
             ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
+            ulong va = image_base + rva;
+            Section section = calc.RVAToSection(rva);
+            ulong offset = calc.RVAToOffset(section, rva);
+            uint size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>().ToUInt32();
+            Location location = new Location(offset, rva, va, size, size, section);
             Stream stream = directory.Directories.Image.GetStream();
 
-            stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
 
             IMAGE_EXPORT_DIRECTORY export_directory = Utils.Read<IMAGE_EXPORT_DIRECTORY>(stream);
             ExportDirectory result = new ExportDirectory(directory, location, export_directory);
