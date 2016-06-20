@@ -33,7 +33,7 @@ namespace Workshell.PE
             Section section = calc.RVAToSection(directory.AddressOfFunctions);
             ulong file_offset = calc.RVAToOffset(section, directory.AddressOfFunctions);
             ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            uint size = directory.AddressOfFunctions * sizeof(uint);
+            uint size = directory.NumberOfFunctions * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfFunctions, image_base + directory.AddressOfFunctions, size, size, section);
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();
 
@@ -62,7 +62,7 @@ namespace Workshell.PE
             Section section = calc.RVAToSection(directory.AddressOfNames);
             ulong file_offset = calc.RVAToOffset(section, directory.AddressOfNames);
             ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            uint size = directory.NumberOfFunctions * sizeof(uint);
+            uint size = directory.NumberOfNames * sizeof(uint);
             Location location = new Location(file_offset, directory.AddressOfNames, image_base + directory.AddressOfNames, size, size, section);
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();
 
@@ -91,7 +91,7 @@ namespace Workshell.PE
             Section section = calc.RVAToSection(directory.AddressOfNameOrdinals);
             ulong file_offset = calc.RVAToOffset(section, directory.AddressOfNameOrdinals);
             ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            uint size = directory.NumberOfFunctions * sizeof(uint);
+            uint size = directory.NumberOfFunctions * sizeof(ushort);
             Location location = new Location(file_offset, directory.AddressOfNameOrdinals, image_base + directory.AddressOfNames, size, size, section);
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();
 
@@ -99,7 +99,7 @@ namespace Workshell.PE
 
             ushort[] ordinals = new ushort[directory.NumberOfFunctions];
 
-            for (int i = 0; i < directory.NumberOfFunctions; i++)
+            for (var i = 0; i < directory.NumberOfFunctions; i++)
             {
                 ushort ord = Utils.ReadUInt16(stream);
 
