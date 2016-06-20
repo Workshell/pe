@@ -52,7 +52,7 @@ namespace Workshell.PE
 
         public string GetName()
         {
-            if (String.IsNullOrWhiteSpace(name))
+            if (name == null)
             {           
                 StringBuilder builder = new StringBuilder(256);
                 LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
