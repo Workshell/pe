@@ -14,10 +14,8 @@ namespace Workshell.PE
     public sealed class Export
     {
 
-        internal Export(int index, int nameIndex, uint entryPoint, string name, int ord, string forwardName)
+        internal Export(uint entryPoint, string name, uint ord, string forwardName)
         {
-            Index = index;
-            NameIndex = nameIndex;
             EntryPoint = entryPoint;
             Name = name;
             Ordinal = ord;
@@ -42,18 +40,6 @@ namespace Workshell.PE
 
         #region Properties
 
-        public int Index
-        {
-            get;
-            private set;
-        }
-
-        public int NameIndex
-        {
-            get;
-            private set;
-        }
-
         public uint EntryPoint
         {
             get;
@@ -66,7 +52,7 @@ namespace Workshell.PE
             private set;
         }
 
-        public int Ordinal
+        public uint Ordinal
         {
             get;
             private set;
@@ -85,17 +71,6 @@ namespace Workshell.PE
     public sealed class Exports : IEnumerable<Export>
     {
 
-        private class ExportItem
-        {
-
-            public int Index;
-            public uint FunctionAddress;
-            public int NameIndex;
-            public uint NameAddress;
-            public int Ordinal;
-
-        }
-
         private Export[] _exports;
 
         internal Exports(Export[] exports)
@@ -107,75 +82,56 @@ namespace Workshell.PE
 
         public static Exports Get(ExportDirectory directory, ExportTable<uint> functionAddresses, ExportTable<uint> nameAddresses, ExportTable<ushort> ordinals)
         {
-            List<Export> list = new List<Export>();
-            List<ExportItem> items = new List<ExportItem>();
-
-            for (int i = 0; i < functionAddresses.Count; i++)
-            {
-                ExportItem item = new ExportItem()
-                {
-                    Index = i,
-                    FunctionAddress = functionAddresses[i],
-                    NameIndex = -1,
-                    NameAddress = 0,
-                    Ordinal = -1
-                };
-
-                items.Add(item);
-            }
-
-            for (int i = 0; i < nameAddresses.Count; i++)
-            {
-                ushort ord = ordinals[i];
-                ExportItem item = items.FirstOrDefault(ei => ei.Index == ord);
-
-                if (item != null)
-                {
-                    item.NameIndex = i;
-                    item.NameAddress = nameAddresses[i];
-                    item.Ordinal = (ord + directory.Base).ToInt32();
-                }
-            }
-
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (items[i].NameIndex == -1)
-                    items[i].Ordinal = Convert.ToInt32(i + directory.Base);
-            }
-
-            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = directory.DataDirectory.Directories.Image.GetStream();
+            List<Tuple<int, uint, uint, ushort, string, string>> name_addresses = new List<Tuple<int, uint, uint, ushort, string, string>>();
 
-            foreach (ExportItem item in items)
+            for(var i = 0; i < nameAddresses.Count; i++)
             {
-                string name = String.Empty;
+                uint name_address = nameAddresses[i];
+                ushort ordinal = ordinals[i];
+                uint function_address = functionAddresses[ordinal];
 
-                if (item.NameIndex > -1)
-                {
-                    Section section = calc.RVAToSection(item.NameAddress);
-                    long offset = calc.RVAToOffset(section, item.NameAddress).ToInt64();
-
-                    name = GetString(stream, offset);
-                }
-
+                long offset = calc.RVAToOffset(name_address).ToInt64();
+                string name = GetString(stream, offset);
                 string fwd_name = String.Empty;
 
-                if (item.FunctionAddress >= directory.DataDirectory.VirtualAddress && item.FunctionAddress <= (directory.DataDirectory.VirtualAddress + directory.DataDirectory.Size))
+                if (function_address >= directory.DataDirectory.VirtualAddress && function_address <= (directory.DataDirectory.VirtualAddress + directory.DataDirectory.Size))
                 {
-                    Section section = calc.RVAToSection(item.FunctionAddress);
-                    long offset = calc.RVAToOffset(section, item.FunctionAddress).ToInt64();
-
+                    offset = calc.RVAToOffset(function_address).ToInt64();
                     fwd_name = GetString(stream, offset);
                 }
 
-                Export export = new Export(item.Index, item.NameIndex, item.FunctionAddress, name, item.Ordinal, fwd_name);
+                Tuple<int, uint, uint, ushort, string, string> tuple = new Tuple<int, uint, uint, ushort, string, string>(i, function_address, name_address, ordinal, name, fwd_name);
 
-                list.Add(export);
+                name_addresses.Add(tuple);
             }
 
-            Exports exports = new Exports(list.OrderBy(e => e.Ordinal).ToArray());
+            List<Export> exports = new List<Export>();
 
-            return exports;
+            for(var i = 0; i < functionAddresses.Count; i++)
+            {
+                uint function_address = functionAddresses[i];
+                bool is_ordinal = !name_addresses.Any(t => t.Item2 == function_address);
+
+                if (!is_ordinal)
+                {
+                    Tuple<int, uint, uint, ushort, string, string> tuple = name_addresses.First(t => t.Item2 == function_address);
+                    Export export = new Export(function_address, tuple.Item5, directory.Base + tuple.Item4, tuple.Item6);
+
+                    exports.Add(export);
+                }
+                else
+                {
+                    Export export = new Export(function_address, String.Empty, Convert.ToUInt32(directory.Base + i), String.Empty);
+
+                    exports.Add(export);
+                }
+            }
+
+            Exports result = new Exports(exports.OrderBy(e => e.Ordinal).ToArray());
+
+            return result;
         }
 
         private static string GetString(Stream stream, long offset)

@@ -46,6 +46,24 @@ namespace Workshell.PE
             return String.Format("Name: {0}, Imported Function Count: {1}",name,functions.Length);
         }
 
+        public IEnumerable<ImportLibraryNamedFunction> GetNamedFunctions()
+        {
+            for(var i = 0; i < functions.Length; i++)
+            {
+                if (functions[i].BindingType == ImportLibraryBindingType.Name)
+                    yield return (ImportLibraryNamedFunction)functions[i];
+            }
+        }
+
+        public IEnumerable<ImportLibraryOrdinalFunction> GetOrdinalFunctions()
+        {
+            for (var i = 0; i < functions.Length; i++)
+            {
+                if (functions[i].BindingType == ImportLibraryBindingType.Ordinal)
+                    yield return (ImportLibraryOrdinalFunction)functions[i];
+            }
+        }
+
         private ImportLibraryFunction[] LoadFunctions()
         {
             List<ImportLibraryFunction> list = new List<ImportLibraryFunction>();
