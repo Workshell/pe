@@ -52,6 +52,12 @@
     <Compile Include="Content\CLR\CLRMetaDataHeader.cs" />
     <Compile Include="Content\CLR\CLRMetaDataStream.cs" />
     <Compile Include="Content\CLR\CLRMetaDataStreamTable.cs" />
+    <Compile Include="Content\Delayed Imports\DelayImportDirectory.cs" />
+    <Compile Include="Content\Delayed Imports\DelayImportAddressTable.cs" />
+    <Compile Include="Content\Delayed Imports\DelayImportHintNameTable.cs" />
+    <Compile Include="Content\Delayed Imports\DelayImportFunction.cs" />
+    <Compile Include="Content\Delayed Imports\DelayImportLibrary.cs" />
+    <Compile Include="Content\Delayed Imports\DelayImports.cs" />
     <Compile Include="Content\ExecutableImageContent.cs" />
     <Compile Include="Content\Debug\DebugData.cs" />
     <Compile Include="Content\Debug\DebugDirectory.cs" />
@@ -89,6 +95,7 @@
     <Compile Include="MoreLinq\MaxBy.cs" />
     <Compile Include="MoreLinq\MinBy.cs" />
     <Compile Include="MoreLinq\MoreEnumerable.cs" />
+    <Compile Include="Native\IMAGE_DELAY_IMPORT_DESCRIPTOR.cs" />
     <Compile Include="Native\WIN_CERTIFICATE.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DATA_ENTRY.cs" />
     <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY_ENTRY.cs" />

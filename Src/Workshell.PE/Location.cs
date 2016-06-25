@@ -35,7 +35,12 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            return String.Format("File Offset: 0x{0:X16}, File Size: 0x{1:X8}, RVA: 0x{2:X8}, Virtual Address: 0x{3:X16}, Virtual Size: 0x{4:X8}",FileOffset,FileSize,RelativeVirtualAddress,VirtualAddress,VirtualSize);
+            string result = String.Format("File Offset: 0x{0:X16}, File Size: 0x{1:X8}, RVA: 0x{2:X8}, Virtual Address: 0x{3:X16}, Virtual Size: 0x{4:X8}", FileOffset, FileSize, RelativeVirtualAddress, VirtualAddress, VirtualSize);
+
+            if (_section != null)
+                result += String.Format(", Section: {0}",_section.Name);
+
+            return result;
         }
 
         public override bool Equals(object other)

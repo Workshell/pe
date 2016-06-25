@@ -12,15 +12,15 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class ImportDirectoryEntry : ISupportsLocation, ISupportsBytes
+    public sealed class DelayImportDirectoryEntry : ISupportsLocation, ISupportsBytes
     {
 
-        private ImportDirectory directory;
-        private IMAGE_IMPORT_DESCRIPTOR descriptor;
+        private DelayImportDirectory directory;
+        private IMAGE_DELAY_IMPORT_DESCRIPTOR descriptor;
         private Location location;
         private string name;
 
-        internal ImportDirectoryEntry(ImportDirectory importDirectory, IMAGE_IMPORT_DESCRIPTOR entry, Location entryLocation)
+        internal DelayImportDirectoryEntry(DelayImportDirectory importDirectory, IMAGE_DELAY_IMPORT_DESCRIPTOR entry, Location entryLocation)
         {
             directory = importDirectory;
             descriptor = entry;
@@ -37,10 +37,10 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            int size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
+            int size = Utils.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
             byte[] buffer = new byte[size];
 
-            Utils.Write<IMAGE_IMPORT_DESCRIPTOR>(descriptor, buffer, 0, size);
+            Utils.Write<IMAGE_DELAY_IMPORT_DESCRIPTOR>(descriptor, buffer, 0, size);
 
             return buffer;
         }
@@ -71,7 +71,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ImportDirectory Directory
+        public DelayImportDirectory Directory
         {
             get
             {
@@ -87,30 +87,12 @@ namespace Workshell.PE
             }
         }
 
-        [FieldAnnotation("Original First Thunk")]
-        public uint OriginalFirstThunk
+        [FieldAnnotation("Attributes")]
+        public uint Attributes
         {
             get
             {
-                return descriptor.OriginalFirstThunk;
-            }
-        }
-
-        [FieldAnnotation("Date/Time Stamp")]
-        public uint TimeDateStamp
-        {
-            get
-            {
-                return descriptor.TimeDateStamp;
-            }
-        }
-
-        [FieldAnnotation("Forwarder Chain")]
-        public uint ForwarderChain
-        {
-            get
-            {
-                return descriptor.ForwarderChain;
+                return descriptor.Attributes;
             }
         }
 
@@ -123,12 +105,57 @@ namespace Workshell.PE
             }
         }
 
-        [FieldAnnotation("First Thunk")]
-        public uint FirstThunk
+        [FieldAnnotation("Module Handle")]
+        public uint ModuleHandle
         {
             get
             {
-                return descriptor.FirstThunk;
+                return descriptor.ModuleHandle;
+            }
+        }
+
+        [FieldAnnotation("Delay Import Address Table")]
+        public uint DelayAddressTable
+        {
+            get
+            {
+                return descriptor.DelayAddressTable;
+            }
+        }
+
+        [FieldAnnotation("Delay Import Hint/Name Table")]
+        public uint DelayNameTable
+        {
+            get
+            {
+                return descriptor.DelayNameTable;
+            }
+        }
+
+        [FieldAnnotation("Bound Delay Import Address Table")]
+        public uint BoundDelayIAT
+        {
+            get
+            {
+                return descriptor.Attributes;
+            }
+        }
+
+        [FieldAnnotation("Unload Delay Import Address Table")]
+        public uint UnloadDelayIAT
+        {
+            get
+            {
+                return descriptor.Attributes;
+            }
+        }
+
+        [FieldAnnotation("Date/Time Stamp")]
+        public uint TimeDateStamp
+        {
+            get
+            {
+                return descriptor.Attributes;
             }
         }
 
@@ -136,27 +163,27 @@ namespace Workshell.PE
 
     }
 
-    public sealed class ImportDirectory : ExecutableImageContent, IEnumerable<ImportDirectoryEntry>, ISupportsBytes
+    public sealed class DelayImportDirectory : ExecutableImageContent, IEnumerable<DelayImportDirectoryEntry>, ISupportsBytes
     {
 
-        private ImportDirectoryEntry[] entries;
+        private DelayImportDirectoryEntry[] entries;
 
-        internal ImportDirectory(DataDirectory dataDirectory, Location dataLocation, IMAGE_IMPORT_DESCRIPTOR[] importDescriptors) : base(dataDirectory,dataLocation)
+        internal DelayImportDirectory(DataDirectory dataDirectory, Location dataLocation, IMAGE_DELAY_IMPORT_DESCRIPTOR[] importDescriptors) : base(dataDirectory,dataLocation)
         {
             LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             ulong image_base = dataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             ulong offset = dataLocation.FileOffset;
             uint size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>().ToUInt32();
 
-            entries = new ImportDirectoryEntry[importDescriptors.Length];
+            entries = new DelayImportDirectoryEntry[importDescriptors.Length];
 
             for(var i = 0; i < importDescriptors.Length; i++)
             {
-                IMAGE_IMPORT_DESCRIPTOR descriptor = importDescriptors[i];
+                IMAGE_DELAY_IMPORT_DESCRIPTOR descriptor = importDescriptors[i];
                 uint rva = calc.OffsetToRVA(dataLocation.Section, offset);
                 Section entry_section = calc.RVAToSection(rva);
                 Location entry_location = new Location(offset, rva, image_base + rva, size, size, entry_section);
-                ImportDirectoryEntry entry = new ImportDirectoryEntry(this, descriptor, entry_location);
+                DelayImportDirectoryEntry entry = new DelayImportDirectoryEntry(this, descriptor, entry_location);
 
                 entries[i] = entry;
                 offset += size;
@@ -165,12 +192,12 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static ImportDirectory Get(ExecutableImage image)
+        public static DelayImportDirectory Get(ExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ImportTable))
                 return null;
 
-            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.ImportTable];
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.DelayImportDescriptor];
 
             if (DataDirectory.IsNullOrEmpty(directory))
                 return null;
@@ -182,14 +209,14 @@ namespace Workshell.PE
 
             stream.Seek(file_offset.ToInt64(), SeekOrigin.Begin);
 
-            int size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
-            List<IMAGE_IMPORT_DESCRIPTOR> descriptors = new List<IMAGE_IMPORT_DESCRIPTOR>();
+            int size = Utils.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
+            List<IMAGE_DELAY_IMPORT_DESCRIPTOR> descriptors = new List<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
 
             while (true)
             {
-                IMAGE_IMPORT_DESCRIPTOR descriptor = Utils.Read<IMAGE_IMPORT_DESCRIPTOR>(stream, size);
+                IMAGE_DELAY_IMPORT_DESCRIPTOR descriptor = Utils.Read<IMAGE_DELAY_IMPORT_DESCRIPTOR>(stream, size);
 
-                if (descriptor.OriginalFirstThunk == 0 && descriptor.FirstThunk == 0)
+                if (descriptor.Name == 0 && descriptor.ModuleHandle == 0)
                     break;
 
                 descriptors.Add(descriptor);
@@ -198,7 +225,7 @@ namespace Workshell.PE
             ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
             uint total_size = Convert.ToUInt32((descriptors.Count + 1) * size);
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, total_size, total_size, section);
-            ImportDirectory result = new ImportDirectory(directory, location, descriptors.ToArray());
+            DelayImportDirectory result = new DelayImportDirectory(directory, location, descriptors.ToArray());
 
             return result;
         }
@@ -207,7 +234,7 @@ namespace Workshell.PE
 
         #region Methods
 
-        public IEnumerator<ImportDirectoryEntry> GetEnumerator()
+        public IEnumerator<DelayImportDirectoryEntry> GetEnumerator()
         {
             for(var i = 0; i < entries.Length; i++)
             {
@@ -240,7 +267,7 @@ namespace Workshell.PE
             }
         }
 
-        public ImportDirectoryEntry this[int index]
+        public DelayImportDirectoryEntry this[int index]
         {
             get
             {
