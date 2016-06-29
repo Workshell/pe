@@ -20,7 +20,7 @@ namespace Workshell.PE
         {
             LocationCalculator calc = dataEntry.DirectoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetCalculator();
             ulong va = imageBase + dataEntry.OffsetToData;
-            ulong file_offset = calc.RVAToOffset(dataEntry.Size);
+            ulong file_offset = calc.VAToOffset(va);
 
             data_entry = dataEntry;
             location = new Location(file_offset,dataEntry.OffsetToData,va,dataEntry.Size,dataEntry.Size);
