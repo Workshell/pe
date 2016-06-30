@@ -15,6 +15,8 @@ This is a class library for reading the Portable Executable file format converin
 * Certificates
 * .NET
 
+For help getting started please see the wiki. Any suggestions for improvements and ideas welcome.
+
 # Simplified BSD License
 
 Copyright (c) 2016, Workshell Ltd
