@@ -81,6 +81,21 @@ namespace Workshell.PE
             return buffer;
         }
 
+        public X509Certificate GetCertificate()
+        {
+            if (cert.wCertificateType == 1 || cert.wCertificateType == 2) // X.509 or PKCS#7
+            {
+                byte[] data = GetData();
+                X509Certificate2 certificate = new X509Certificate2(data);
+
+                return certificate;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         #endregion
 
         #region Properties

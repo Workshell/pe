@@ -13,6 +13,9 @@ namespace Workshell.PE
     public sealed class CLR : ExecutableImageContent
     {
 
+        private CLRHeader header;
+        private CLRMetaData meta_data;
+
         internal CLR(DataDirectory dataDirectory, Location dataLocation) : base(dataDirectory,dataLocation)
         {
         }
@@ -37,6 +40,32 @@ namespace Workshell.PE
             CLR result = new CLR(directory, location);
 
             return result;
+        }
+
+        #endregion
+
+        #region Properties
+
+        public CLRHeader Header
+        {
+            get
+            {
+                if (header == null)
+                    header = CLRHeader.Get(this);
+
+                return header;
+            }
+        }
+
+        public CLRMetaData MetaData
+        {
+            get
+            {
+                if (meta_data == null)
+                    meta_data = CLRMetaData.Get(Header);
+
+                return meta_data;
+            }
         }
 
         #endregion

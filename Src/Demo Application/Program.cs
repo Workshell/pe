@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,7 +37,11 @@ namespace Workshell.PE.Demo
             }
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-            Resources results = Resources.Get(image);
+            Certificate cert = Certificate.Get(image);
+            X509Certificate x509 = cert.GetCertificate();
+
+            if (x509 != null)
+                X509Certificate2UI.DisplayCertificate((X509Certificate2)x509);
 
             Console.ReadKey();
         }
