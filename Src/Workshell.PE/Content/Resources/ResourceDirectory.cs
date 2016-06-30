@@ -15,25 +15,26 @@ namespace Workshell.PE
     public sealed class ResourceDirectory : IEnumerable<ResourceDirectoryEntry>, ISupportsLocation, ISupportsBytes
     {
 
-        private Resources res;
+        private DataDirectory data_directory;
         private IMAGE_RESOURCE_DIRECTORY directory;
         private Location location;
         private ResourceDirectory parent_directory;
         private ResourceDirectoryEntry[] entries;
 
-        internal ResourceDirectory(Resources resources, ulong directoryOffset, ResourceDirectory parentDirectory)
+        internal ResourceDirectory(DataDirectory dataDirectory, ulong directoryOffset, ResourceDirectory parentDirectory)
         {
-            LocationCalculator calc = resources.DataDirectory.Directories.Image.GetCalculator();
-            Stream stream = resources.DataDirectory.Directories.Image.GetStream();
+            data_directory = dataDirectory;
+
+            LocationCalculator calc = data_directory.Directories.Image.GetCalculator();
+            Stream stream = data_directory.Directories.Image.GetStream();
 
             stream.Seek(Convert.ToInt64(directoryOffset),SeekOrigin.Begin);
 
             uint rva = calc.OffsetToRVA(directoryOffset);
-            ulong va = resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
+            ulong va = data_directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
             uint size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
             Section section = calc.RVAToSection(rva);
 
-            res = resources;
             directory = Utils.Read<IMAGE_RESOURCE_DIRECTORY>(stream);
             location = new Location(directoryOffset,rva,va,size,size,section);
             parent_directory = parentDirectory;
@@ -57,6 +58,29 @@ namespace Workshell.PE
             entries = list.ToArray();
         }
 
+        #region Static Methods
+
+        public static ResourceDirectory GetRootDirectory(ExecutableImage image)
+        {
+            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ResourceTable))
+                return null;
+
+            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
+
+            if (DataDirectory.IsNullOrEmpty(directory))
+                return null;
+
+            LocationCalculator calc = directory.Directories.Image.GetCalculator();
+            Section section = calc.RVAToSection(directory.VirtualAddress);
+            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
+
+            ResourceDirectory result = new ResourceDirectory(directory, file_offset, null);
+
+            return result;
+        }
+
+        #endregion
+
         #region Methods
 
         public IEnumerator<ResourceDirectoryEntry> GetEnumerator()
@@ -74,7 +98,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = res.DataDirectory.Directories.Image.GetStream();
+            Stream stream = data_directory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -84,11 +108,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public Resources Resources
+        public DataDirectory DataDirectory
         {
             get
             {
-                return res;
+                return data_directory;
             }
         }
 

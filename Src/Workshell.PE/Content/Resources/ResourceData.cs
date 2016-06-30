@@ -18,19 +18,20 @@ namespace Workshell.PE
 
         internal ResourceData(ResourceDataEntry dataEntry, ulong imageBase)
         {
-            LocationCalculator calc = dataEntry.DirectoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetCalculator();
+            LocationCalculator calc = dataEntry.DirectoryEntry.Directory.DataDirectory.Directories.Image.GetCalculator();
             ulong va = imageBase + dataEntry.OffsetToData;
             ulong file_offset = calc.VAToOffset(va);
+            Section section = calc.VAToSection(va);
 
             data_entry = dataEntry;
-            location = new Location(file_offset,dataEntry.OffsetToData,va,dataEntry.Size,dataEntry.Size);
+            location = new Location(file_offset,dataEntry.OffsetToData,va,dataEntry.Size,dataEntry.Size,section);
         }
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = data_entry.DirectoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetStream();
+            Stream stream = data_entry.DirectoryEntry.Directory.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;

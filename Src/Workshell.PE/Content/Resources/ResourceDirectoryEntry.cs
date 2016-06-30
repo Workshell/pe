@@ -35,11 +35,11 @@ namespace Workshell.PE
 
         internal ResourceDirectoryEntry(ResourceDirectory parentDirectory, ulong entryOffset, IMAGE_RESOURCE_DIRECTORY_ENTRY directoryEntry)
         {
-            LocationCalculator calc = parentDirectory.Resources.DataDirectory.Directories.Image.GetCalculator();
-            Stream stream = parentDirectory.Resources.DataDirectory.Directories.Image.GetStream();
+            LocationCalculator calc = parentDirectory.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = parentDirectory.DataDirectory.Directories.Image.GetStream();
 
             uint rva = calc.OffsetToRVA(entryOffset);
-            ulong va = parentDirectory.Resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
+            ulong va = parentDirectory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>());
             Section section = calc.RVAToSection(rva);
 
@@ -70,10 +70,10 @@ namespace Workshell.PE
             {
                 if ((entry.Name & 0x80000000) == 0x80000000)
                 {
-                    LocationCalculator calc = parent_directory.Resources.DataDirectory.Directories.Image.GetCalculator();
-                    Stream stream = parent_directory.Resources.DataDirectory.Directories.Image.GetStream();
+                    LocationCalculator calc = parent_directory.DataDirectory.Directories.Image.GetCalculator();
+                    Stream stream = parent_directory.DataDirectory.Directories.Image.GetStream();
                     uint offset = entry.Name & 0x7fffffff;
-                    uint rva = parent_directory.Resources.DataDirectory.VirtualAddress + offset;
+                    uint rva = parent_directory.DataDirectory.VirtualAddress + offset;
                     ulong file_offset = calc.RVAToOffset(rva);
 
                     stream.Seek(Convert.ToInt64(file_offset),SeekOrigin.Begin);
@@ -104,14 +104,14 @@ namespace Workshell.PE
         {
             if (directory == null && ((entry.OffsetToData & 0x80000000) == 0x80000000))
             {
-                LocationCalculator calc = parent_directory.Resources.DataDirectory.Directories.Image.GetCalculator();
-                Stream stream = parent_directory.Resources.DataDirectory.Directories.Image.GetStream();
+                LocationCalculator calc = parent_directory.DataDirectory.Directories.Image.GetCalculator();
+                Stream stream = parent_directory.DataDirectory.Directories.Image.GetStream();
 
                 uint offset = entry.OffsetToData & 0x7fffffff;
-                uint rva = parent_directory.Resources.DataDirectory.VirtualAddress + offset;
+                uint rva = parent_directory.DataDirectory.VirtualAddress + offset;
                 ulong file_offset = calc.RVAToOffset(rva);
 
-                directory = new ResourceDirectory(parent_directory.Resources,file_offset,parent_directory);
+                directory = new ResourceDirectory(parent_directory.DataDirectory,file_offset,parent_directory);
             }
 
             return directory;
@@ -121,11 +121,11 @@ namespace Workshell.PE
         {
             if (data == null && ((entry.OffsetToData & 0x80000000) != 0x80000000))
             {
-                LocationCalculator calc = parent_directory.Resources.DataDirectory.Directories.Image.GetCalculator();
-                Stream stream = parent_directory.Resources.DataDirectory.Directories.Image.GetStream();
+                LocationCalculator calc = parent_directory.DataDirectory.Directories.Image.GetCalculator();
+                Stream stream = parent_directory.DataDirectory.Directories.Image.GetStream();
 
                 uint offset = entry.OffsetToData & 0x7fffffff;
-                uint rva = parent_directory.Resources.DataDirectory.VirtualAddress + offset;
+                uint rva = parent_directory.DataDirectory.VirtualAddress + offset;
                 ulong file_offset = calc.RVAToOffset(rva);
 
                 data = new ResourceDataEntry(this,file_offset);
@@ -136,7 +136,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = parent_directory.Resources.DataDirectory.Directories.Image.GetStream();
+            Stream stream = parent_directory.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;

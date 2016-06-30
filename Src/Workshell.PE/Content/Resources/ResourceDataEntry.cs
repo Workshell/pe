@@ -21,13 +21,13 @@ namespace Workshell.PE
 
         internal ResourceDataEntry(ResourceDirectoryEntry directoryEntry, ulong entryOffset)
         {
-            LocationCalculator calc = directoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetCalculator();
-            Stream stream = directoryEntry.Directory.Resources.DataDirectory.Directories.Image.GetStream();
+            LocationCalculator calc = directoryEntry.Directory.DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = directoryEntry.Directory.DataDirectory.Directories.Image.GetStream();
 
             stream.Seek(Convert.ToInt64(entryOffset),SeekOrigin.Begin);
 
             uint rva = calc.OffsetToRVA(entryOffset);
-            ulong va = directoryEntry.Directory.Resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
+            ulong va = directoryEntry.Directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
             uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_RESOURCE_DATA_ENTRY>());
             Section section = calc.RVAToSection(rva);
 
@@ -41,7 +41,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = directory_entry.Directory.Resources.DataDirectory.Directories.Image.GetStream();
+            Stream stream = directory_entry.Directory.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -51,7 +51,7 @@ namespace Workshell.PE
         {
             if (data == null)
             {
-                ulong image_base = directory_entry.Directory.Resources.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+                ulong image_base = directory_entry.Directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
 
                 data = new ResourceData(this, image_base);
             }

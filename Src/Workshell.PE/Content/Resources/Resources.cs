@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,80 +11,448 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class Resources : ExecutableImageContent, ISupportsBytes
+    public sealed class Resource : ISupportsBytes
     {
 
-        private static Dictionary<uint, Tuple<string, string>> type_names;
+        private ResourceLanguage language;
+        private ResourceDataEntry data_entry;
 
-        private ResourceDirectory root_directory;
+        internal Resource(ResourceLanguage resourceLanguage, ResourceDataEntry dataEntry)
+        {
+            language = resourceLanguage;
+            data_entry = dataEntry;
+        }
+
+        #region Methods
+
+        public byte[] GetBytes()
+        {
+            ResourceData data = data_entry.GetData();
+            byte[] buffer = data.GetBytes();
+
+            return buffer;
+        }
+
+        public void CopyToStream(Stream stream)
+        {
+            byte[] buffer = GetBytes();
+
+            stream.Write(buffer, 0, buffer.Length);
+        }
+
+        #endregion
+
+        #region Properties
+
+        public ResourceLanguage Language
+        {
+            get
+            {
+                return language;
+            }
+        }
+
+        public ResourceDataEntry DataEntry
+        {
+            get
+            {
+                return data_entry;
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class ResourceLanguage
+    {
+
+        private ResourceName name;
+        private ResourceDirectoryEntry directory_entry;
+        private uint id;
+        private Resource resource;
+
+        internal ResourceLanguage(ResourceName resourceName, ResourceDirectoryEntry directoryEntry)
+        {
+            name = resourceName;
+            directory_entry = directoryEntry;
+            id = directory_entry.GetId();
+            resource = LoadResource();
+        }
+
+        #region Methods
+
+        public override string ToString()
+        {
+            return id.ToString();
+        }
+
+        private Resource LoadResource()
+        {
+            ResourceDataEntry data_entry = directory_entry.GetDataEntry();
+            Resource result = new PE.Resource(this, data_entry);
+
+            return result;
+        }
+
+        #endregion
+
+        #region Properties
+
+        public ResourceName Name
+        {
+            get
+            {
+                return name;
+            }
+        }
+
+        public ResourceDirectoryEntry DirectoryEntry
+        {
+            get
+            {
+                return directory_entry;
+            }
+        }
+
+        public uint Id
+        {
+            get
+            {
+                return id;
+            }
+        }
+
+        public Resource Resource
+        {
+            get
+            {
+                return resource;
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class ResourceName : IEnumerable<ResourceLanguage>
+    {
+
+        private ResourceType type;
+        private ResourceDirectoryEntry directory_entry;
+        private uint id;
+        private string name;
+        private ResourceLanguage[] languages;
+
+        internal ResourceName(ResourceType resourceType, ResourceDirectoryEntry directoryEntry)
+        {
+            type = resourceType;
+            directory_entry = directoryEntry;
+
+            if (directory_entry.NameType == NameType.ID)
+            {
+                id = directory_entry.GetId();
+                name = null;
+            }
+            else
+            {
+                id = 0;
+                name = directory_entry.GetName();
+            }
+
+            languages = LoadLanguages();
+        }
+
+        #region Methods
+
+        public IEnumerator<ResourceLanguage> GetEnumerator()
+        {
+            for(var i = 0; i < languages.Length; i++)
+            {
+                ResourceLanguage language = languages[i];
+
+                yield return language;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            if (id != 0)
+            {
+                return id.ToString();
+            }
+            else
+            {
+                return name;
+            }
+        }
+
+        private ResourceLanguage[] LoadLanguages()
+        {
+            List<ResourceLanguage> results = new List<ResourceLanguage>();
+            ResourceDirectory directory = directory_entry.GetDirectory();
+
+            foreach (ResourceDirectoryEntry entry in directory)
+            {
+                ResourceLanguage language = new PE.ResourceLanguage(this, entry);
+
+                results.Add(language);
+            }
+
+            return results.ToArray();
+        }
+
+        #endregion
+
+        #region Properties
+
+        public ResourceType Type
+        {
+            get
+            {
+                return type;
+            }
+        }
+
+        public ResourceDirectoryEntry DirectoryEntry
+        {
+            get
+            {
+                return directory_entry;
+            }
+        }
+
+        public uint Id
+        {
+            get
+            {
+                return id;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return name;
+            }
+        }
+
+        public int LanguageCount
+        {
+            get
+            {
+                return languages.Length;
+            }
+        }
+
+        public ResourceLanguage this[int index]
+        {
+            get
+            {
+                return languages[index];
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class ResourceType : IEnumerable<ResourceName>
+    {
+
+        private ResourceDirectoryEntry directory_entry;
+        private uint id;
+        private string name;
+        private ResourceName[] names;
+
+        internal ResourceType(ResourceDirectoryEntry directoryEntry)
+        {
+            directory_entry = directoryEntry;
+
+            if (directory_entry.NameType == NameType.ID)
+            {
+                id = directory_entry.GetId();
+                name = null;
+            }
+            else
+            {
+                id = 0;
+                name = directory_entry.GetName();
+            }
+
+            names = LoadResources();
+        }
+
+        #region Methods
+
+        public IEnumerator<ResourceName> GetEnumerator()
+        {
+            for(var i = 0; i < names.Length; i++)
+            {
+                ResourceName resource_name = names[i];
+
+                yield return resource_name;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public override string ToString()
+        {
+            string result;
+
+            if (id == 0)
+            {
+                result = name;
+            }
+            else
+            {
+                string constant = PE.Resources.GetTypeConstant(id);
+
+                result = String.Format("{0} ({1})", id, constant);
+            }
+
+            return result;
+        }
+
+        private ResourceName[] LoadResources()
+        {
+            List<ResourceName> results = new List<ResourceName>();
+            ResourceDirectory directory = directory_entry.GetDirectory();
+
+            foreach(ResourceDirectoryEntry entry in directory)
+            {
+                ResourceName resource_name = new PE.ResourceName(this, entry);
+
+                results.Add(resource_name);
+            }
+
+            return results.ToArray();
+        }
+
+        #endregion
+
+        #region Properties
+
+        public ResourceDirectoryEntry DirectoryEntry
+        {
+            get
+            {
+                return directory_entry;
+            }
+        }
+
+        public uint Id
+        {
+            get
+            {
+                return id;
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return name;
+            }
+        }
+
+        public int NameCount
+        {
+            get
+            {
+                return names.Length;
+            }
+        }
+
+        public ResourceName this[int index]
+        {
+            get
+            {
+                return names[index];
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class Resources : IEnumerable<ResourceType>
+    {
+
+        private static Dictionary<uint, Tuple<string, string>> type_info;
+
+        private ResourceType[] types;
 
         static Resources()
         {
-            type_names = new Dictionary<uint, Tuple<string, string>>();
+            type_info = new Dictionary<uint, Tuple<string, string>>();
 
-            PopulateTypeNames();
+            PopulateTypeInfo();
         }
 
-        internal Resources(DataDirectory dataDirectory, Location dataLocation, ulong rootOffset) : base(dataDirectory, dataLocation)
+        internal Resources(ResourceDirectory rootDirectory)
         {
-            root_directory = new ResourceDirectory(this, rootOffset, null);
+            types = LoadTypes(rootDirectory);
         }
 
         #region Static Methods
 
         public static Resources Get(ExecutableImage image)
         {
-            if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ResourceTable))
+            ResourceDirectory root_directory = ResourceDirectory.GetRootDirectory(image);
+
+            if (root_directory == null)
                 return null;
 
-            DataDirectory directory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
-
-            if (DataDirectory.IsNullOrEmpty(directory))
-                return null;
-
-            LocationCalculator calc = directory.Directories.Image.GetCalculator();
-            Section section = calc.RVAToSection(directory.VirtualAddress);
-            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-            ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
-            Resources result = new Resources(directory, location, file_offset);
+            Resources result = new Resources(root_directory);
 
             return result;
         }
 
         public static string GetTypeName(uint typeId)
         {
-            if (!type_names.ContainsKey(typeId))
+            if (!type_info.ContainsKey(typeId))
             {
                 return String.Empty;
             }
             else
             {
-                return type_names[typeId].Item1;
+                return type_info[typeId].Item1;
             }
         }
 
         public static string GetTypeConstant(uint typeId)
         {
-            if (!type_names.ContainsKey(typeId))
+            if (!type_info.ContainsKey(typeId))
             {
                 return String.Empty;
             }
             else
             {
-                return type_names[typeId].Item2;
+                return type_info[typeId].Item2;
             }
         }
 
-        private static void PopulateTypeNames()
+        private static void PopulateTypeInfo()
         {
             uint[] known_types = new uint[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24 };
 
             foreach (uint id in known_types)
-                PopulateTypeName(id);
+                PopulateTypeInfo(id);
         }
 
-        private static void PopulateTypeName(uint typeId)
+        private static void PopulateTypeInfo(uint typeId)
         {
             string name;
             string constant_name;
@@ -175,37 +544,69 @@ namespace Workshell.PE
                     constant_name = "RT_MANIFEST";
                     break;
                 default:
-                    name = String.Format("Type {0}", typeId);
-                    constant_name = String.Format("MAKEINTRESOUCE({0})", typeId);
+                    name = null;
+                    constant_name = null;
                     break;
             }
 
+            if (name == null && constant_name == null)
+                return;
+
             Tuple<string, string> tuple = new Tuple<string, string>(name, constant_name);
 
-            type_names.Add(typeId,tuple);
+            type_info.Add(typeId,tuple);
         }
 
         #endregion
 
         #region Methods
 
-        public byte[] GetBytes()
+        public IEnumerator<ResourceType> GetEnumerator()
         {
-            Stream stream = DataDirectory.Directories.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream, Location);
+            for(var i = 0; i < types.Length; i++)
+            {
+                ResourceType type = types[i];
 
-            return buffer;
+                yield return type;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private ResourceType[] LoadTypes(ResourceDirectory rootDirectory)
+        {
+            List<ResourceType> results = new List<ResourceType>();
+
+            foreach(ResourceDirectoryEntry entry in rootDirectory)
+            {
+                ResourceType type = new ResourceType(entry);
+
+                results.Add(type);
+            }
+
+            return results.ToArray();
         }
 
         #endregion
 
         #region Properties
 
-        public ResourceDirectory Root
+        public int TypeCount
         {
             get
             {
-                return root_directory;
+                return types.Length;
+            }
+        }
+
+        public ResourceType this[int index]
+        {
+            get
+            {
+                return types[index];
             }
         }
 
