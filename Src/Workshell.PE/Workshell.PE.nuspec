@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>Workshell.PE</id>
+        <version>$version$</version>
+        <title>Workshell PE</title>
+        <description>A class library for reading the Portable Executable file format.</description>
+        <authors>Workshell Ltd</authors>
+        <language>en-US</language>
+        <projectUrl>https://github.com/Workshell/pe</projectUrl>
+        <licenseUrl>https://raw.githubusercontent.com/Workshell/pe/master/license.txt</licenseUrl>
+        <tags>pe</tags>
+        <dependencies>
+            <group targetFramework=".NETFramework4.0" />
+        </dependencies>
+    </metadata>
+<!--
+  <files>
+    <file src="..\Bin\Release\*.dll" target="lib\net40" />
+  </files>
+  -->
+</package>
