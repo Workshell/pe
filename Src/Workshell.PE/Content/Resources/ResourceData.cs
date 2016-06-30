@@ -10,29 +10,22 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class ResourceData : ISupportsLocation, ISupportsBytes
+    public sealed class ResourceData : ExecutableImageContent, ISupportsBytes
     {
 
         private ResourceDataEntry data_entry;
-        private Location location;
 
-        internal ResourceData(ResourceDataEntry dataEntry, ulong imageBase)
+        internal ResourceData(DataDirectory dataDirectory, Location dataLocation, ResourceDataEntry dataEntry) : base(dataDirectory,dataLocation)
         {
-            LocationCalculator calc = dataEntry.DirectoryEntry.Directory.DataDirectory.Directories.Image.GetCalculator();
-            ulong va = imageBase + dataEntry.OffsetToData;
-            ulong file_offset = calc.VAToOffset(va);
-            Section section = calc.VAToSection(va);
-
             data_entry = dataEntry;
-            location = new Location(file_offset,dataEntry.OffsetToData,va,dataEntry.Size,dataEntry.Size,section);
         }
 
         #region Methods
 
         public byte[] GetBytes()
         {
-            Stream stream = data_entry.DirectoryEntry.Directory.DataDirectory.Directories.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            Stream stream = DataDirectory.Directories.Image.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
@@ -46,14 +39,6 @@ namespace Workshell.PE
             get
             {
                 return data_entry;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
             }
         }
 

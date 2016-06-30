@@ -12,44 +12,41 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class ResourceDirectory : IEnumerable<ResourceDirectoryEntry>, ISupportsLocation, ISupportsBytes
+    public sealed class ResourceDirectory : ExecutableImageContent, IEnumerable<ResourceDirectoryEntry>, ISupportsBytes
     {
 
-        private DataDirectory data_directory;
         private IMAGE_RESOURCE_DIRECTORY directory;
-        private Location location;
         private ResourceDirectory parent_directory;
         private ResourceDirectoryEntry[] entries;
 
-        internal ResourceDirectory(DataDirectory dataDirectory, ulong directoryOffset, ResourceDirectory parentDirectory)
+        internal ResourceDirectory(DataDirectory dataDirectory, Location dataLocation, ResourceDirectory parentDirectory) : base(dataDirectory,dataLocation)
         {
-            data_directory = dataDirectory;
+            LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
+            Stream stream = DataDirectory.Directories.Image.GetStream();
 
-            LocationCalculator calc = data_directory.Directories.Image.GetCalculator();
-            Stream stream = data_directory.Directories.Image.GetStream();
-
-            stream.Seek(Convert.ToInt64(directoryOffset),SeekOrigin.Begin);
-
-            uint rva = calc.OffsetToRVA(directoryOffset);
-            ulong va = data_directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
-            uint size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
-            Section section = calc.RVAToSection(rva);
+            stream.Seek(dataLocation.FileOffset.ToInt64(),SeekOrigin.Begin);
 
             directory = Utils.Read<IMAGE_RESOURCE_DIRECTORY>(stream);
-            location = new Location(directoryOffset,rva,va,size,size,section);
             parent_directory = parentDirectory;
 
             int count = directory.NumberOfNamedEntries + directory.NumberOfIdEntries;
             List<ResourceDirectoryEntry> list = new List<ResourceDirectoryEntry>(count);
-            ulong offset = directoryOffset + size;
+            uint size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
+            ulong offset = dataLocation.FileOffset + size;
             uint entry_size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>().ToUInt32();
 
             for (int i = 0; i < count; i++)
             {
-                stream.Seek(Convert.ToInt64(offset),SeekOrigin.Begin);
+                stream.Seek(offset.ToInt64(),SeekOrigin.Begin);
 
                 IMAGE_RESOURCE_DIRECTORY_ENTRY directory_entry = Utils.Read<IMAGE_RESOURCE_DIRECTORY_ENTRY>(stream);
-                ResourceDirectoryEntry entry = new ResourceDirectoryEntry(this,offset,directory_entry);
+
+                uint rva = calc.OffsetToRVA(offset);
+                ulong va = DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
+                Section section = calc.RVAToSection(rva);
+                Location location = new Location(offset, rva, va, entry_size, entry_size, section);
+
+                ResourceDirectoryEntry entry = new ResourceDirectoryEntry(DataDirectory, location,this,directory_entry);
 
                 list.Add(entry);
                 offset += entry_size;
@@ -71,10 +68,13 @@ namespace Workshell.PE
                 return null;
 
             LocationCalculator calc = directory.Directories.Image.GetCalculator();
-            Section section = calc.RVAToSection(directory.VirtualAddress);
-            ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
-
-            ResourceDirectory result = new ResourceDirectory(directory, file_offset, null);
+            uint rva = directory.VirtualAddress;
+            ulong va = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase + rva;
+            ulong file_offset = calc.RVAToOffset(rva);
+            uint size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
+            Section section = calc.RVAToSection(rva);
+            Location location = new Location(file_offset, rva, va, size, size, section);
+            ResourceDirectory result = new ResourceDirectory(directory, location, null);
 
             return result;
         }
@@ -98,8 +98,8 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = data_directory.Directories.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            Stream stream = DataDirectory.Directories.Image.GetStream();
+            byte[] buffer = Utils.ReadBytes(stream,Location);
 
             return buffer;
         }
@@ -107,22 +107,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public DataDirectory DataDirectory
-        {
-            get
-            {
-                return data_directory;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
 
         public ResourceDirectory Parent
         {
