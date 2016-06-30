@@ -4,19 +4,16 @@
         <id>Workshell.PE</id>
         <version>$version$</version>
         <title>Workshell PE</title>
-        <description>A class library for reading the Portable Executable file format.</description>
+		<summary>A class library for reading the Portable Executable file format.</summary>
+        <description>A full featured class library for reading the Portable Executable file format covering all major sections.</description>
         <authors>Workshell Ltd</authors>
+		<copyright>Workshell Ltd</copyright>
         <language>en-US</language>
         <projectUrl>https://github.com/Workshell/pe</projectUrl>
         <licenseUrl>https://raw.githubusercontent.com/Workshell/pe/master/license.txt</licenseUrl>
-        <tags>pe</tags>
+        <tags>pe executable native</tags>
         <dependencies>
             <group targetFramework=".NETFramework4.0" />
         </dependencies>
     </metadata>
-<!--
-  <files>
-    <file src="..\Bin\Release\*.dll" target="lib\net40" />
-  </files>
-  -->
 </package>
