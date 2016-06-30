@@ -54,47 +54,6 @@ namespace Workshell.PE
 
             return imports;
         }
-        
-        /*
-        public static Location GetLocation(ImportDirectory directory, ImportAddressTable ilt, ImportAddressTable iat, ImportHintNameTable hnTable)
-        {
-            ulong lowest_offset = ulong.MaxValue;
-            ulong largest_offset = ulong.MinValue;
-
-            if (directory.Location.FileOffset < lowest_offset)
-                lowest_offset = directory.Location.FileOffset;
-
-            if (ilt.Location.FileOffset < lowest_offset)
-                lowest_offset = ilt.Location.FileOffset;
-
-            if (iat.Location.FileOffset < lowest_offset)
-                lowest_offset = iat.Location.FileOffset;
-
-            if (hnTable.Location.FileOffset < lowest_offset)
-                lowest_offset = hnTable.Location.FileOffset;
-
-            if ((directory.Location.FileOffset + directory.Location.FileSize) > largest_offset)
-                largest_offset = directory.Location.FileOffset + directory.Location.FileSize;
-
-            if ((ilt.Location.FileOffset + ilt.Location.FileSize) > largest_offset)
-                largest_offset = ilt.Location.FileOffset + ilt.Location.FileSize;
-
-            if ((iat.Location.FileOffset + iat.Location.FileSize) > largest_offset)
-                largest_offset = iat.Location.FileOffset + iat.Location.FileSize;
-
-            if ((hnTable.Location.FileOffset + hnTable.Location.FileSize) > largest_offset)
-                largest_offset = hnTable.Location.FileOffset + hnTable.Location.FileSize;
-
-            LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
-            uint rva = calc.OffsetToRVA(lowest_offset);
-            ulong va = calc.OffsetToVA(lowest_offset);
-            ulong size = largest_offset - lowest_offset;
-            Section section = calc.RVAToSection(rva);
-            Location result = new Location(lowest_offset, rva, va, size, size, section);
-
-            return result;
-        }
-        */
 
         #endregion
 

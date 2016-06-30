@@ -11,6 +11,7 @@
         <language>en-US</language>
         <projectUrl>https://github.com/Workshell/pe</projectUrl>
         <licenseUrl>https://raw.githubusercontent.com/Workshell/pe/master/license.txt</licenseUrl>
+		<iconUrl>http://img.workshell.co.uk/logo_128.png</iconUrl>
         <tags>pe executable native</tags>
         <dependencies>
             <group targetFramework=".NETFramework4.0" />
