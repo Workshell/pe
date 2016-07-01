@@ -80,6 +80,31 @@ namespace Workshell.PE
 
         #region Static Methods
 
+        public static Exports Get(ExecutableImage image)
+        {
+            ExportDirectory directory = ExportDirectory.Get(image);
+
+            if (directory == null)
+                return null;
+
+            ExportTable<uint> function_addresses = ExportTable<uint>.GetFunctionAddressTable(directory);
+
+            if (function_addresses == null)
+                return null;
+
+            ExportTable<uint> name_addresses = ExportTable<uint>.GetNameAddressTable(directory);
+
+            if (name_addresses == null)
+                return null;
+
+            ExportTable<ushort> ordinals = ExportTable<short>.GetOrdinalTable(directory);
+
+            if (ordinals == null)
+                return null;
+
+            return Get(directory, function_addresses, name_addresses, ordinals);
+        }
+
         public static Exports Get(ExportDirectory directory, ExportTable<uint> functionAddresses, ExportTable<uint> nameAddresses, ExportTable<ushort> ordinals)
         {
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();

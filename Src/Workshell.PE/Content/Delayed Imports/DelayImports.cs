@@ -22,6 +22,27 @@ namespace Workshell.PE
 
         #region Static Methods
 
+        public static DelayImports Get(ExecutableImage image)
+        {
+            DelayImportDirectory directory = DelayImportDirectory.Get(image);
+
+            if (directory == null)
+                return null;
+
+            DelayImportAddressTables ilt = DelayImportAddressTables.GetLookupTable(directory);
+
+            if (ilt == null)
+                return null;
+
+            DelayImportHintNameTable hnt = DelayImportHintNameTable.Get(directory);
+
+            if (hnt == null)
+                return null;
+
+            return Get(ilt, hnt);
+        }
+
+
         public static DelayImports Get(DelayImportAddressTables ilt, DelayImportHintNameTable hnTable)
         {
             List<Tuple<string, DelayImportAddressTable, DelayImportHintNameTable>> libraries = new List<Tuple<string, DelayImportAddressTable, DelayImportHintNameTable>>();

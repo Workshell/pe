@@ -22,6 +22,26 @@ namespace Workshell.PE
 
         #region Static Methods
 
+        public static Imports Get(ExecutableImage image)
+        {
+            ImportDirectory directory = ImportDirectory.Get(image);
+
+            if (directory == null)
+                return null;
+
+            ImportAddressTables ilt = ImportAddressTables.GetLookupTable(directory);
+
+            if (ilt == null)
+                return null;
+
+            ImportHintNameTable hnt = ImportHintNameTable.Get(directory);
+
+            if (hnt == null)
+                return null;
+
+            return Get(ilt, hnt);
+        }
+
         public static Imports Get(ImportAddressTables ilt, ImportHintNameTable hnTable)
         {
             List<Tuple<string, ImportAddressTable, ImportHintNameTable>> libraries = new List<Tuple<string, ImportAddressTable, ImportHintNameTable>>();
