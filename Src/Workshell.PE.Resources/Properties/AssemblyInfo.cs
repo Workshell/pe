@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Workshell.PE")]
-[assembly: AssemblyDescription("A .NET class library for reading the PE executable format")]
+[assembly: AssemblyTitle("Workshell.PE.Resources")]
+[assembly: AssemblyDescription("A set of classes for dealing with resources within a PE file.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Workshell Ltd")]
-[assembly: AssemblyProduct(".NET PE Class Library")]
+[assembly: AssemblyProduct(".NET PE Resources Class Library")]
 [assembly: AssemblyCopyright("Copyright ©2016 Workshell Ltd")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("5ef8a44d-2548-4cda-b507-bc3a7907ee1e")]
+[assembly: Guid("2b06cbf8-136a-4bec-8624-861992139489")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -33,5 +33,3 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0")]
-
-[assembly: InternalsVisibleTo("peres")]

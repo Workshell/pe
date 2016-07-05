@@ -11,142 +11,20 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class Resource : ISupportsBytes
+    public sealed class Resource
     {
 
-        private ResourceLanguage language;
-        private ResourceDataEntry data_entry;
-
-        internal Resource(ResourceLanguage resourceLanguage, ResourceDataEntry dataEntry)
-        {
-            language = resourceLanguage;
-            data_entry = dataEntry;
-        }
-
-        #region Methods
-
-        public byte[] GetBytes()
-        {
-            ResourceData data = data_entry.GetData();
-            byte[] buffer = data.GetBytes();
-
-            return buffer;
-        }
-
-        public void CopyToStream(Stream stream)
-        {
-            byte[] buffer = GetBytes();
-
-            stream.Write(buffer, 0, buffer.Length);
-        }
-
-        #endregion
-
-        #region Properties
-
-        public ResourceLanguage Language
-        {
-            get
-            {
-                return language;
-            }
-        }
-
-        public ResourceDataEntry DataEntry
-        {
-            get
-            {
-                return data_entry;
-            }
-        }
-
-        #endregion
-
-    }
-
-    public sealed class ResourceLanguage
-    {
-
-        private ResourceName name;
-        private ResourceDirectoryEntry directory_entry;
-        private uint id;
-        private Resource resource;
-
-        internal ResourceLanguage(ResourceName resourceName, ResourceDirectoryEntry directoryEntry)
-        {
-            name = resourceName;
-            directory_entry = directoryEntry;
-            id = directory_entry.GetId();
-            resource = LoadResource();
-        }
-
-        #region Methods
-
-        public override string ToString()
-        {
-            return id.ToString();
-        }
-
-        private Resource LoadResource()
-        {
-            ResourceDataEntry data_entry = directory_entry.GetDataEntry();
-            Resource result = new PE.Resource(this, data_entry);
-
-            return result;
-        }
-
-        #endregion
-
-        #region Properties
-
-        public ResourceName Name
-        {
-            get
-            {
-                return name;
-            }
-        }
-
-        public ResourceDirectoryEntry DirectoryEntry
-        {
-            get
-            {
-                return directory_entry;
-            }
-        }
-
-        public uint Id
-        {
-            get
-            {
-                return id;
-            }
-        }
-
-        public Resource Resource
-        {
-            get
-            {
-                return resource;
-            }
-        }
-
-        #endregion
-
-    }
-
-    public sealed class ResourceName : IEnumerable<ResourceLanguage>
-    {
+        public const uint DEFAULT_LANGUAGE = 1033;
 
         private ResourceType type;
         private ResourceDirectoryEntry directory_entry;
         private uint id;
         private string name;
-        private ResourceLanguage[] languages;
+        private Dictionary<uint, ResourceDirectoryEntry> languages;
 
-        internal ResourceName(ResourceType resourceType, ResourceDirectoryEntry directoryEntry)
+        internal Resource(ResourceType owningType, ResourceDirectoryEntry directoryEntry)
         {
-            type = resourceType;
+            type = owningType;
             directory_entry = directoryEntry;
 
             if (directory_entry.NameType == NameType.ID)
@@ -165,19 +43,58 @@ namespace Workshell.PE
 
         #region Methods
 
-        public IEnumerator<ResourceLanguage> GetEnumerator()
+        public ResourceData ToData()
         {
-            for(var i = 0; i < languages.Length; i++)
-            {
-                ResourceLanguage language = languages[i];
+            return ToData(DEFAULT_LANGUAGE);
+        }
 
-                yield return language;
+        public ResourceData ToData(uint languageId)
+        {
+            if (!languages.ContainsKey(languageId))
+            {
+                return null;
+            }
+            else
+            {
+                ResourceDirectoryEntry language_entry = languages[languageId];
+                ResourceDataEntry data_entry = language_entry.GetDataEntry();
+                ResourceData data = data_entry.GetData();
+
+                return data;
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public byte[] ToBytes()
         {
-            return GetEnumerator();
+            return ToBytes(DEFAULT_LANGUAGE);
+        }
+
+        public byte[] ToBytes(uint languageId)
+        {
+            if (!languages.ContainsKey(languageId))
+            {
+                return new byte[0];
+            }
+            else
+            {
+                ResourceDirectoryEntry language_entry = languages[languageId];
+                ResourceDataEntry data_entry = language_entry.GetDataEntry();
+                ResourceData data = data_entry.GetData();
+
+                return data.GetBytes();
+            }
+        }
+
+        public void ToStream(Stream stream)
+        {
+            ToStream(DEFAULT_LANGUAGE, stream);
+        }
+
+        public void ToStream(uint languageId, Stream stream)
+        {
+            byte[] data = ToBytes(languageId);
+
+            stream.Write(data, 0, data.Length);
         }
 
         public override string ToString()
@@ -192,19 +109,17 @@ namespace Workshell.PE
             }
         }
 
-        private ResourceLanguage[] LoadLanguages()
+        private Dictionary<uint, ResourceDirectoryEntry> LoadLanguages()
         {
-            List<ResourceLanguage> results = new List<ResourceLanguage>();
+            Dictionary<uint, ResourceDirectoryEntry> results = new Dictionary<uint, ResourceDirectoryEntry>();
             ResourceDirectory directory = directory_entry.GetDirectory();
 
             foreach (ResourceDirectoryEntry entry in directory)
             {
-                ResourceLanguage language = new PE.ResourceLanguage(this, entry);
-
-                results.Add(language);
+                results.Add(entry.GetId(),entry);
             }
 
-            return results.ToArray();
+            return results;
         }
 
         #endregion
@@ -216,14 +131,6 @@ namespace Workshell.PE
             get
             {
                 return type;
-            }
-        }
-
-        public ResourceDirectoryEntry DirectoryEntry
-        {
-            get
-            {
-                return directory_entry;
             }
         }
 
@@ -243,19 +150,11 @@ namespace Workshell.PE
             }
         }
 
-        public int LanguageCount
+        public uint[] Languages
         {
             get
             {
-                return languages.Length;
-            }
-        }
-
-        public ResourceLanguage this[int index]
-        {
-            get
-            {
-                return languages[index];
+                return languages.Keys.ToArray();
             }
         }
 
@@ -263,7 +162,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class ResourceType : IEnumerable<ResourceName>
+    public sealed class ResourceType : IEnumerable<Resource>
     {
 
         public const ushort RT_CURSOR = 1;
@@ -292,11 +191,11 @@ namespace Workshell.PE
         private ResourceDirectoryEntry directory_entry;
         private uint id;
         private string name;
-        private ResourceName[] names;
+        private Resource[] resource_items;
 
-        internal ResourceType(Resources res, ResourceDirectoryEntry directoryEntry)
+        internal ResourceType(Resources owningResources, ResourceDirectoryEntry directoryEntry)
         {
-            resources = res;
+            resources = owningResources;
             directory_entry = directoryEntry;
 
             if (directory_entry.NameType == NameType.ID)
@@ -310,16 +209,16 @@ namespace Workshell.PE
                 name = directory_entry.GetName();
             }
 
-            names = LoadResources();
+            resource_items = LoadResources();
         }
 
         #region Methods
 
-        public IEnumerator<ResourceName> GetEnumerator()
+        public IEnumerator<Resource> GetEnumerator()
         {
-            for(var i = 0; i < names.Length; i++)
+            for(var i = 0; i < resource_items.Length; i++)
             {
-                ResourceName resource_name = names[i];
+                Resource resource_name = resource_items[i];
 
                 yield return resource_name;
             }
@@ -348,16 +247,17 @@ namespace Workshell.PE
             return result;
         }
 
-        private ResourceName[] LoadResources()
+        private Resource[] LoadResources()
         {
-            List<ResourceName> results = new List<ResourceName>();
+            List<Resource> results = new List<Resource>();
             ResourceDirectory directory = directory_entry.GetDirectory();
 
             foreach(ResourceDirectoryEntry entry in directory)
             {
-                ResourceName resource_name = new PE.ResourceName(this, entry);
+                IResourceProvider provider = (id > 0 ? Resources.GetProvider(id) : Resources.GetProvider(name));
+                Resource resource = provider.Create(this, entry);
 
-                results.Add(resource_name);
+                results.Add(resource);
             }
 
             return results.ToArray();
@@ -372,14 +272,6 @@ namespace Workshell.PE
             get
             {
                 return resources;
-            }
-        }
-
-        public ResourceDirectoryEntry DirectoryEntry
-        {
-            get
-            {
-                return directory_entry;
             }
         }
 
@@ -399,19 +291,19 @@ namespace Workshell.PE
             }
         }
 
-        public int NameCount
+        public int Count
         {
             get
             {
-                return names.Length;
+                return resource_items.Length;
             }
         }
 
-        public ResourceName this[int index]
+        public Resource this[int index]
         {
             get
             {
-                return names[index];
+                return resource_items[index];
             }
         }
 
@@ -423,12 +315,16 @@ namespace Workshell.PE
     {
 
         private static Dictionary<uint, Tuple<string, string>> type_info;
+        private static Dictionary<string, IResourceProvider> providers;
+        private static DefaultResourceProvider default_provider;
 
         private ResourceType[] types;
 
         static Resources()
         {
             type_info = new Dictionary<uint, Tuple<string, string>>();
+            providers = new Dictionary<string, IResourceProvider>(StringComparer.OrdinalIgnoreCase);
+            default_provider = new DefaultResourceProvider();
 
             PopulateTypeInfo();
         }
@@ -476,6 +372,53 @@ namespace Workshell.PE
             }
         }
 
+        public static bool RegisterProvider(uint typeId, IResourceProvider provider)
+        {
+            return RegisterProvider(String.Format("#{0}",typeId), provider);
+        }
+
+        public static bool RegisterProvider(string typeName, IResourceProvider provider)
+        {
+            if (providers.ContainsKey(typeName))
+                return false;
+
+            providers.Add(typeName, provider);
+
+            return true;
+        }
+
+        public static bool UnregisterProvider(uint typeId)
+        {
+            return UnregisterProvider(String.Format("#{0}", typeId));
+        }
+
+        public static bool UnregisterProvider(string typeName)
+        {
+            if (!providers.ContainsKey(typeName))
+                return false;
+
+            providers.Remove(typeName);
+
+            return true;
+        }
+
+        public static IResourceProvider GetProvider(uint typeId)
+        {
+            return GetProvider(String.Format("#{0}", typeId));
+        }
+
+        public static IResourceProvider GetProvider(string typeName)
+        {
+            if (!providers.ContainsKey(typeName))
+            {
+                return default_provider;
+            }
+            else
+            {
+                return providers[typeName];
+            }
+        }
+
         private static void PopulateTypeInfo()
         {
             ushort[] known_types = new ushort[] {
@@ -500,7 +443,7 @@ namespace Workshell.PE
                 ResourceType.RT_ANIICON,
                 ResourceType.RT_HTML,
                 ResourceType.RT_MANIFEST
-            }
+            };
 
             foreach (ushort type_id in known_types)
                 PopulateTypeInfo(type_id);
@@ -618,11 +561,7 @@ namespace Workshell.PE
         public IEnumerator<ResourceType> GetEnumerator()
         {
             for(var i = 0; i < types.Length; i++)
-            {
-                ResourceType type = types[i];
-
-                yield return type;
-            }
+                yield return types[i];
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -636,7 +575,7 @@ namespace Workshell.PE
 
             foreach(ResourceDirectoryEntry entry in rootDirectory)
             {
-                ResourceType type = new ResourceType(this,entry);
+                ResourceType type = new ResourceType(this, entry);
 
                 results.Add(type);
             }
@@ -648,7 +587,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public int TypeCount
+        public int Count
         {
             get
             {

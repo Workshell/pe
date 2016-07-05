@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using Workshell.PE;
 
@@ -24,9 +26,6 @@ namespace Workshell.PE.Demo
             //string file_name = @"C:\Windows\System32\shell32.dll";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
-            //string file_name = @"P:\Workshell\dotNET Dependency Walker\Bin\Debug\netdepends.exe";
-            //string file_name = @"C:\Users\Lloyd\Desktop\PE Related\Tools\PeInternals\x64\PeInternals.exe";
-            //string file_name = @"D:\Lloyd\Downloads\Win32DiskImager-0.9.5-install.exe";
             string error_message;
 
             if (!ExecutableImage.IsValid(file_name,out error_message))
@@ -37,11 +36,18 @@ namespace Workshell.PE.Demo
             }
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-            Certificate cert = Certificate.Get(image);
-            X509Certificate x509 = cert.GetCertificate();
+            Resources resources = Resources.Get(image);
+            ResourceType cursor_groups = resources.FirstOrDefault(type => type.Id == ResourceType.RT_GROUP_CURSOR);
+            Resource group_resource = cursor_groups.FirstOrDefault(res => res.Id == 1001);
+            CursorGroupResource cursor_group = CursorGroupResource.FromResource(group_resource, Resource.DEFAULT_LANGUAGE);
+            CursorGroupResourceEntry cursor_entry = cursor_group.FirstOrDefault();
+            ResourceType cursors = resources.FirstOrDefault(type => type.Id == ResourceType.RT_CURSOR);
+            Resource resource = cursors.FirstOrDefault(res => res.Id == cursor_entry.CursorId);
+            CursorResource cursor_resource = CursorResource.FromResource(resource, Resource.DEFAULT_LANGUAGE);
+            Cursor cursor = cursor_resource.ToCursor();
+            Bitmap bitmap = cursor_resource.ToBitmap();
 
-            if (x509 != null)
-                X509Certificate2UI.DisplayCertificate((X509Certificate2)x509);
+            bitmap.Save(@"d:\test.bmp");
 
             Console.ReadKey();
         }

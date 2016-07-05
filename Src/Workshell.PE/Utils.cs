@@ -204,6 +204,67 @@ namespace Workshell.PE
             return ReadBytes(stream, location.FileOffset.ToInt64(), location.FileSize.ToInt64());
         }
 
+        public static void Write(sbyte value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            stream.WriteByte((byte)value);
+        }
+
+        public static void Write(byte value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            stream.WriteByte(value);
+        }
+
+        public static void Write(short value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            Write(buffer, stream);
+        }
+
+        public static void Write(ushort value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            Write(buffer, stream);
+        }
+
+        public static void Write(int value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            Write(buffer, stream);
+        }
+
+        public static void Write(uint value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            Write(buffer, stream);
+        }
+
+        public static void Write(long value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            Write(buffer, stream);
+        }
+
+        public static void Write(ulong value, Stream stream)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            Write(buffer, stream);
+        }
+
+        public static void Write(byte[] bytes, Stream stream)
+        {
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
         public static void Write<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct
         {
             IntPtr ptr = Marshal.AllocHGlobal(count);
