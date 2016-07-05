@@ -254,8 +254,7 @@ namespace Workshell.PE
 
             foreach(ResourceDirectoryEntry entry in directory)
             {
-                IResourceProvider provider = (id > 0 ? Resources.GetProvider(id) : Resources.GetProvider(name));
-                Resource resource = provider.Create(this, entry);
+                Resource resource = new Resource(this, entry);
 
                 results.Add(resource);
             }
@@ -315,16 +314,12 @@ namespace Workshell.PE
     {
 
         private static Dictionary<uint, Tuple<string, string>> type_info;
-        private static Dictionary<string, IResourceProvider> providers;
-        private static DefaultResourceProvider default_provider;
 
         private ResourceType[] types;
 
         static Resources()
         {
             type_info = new Dictionary<uint, Tuple<string, string>>();
-            providers = new Dictionary<string, IResourceProvider>(StringComparer.OrdinalIgnoreCase);
-            default_provider = new DefaultResourceProvider();
 
             PopulateTypeInfo();
         }
@@ -369,53 +364,6 @@ namespace Workshell.PE
             else
             {
                 return type_info[typeId].Item2;
-            }
-        }
-
-        public static bool RegisterProvider(uint typeId, IResourceProvider provider)
-        {
-            return RegisterProvider(String.Format("#{0}",typeId), provider);
-        }
-
-        public static bool RegisterProvider(string typeName, IResourceProvider provider)
-        {
-            if (providers.ContainsKey(typeName))
-                return false;
-
-            providers.Add(typeName, provider);
-
-            return true;
-        }
-
-        public static bool UnregisterProvider(uint typeId)
-        {
-            return UnregisterProvider(String.Format("#{0}", typeId));
-        }
-
-        public static bool UnregisterProvider(string typeName)
-        {
-            if (!providers.ContainsKey(typeName))
-                return false;
-
-            providers.Remove(typeName);
-
-            return true;
-        }
-
-        public static IResourceProvider GetProvider(uint typeId)
-        {
-            return GetProvider(String.Format("#{0}", typeId));
-        }
-
-        public static IResourceProvider GetProvider(string typeName)
-        {
-            if (!providers.ContainsKey(typeName))
-            {
-                return default_provider;
-            }
-            else
-            {
-                return providers[typeName];
             }
         }
 
