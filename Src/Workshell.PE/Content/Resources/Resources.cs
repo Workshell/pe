@@ -266,13 +266,37 @@ namespace Workshell.PE
     public sealed class ResourceType : IEnumerable<ResourceName>
     {
 
+        public const ushort RT_CURSOR = 1;
+        public const ushort RT_BITMAP = 2;
+        public const ushort RT_ICON = 3;
+        public const ushort RT_MENU = 4;
+        public const ushort RT_DIALOG = 5;
+        public const ushort RT_STRING = 6;
+        public const ushort RT_FONTDIR = 7;
+        public const ushort RT_FONT = 8;
+        public const ushort RT_ACCELERATOR = 9;
+        public const ushort RT_RCDATA = 10;
+        public const ushort RT_MESSAGETABLE = 11;
+        public const ushort RT_GROUP_CURSOR = 12;
+        public const ushort RT_GROUP_ICON = 14;
+        public const ushort RT_VERSION = 16;
+        public const ushort RT_DLGINCLUDE = 17;
+        public const ushort RT_PLUGPLAY = 19;
+        public const ushort RT_VXD = 20;
+        public const ushort RT_ANICURSOR = 21;
+        public const ushort RT_ANIICON = 22;
+        public const ushort RT_HTML = 23;
+        public const ushort RT_MANIFEST = 24;
+
+        private Resources resources;
         private ResourceDirectoryEntry directory_entry;
         private uint id;
         private string name;
         private ResourceName[] names;
 
-        internal ResourceType(ResourceDirectoryEntry directoryEntry)
+        internal ResourceType(Resources res, ResourceDirectoryEntry directoryEntry)
         {
+            resources = res;
             directory_entry = directoryEntry;
 
             if (directory_entry.NameType == NameType.ID)
@@ -342,6 +366,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public Resources Resources
+        {
+            get
+            {
+                return resources;
+            }
+        }
 
         public ResourceDirectoryEntry DirectoryEntry
         {
@@ -446,100 +478,122 @@ namespace Workshell.PE
 
         private static void PopulateTypeInfo()
         {
-            uint[] known_types = new uint[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 17, 19, 20, 21, 22, 23, 24 };
+            ushort[] known_types = new ushort[] {
+                ResourceType.RT_CURSOR,
+                ResourceType.RT_BITMAP,
+                ResourceType.RT_ICON,
+                ResourceType.RT_MENU,
+                ResourceType.RT_DIALOG,
+                ResourceType.RT_STRING,
+                ResourceType.RT_FONTDIR,
+                ResourceType.RT_FONT,
+                ResourceType.RT_ACCELERATOR,
+                ResourceType.RT_RCDATA,
+                ResourceType.RT_MESSAGETABLE,
+                ResourceType.RT_GROUP_CURSOR,
+                ResourceType.RT_GROUP_ICON,
+                ResourceType.RT_VERSION,
+                ResourceType.RT_DLGINCLUDE,
+                ResourceType.RT_PLUGPLAY,
+                ResourceType.RT_VXD,
+                ResourceType.RT_ANICURSOR,
+                ResourceType.RT_ANIICON,
+                ResourceType.RT_HTML,
+                ResourceType.RT_MANIFEST
+            }
 
-            foreach (uint id in known_types)
-                PopulateTypeInfo(id);
+            foreach (ushort type_id in known_types)
+                PopulateTypeInfo(type_id);
         }
 
-        private static void PopulateTypeInfo(uint typeId)
+        private static void PopulateTypeInfo(ushort typeId)
         {
             string name;
             string constant_name;
 
             switch (typeId)
             {
-                case 1:
+                case ResourceType.RT_CURSOR:
                     name = "Cursor";
                     constant_name = "RT_CURSOR";
                     break;
-                case 2:
+                case ResourceType.RT_BITMAP:
                     name = "Bitmap";
                     constant_name = "RT_BITMAP";
                     break;
-                case 3:
+                case ResourceType.RT_ICON:
                     name = "Icon";
                     constant_name = "RT_ICON";
                     break;
-                case 4:
+                case ResourceType.RT_MENU:
                     name = "Menu";
                     constant_name = "RT_MENU";
                     break;
-                case 5:
+                case ResourceType.RT_DIALOG:
                     name = "Dialog";
                     constant_name = "RT_DIALOG";
                     break;
-                case 6:
+                case ResourceType.RT_STRING:
                     name = "String";
                     constant_name = "RT_STRING";
                     break;
-                case 7:
+                case ResourceType.RT_FONTDIR:
                     name = "Font Directory";
                     constant_name = "RT_FONTDIR";
                     break;
-                case 8:
+                case ResourceType.RT_FONT:
                     name = "Font";
                     constant_name = "RT_FONT";
                     break;
-                case 9:
+                case ResourceType.RT_ACCELERATOR:
                     name = "Accelerator";
                     constant_name = "RT_ACCELERATOR";
                     break;
-                case 10:
+                case ResourceType.RT_RCDATA:
                     name = "RC Data";
                     constant_name = "RT_RCDATA";
                     break;
-                case 11:
+                case ResourceType.RT_MESSAGETABLE:
                     name = "Message Table";
                     constant_name = "RT_MESSAGETABLE";
                     break;
-                case 12:
+                case ResourceType.RT_GROUP_CURSOR:
                     name = "Cursor Group";
                     constant_name = "RT_GROUP_CURSOR";
                     break;
-                case 14:
+                case ResourceType.RT_GROUP_ICON:
                     name = "Icon Group";
                     constant_name = "RT_GROUP_ICON";
                     break;
-                case 16:
+                case ResourceType.RT_VERSION:
                     name = "Version";
                     constant_name = "RT_VERSION";
                     break;
-                case 17:
+                case ResourceType.RT_DLGINCLUDE:
                     name = "Dialog Include";
                     constant_name = "RT_DLGINCLUDE";
                     break;
-                case 19:
+                case ResourceType.RT_PLUGPLAY:
                     name = "Plug & Play";
                     constant_name = "RT_PLUGPLAY";
                     break;
-                case 20:
+                case ResourceType.RT_VXD:
                     name = "VxD";
                     constant_name = "RT_VXD";
                     break;
-                case 21:
+                case ResourceType.RT_ANICURSOR:
                     name = "Animated Cursor";
                     constant_name = "RT_ANICURSOR";
                     break;
-                case 22:
+                case ResourceType.RT_ANIICON:
                     name = "Animated Icon";
                     constant_name = "RT_ANIICON";
                     break;
-                case 23:
+                case ResourceType.RT_HTML:
                     name = "HTML";
                     constant_name = "RT_HTML";
                     break;
-                case 24:
+                case ResourceType.RT_MANIFEST:
                     name = "Manifest";
                     constant_name = "RT_MANIFEST";
                     break;
@@ -582,7 +636,7 @@ namespace Workshell.PE
 
             foreach(ResourceDirectoryEntry entry in rootDirectory)
             {
-                ResourceType type = new ResourceType(entry);
+                ResourceType type = new ResourceType(this,entry);
 
                 results.Add(type);
             }
