@@ -102,27 +102,30 @@ namespace Workshell.PE
 
                 switch (color_count)
                 {
-                    case 0:
-                        colors = 0;
-                        break;
                     case 1:
                         colors = 2;
+                        break;
+                    case 2:
+                        colors = 4;
+                        break;
+                    case 3:
+                        colors = 8;
                         break;
                     case 4:
                         colors = 16;
                         break;
-                    case 8:
-                        colors = 0;
+                    case 5:
+                        colors = 32;
                         break;
-                    case 16:
-                        colors = 0;
+                    case 6:
+                        colors = 64;
                         break;
-                    case 24:
-                        colors = 0;
+                    case 7:
+                        colors = 128;
                         break;
-                    case 32:
-                        colors = 0;
-                        break;
+                    //case 8:
+                    //    colors = 256;
+                    //    break;
                 }
 
                 Utils.Write(Convert.ToByte(width), stream);

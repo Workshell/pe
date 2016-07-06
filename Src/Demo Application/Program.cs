@@ -38,16 +38,14 @@ namespace Workshell.PE.Demo
             ExecutableImage image = ExecutableImage.FromFile(file_name);
             Resources resources = Resources.Get(image);
             ResourceType icon_groups = resources.FirstOrDefault(type => type.Id == ResourceType.RT_GROUP_ICON);
-            Resource group_resource = icon_groups.FirstOrDefault(res => res.Id == 1);
-            IconGroupResource icon_group = IconGroupResource.FromResource(group_resource, Resource.DEFAULT_LANGUAGE);
+            Resource group_resource = icon_groups.FirstOrDefault(res => res.Id == 7);
+            IconGroupResource icon_group = IconGroupResource.Load(group_resource, Resource.DEFAULT_LANGUAGE);
             IconGroupResourceEntry icon_entry = icon_group.FirstOrDefault();
             ResourceType icons = resources.FirstOrDefault(type => type.Id == ResourceType.RT_ICON);
             Resource resource = icons.FirstOrDefault(res => res.Id == /*icon_entry.IconId*/105);
             IconResource icon_resource = IconResource.FromResource(resource, Resource.DEFAULT_LANGUAGE);
-            Icon icon = icon_resource.ToIcon();
-            Bitmap bitmap = icon.ToBitmap();
 
-            bitmap.Save(@"d:\test.bmp");
+            icon_group.Save(@"D:\test.ico", IconGroupFormat.Icon);
 
             //Console.ReadKey();
         }
