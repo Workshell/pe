@@ -37,19 +37,19 @@ namespace Workshell.PE.Demo
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
             Resources resources = Resources.Get(image);
-            ResourceType cursor_groups = resources.FirstOrDefault(type => type.Id == ResourceType.RT_GROUP_CURSOR);
-            Resource group_resource = cursor_groups.FirstOrDefault(res => res.Id == 1001);
-            CursorGroupResource cursor_group = CursorGroupResource.FromResource(group_resource, Resource.DEFAULT_LANGUAGE);
-            CursorGroupResourceEntry cursor_entry = cursor_group.FirstOrDefault();
-            ResourceType cursors = resources.FirstOrDefault(type => type.Id == ResourceType.RT_CURSOR);
-            Resource resource = cursors.FirstOrDefault(res => res.Id == cursor_entry.CursorId);
-            CursorResource cursor_resource = CursorResource.FromResource(resource, Resource.DEFAULT_LANGUAGE);
-            Cursor cursor = cursor_resource.ToCursor();
-            Bitmap bitmap = cursor_resource.ToBitmap();
+            ResourceType icon_groups = resources.FirstOrDefault(type => type.Id == ResourceType.RT_GROUP_ICON);
+            Resource group_resource = icon_groups.FirstOrDefault(res => res.Id == 1);
+            IconGroupResource icon_group = IconGroupResource.FromResource(group_resource, Resource.DEFAULT_LANGUAGE);
+            IconGroupResourceEntry icon_entry = icon_group.FirstOrDefault();
+            ResourceType icons = resources.FirstOrDefault(type => type.Id == ResourceType.RT_ICON);
+            Resource resource = icons.FirstOrDefault(res => res.Id == /*icon_entry.IconId*/105);
+            IconResource icon_resource = IconResource.FromResource(resource, Resource.DEFAULT_LANGUAGE);
+            Icon icon = icon_resource.ToIcon();
+            Bitmap bitmap = icon.ToBitmap();
 
             bitmap.Save(@"d:\test.bmp");
 
-            Console.ReadKey();
+            //Console.ReadKey();
         }
 
     }

@@ -11,23 +11,25 @@ using System.Windows.Forms;
 namespace Workshell.PE
 {
 
-    public class CursorResource
+    public class IconResource
     {
 
-        private ushort hotspot_x;
-        private ushort hotspot_y;
+        private byte width;
+        private byte height;
+        private byte color_count;
         private byte[] dib;
 
-        internal CursorResource(ushort hotspotX, ushort hotspotY, byte[] dibData)
+        internal IconResource(byte iconWidth, byte iconHeight, byte colorCount, byte[] dibData)
         {
-            hotspot_x = hotspotX;
-            hotspot_y = hotspotY;
+            width = iconWidth;
+            height = iconHeight;
+            color_count = colorCount;
             dib = dibData;
         }
 
         #region Static Methods
 
-        public static CursorResource FromBytes(byte[] data)
+        public static IconResource FromBytes(byte[] data)
         {
             using (MemoryStream mem = new MemoryStream(data))
             {
@@ -35,30 +37,38 @@ namespace Workshell.PE
             }
         }
 
-        public static CursorResource FromStream(Stream stream)
+        public static IconResource FromStream(Stream stream)
         {
-            ushort hotspot_x = Utils.ReadUInt16(stream);
-            ushort hotspot_y = Utils.ReadUInt16(stream);
+            byte width;
+            byte height;
+            byte color_count;
             byte[] dib;
 
             using (MemoryStream mem = new MemoryStream())
             {
                 stream.CopyTo(mem, 4096);
+                mem.Seek(0, SeekOrigin.Begin);
 
                 dib = mem.ToArray();
+            
+                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
+
+                width = Convert.ToByte(header.biWidth);
+                height = Convert.ToByte(header.biHeight / 2);
+                color_count = Convert.ToByte(header.biBitCount);
             }
 
-            CursorResource cursor = new CursorResource(hotspot_x, hotspot_y, dib);
-
-            return cursor;
+            IconResource icon = new IconResource(width, height, color_count, dib);
+            
+            return icon;
         }
 
-        public static CursorResource FromResource(Resource resource)
+        public static IconResource FromResource(Resource resource)
         {
             return FromResource(resource, Resource.DEFAULT_LANGUAGE);
         }
 
-        public static CursorResource FromResource(Resource resource, uint language)
+        public static IconResource FromResource(Resource resource, uint language)
         {
             byte[] data = resource.ToBytes(language);
 
@@ -85,15 +95,42 @@ namespace Workshell.PE
                 BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
 
                 Utils.Write(Convert.ToUInt16(0), stream);
-                Utils.Write(Convert.ToUInt16(2), stream);
+                Utils.Write(Convert.ToUInt16(1), stream);
                 Utils.Write(Convert.ToUInt16(1), stream);
 
-                Utils.Write(Convert.ToByte(header.biWidth), stream);
-                Utils.Write(Convert.ToByte(header.biHeight), stream);
+                int colors = 0;
+
+                switch (color_count)
+                {
+                    case 0:
+                        colors = 0;
+                        break;
+                    case 1:
+                        colors = 2;
+                        break;
+                    case 4:
+                        colors = 16;
+                        break;
+                    case 8:
+                        colors = 0;
+                        break;
+                    case 16:
+                        colors = 0;
+                        break;
+                    case 24:
+                        colors = 0;
+                        break;
+                    case 32:
+                        colors = 0;
+                        break;
+                }
+
+                Utils.Write(Convert.ToByte(width), stream);
+                Utils.Write(Convert.ToByte(height), stream);
+                Utils.Write(Convert.ToByte(colors), stream);
                 Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(hotspot_x, stream);
-                Utils.Write(hotspot_y, stream);
+                Utils.Write(Convert.ToUInt16(1), stream);
+                Utils.Write(Convert.ToUInt16(color_count), stream);
                 Utils.Write(dib.Length, stream);
                 Utils.Write(22, stream);
 
@@ -101,16 +138,16 @@ namespace Workshell.PE
             }
         }
 
-        public Cursor ToCursor()
+        public Icon ToIcon()
         {
             using (MemoryStream mem = new MemoryStream())
             {
                 Save(mem);
                 mem.Seek(0, SeekOrigin.Begin);
 
-                Cursor cursor = new Cursor(mem);
+                Icon icon = new Icon(mem);
 
-                return cursor;
+                return icon;
             }
         }
 
@@ -121,9 +158,9 @@ namespace Workshell.PE
 
         public Bitmap ToBitmap(Color backgroundColor)
         {
-            using (Cursor cursor = ToCursor())
+            using (Icon icon = ToIcon())
             {
-                Rectangle rect = new Rectangle(0, 0, cursor.Size.Width, cursor.Size.Height);
+                Rectangle rect = new Rectangle(0, 0, icon.Size.Width, icon.Size.Height);
                 Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
 
                 using (Graphics graphics = Graphics.FromImage(bitmap))
@@ -131,7 +168,7 @@ namespace Workshell.PE
                     using (SolidBrush brush = new SolidBrush(backgroundColor))
                     {
                         graphics.FillRectangle(brush, rect);
-                        cursor.Draw(graphics, rect);
+                        graphics.DrawIcon(icon, rect);
                     }
                 }
 
@@ -143,19 +180,27 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ushort HotspotX
+        public byte Width
         {
             get
             {
-                return hotspot_x;
+                return width;
             }
         }
 
-        public ushort HotspotY
+        public byte Height
         {
             get
             {
-                return hotspot_y;
+                return height;
+            }
+        }
+
+        public byte ColorCount
+        {
+            get
+            {
+                return color_count;
             }
         }
 
