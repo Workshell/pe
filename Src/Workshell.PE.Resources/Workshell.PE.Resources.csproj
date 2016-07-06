@@ -46,6 +46,7 @@
     <Compile Include="IconGroupResource.cs" />
     <Compile Include="CursorGroupResource.cs" />
     <Compile Include="CursorResource.cs" />
+    <Compile Include="IconUtils.cs" />
     <Compile Include="Native\BITMAPINFOHEADER.cs" />
     <Compile Include="Native\CURSORDIR.cs" />
     <Compile Include="Native\ICONDIR.cs" />

@@ -31,6 +31,12 @@ namespace Workshell.PE
             BitCount = resDir.BitCount;
             BytesInRes = resDir.BytesInRes;
             IconId = resDir.IconId;
+
+            if (Width == 0)
+                Width = 256;
+
+            if (Height == 0)
+                Height = 256;
         }
 
         #region Methods
@@ -44,13 +50,13 @@ namespace Workshell.PE
 
         #region Properties
 
-        public byte Width
+        public ushort Width
         {
             get;
             private set;
         }
 
-        public byte Height
+        public ushort Height
         {
             get;
             private set;
@@ -200,7 +206,7 @@ namespace Workshell.PE
 
         private void SaveResource(Stream stream)
         {
-            //
+            throw new NotImplementedException();
         }
 
         private void SaveIcon(Stream stream)
@@ -224,13 +230,13 @@ namespace Workshell.PE
             {
                 IconGroupResourceEntry entry = entries[i];
 
-                Utils.Write(Convert.ToByte(entry.Width), stream);
-                Utils.Write(Convert.ToByte(entry.Height), stream);
+                Utils.Write(Convert.ToByte(entry.Width >= 256 ? 0 : entry.Width), stream);
+                Utils.Write(Convert.ToByte(entry.Height >= 256 ? 0 : entry.Height), stream);
                 Utils.Write(Convert.ToByte(entry.ColorCount), stream);
                 Utils.Write(Convert.ToByte(0), stream);
                 Utils.Write(Convert.ToUInt16(1), stream);
 
-                ushort colors = 0;
+                ushort colors;
 
                 if (entry.ColorCount <= 2)
                 {
@@ -260,7 +266,6 @@ namespace Workshell.PE
                 {
                     colors = 7;
                 }
-                //else if (entry.ColorCount <= 256)
                 else
                 {
                     colors = 0;
@@ -286,6 +291,22 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public Resource Resource
+        {
+            get
+            {
+                return resource;
+            }
+        }
+
+        public uint Language
+        {
+            get
+            {
+                return language_id;
+            }
+        }
 
         public int Count
         {

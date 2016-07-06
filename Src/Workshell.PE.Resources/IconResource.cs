@@ -11,135 +11,87 @@ using System.Windows.Forms;
 namespace Workshell.PE
 {
 
+    public enum IconFormat
+    {
+        Raw,
+        Resource,
+        Icon
+    }
+
     public class IconResource
     {
 
-        private byte width;
-        private byte height;
+        private Resource resource;
+        private uint language_id;
+        private ushort width;
+        private ushort height;
         private byte color_count;
         private byte[] dib;
+        private bool is_png;
 
-        internal IconResource(byte iconWidth, byte iconHeight, byte colorCount, byte[] dibData)
+        internal IconResource(Resource sourceResource, uint languageId, ushort iconWidth, ushort iconHeight, byte colorCount, byte[] dibData, bool isPNG)
         {
+            resource = sourceResource;
+            language_id = languageId;
             width = iconWidth;
             height = iconHeight;
             color_count = colorCount;
             dib = dibData;
+            is_png = isPNG;
         }
 
         #region Static Methods
 
-        public static IconResource FromBytes(byte[] data)
+        public static IconResource Load(Resource resource)
         {
-            using (MemoryStream mem = new MemoryStream(data))
-            {
-                return FromStream(mem);
-            }
+            return Load(resource, Resource.DEFAULT_LANGUAGE);
         }
 
-        public static IconResource FromStream(Stream stream)
+        public static IconResource Load(Resource resource, uint language)
         {
-            byte width;
-            byte height;
-            byte color_count;
-            byte[] dib;
+            if (!resource.Languages.Contains(language))
+                return null;
 
-            using (MemoryStream mem = new MemoryStream())
-            {
-                stream.CopyTo(mem, 4096);
-                mem.Seek(0, SeekOrigin.Begin);
-
-                dib = mem.ToArray();
-            
-                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
-
-                width = Convert.ToByte(header.biWidth);
-                height = Convert.ToByte(header.biHeight / 2);
-                color_count = Convert.ToByte(header.biBitCount);
-            }
-
-            IconResource icon = new IconResource(width, height, color_count, dib);
-            
-            return icon;
-        }
-
-        public static IconResource FromResource(Resource resource)
-        {
-            return FromResource(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static IconResource FromResource(Resource resource, uint language)
-        {
             byte[] data = resource.ToBytes(language);
 
-            return FromBytes(data);
+            if (!IconUtils.IsPNG(data))
+            {
+                using (MemoryStream mem = new MemoryStream(data))
+                {
+                    BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
+
+                    ushort width = Convert.ToUInt16(header.biWidth);
+                    ushort height = Convert.ToUInt16(header.biHeight / 2);
+                    byte color_count = Convert.ToByte(header.biBitCount);
+                    byte[] dib = mem.ToArray();
+
+                    IconResource icon = new IconResource(resource, language, width, height, color_count, dib, false);
+
+                    return icon;
+                }
+            }
+            else
+            {
+                using (MemoryStream mem = new MemoryStream(data))
+                {
+                    using (Image png = Image.FromStream(mem))
+                    {
+                        ushort width = Convert.ToUInt16(png.Width);
+                        ushort height = Convert.ToUInt16(png.Height);
+                        byte color_count = 32;
+                        byte[] dib = mem.ToArray();
+
+                        IconResource icon = new IconResource(resource, language, width, height, color_count, dib, true);
+
+                        return icon;
+                    }
+                }
+            }
         }
 
         #endregion
 
         #region Methods
-
-        public void Save(string fileName)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                Save(file);
-                file.Flush();
-            }
-        }
-
-        public void Save(Stream stream)
-        {
-            using (MemoryStream mem = new MemoryStream(dib))
-            {
-                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
-
-                Utils.Write(Convert.ToUInt16(0), stream);
-                Utils.Write(Convert.ToUInt16(1), stream);
-                Utils.Write(Convert.ToUInt16(1), stream);
-
-                int colors = 0;
-
-                switch (color_count)
-                {
-                    case 1:
-                        colors = 2;
-                        break;
-                    case 2:
-                        colors = 4;
-                        break;
-                    case 3:
-                        colors = 8;
-                        break;
-                    case 4:
-                        colors = 16;
-                        break;
-                    case 5:
-                        colors = 32;
-                        break;
-                    case 6:
-                        colors = 64;
-                        break;
-                    case 7:
-                        colors = 128;
-                        break;
-                    //case 8:
-                    //    colors = 256;
-                    //    break;
-                }
-
-                Utils.Write(Convert.ToByte(width), stream);
-                Utils.Write(Convert.ToByte(height), stream);
-                Utils.Write(Convert.ToByte(colors), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(Convert.ToUInt16(1), stream);
-                Utils.Write(Convert.ToUInt16(color_count), stream);
-                Utils.Write(dib.Length, stream);
-                Utils.Write(22, stream);
-
-                Utils.Write(dib, stream);
-            }
-        }
 
         public Icon ToIcon()
         {
@@ -161,29 +113,165 @@ namespace Workshell.PE
 
         public Bitmap ToBitmap(Color backgroundColor)
         {
-            using (Icon icon = ToIcon())
+            if (!is_png)
             {
-                Rectangle rect = new Rectangle(0, 0, icon.Size.Width, icon.Size.Height);
-                Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
-
-                using (Graphics graphics = Graphics.FromImage(bitmap))
+                using (Icon icon = ToIcon())
                 {
-                    using (SolidBrush brush = new SolidBrush(backgroundColor))
+                    Rectangle rect = new Rectangle(0, 0, icon.Size.Width, icon.Size.Height);
+                    Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+
+                    using (Graphics graphics = Graphics.FromImage(bitmap))
                     {
-                        graphics.FillRectangle(brush, rect);
-                        graphics.DrawIcon(icon, rect);
+                        using (SolidBrush brush = new SolidBrush(backgroundColor))
+                        {
+                            graphics.FillRectangle(brush, rect);
+                            graphics.DrawIcon(icon, rect);
+                        }
+                    }
+
+                    return bitmap;
+                }
+            }
+            else
+            {
+                using (MemoryStream mem = new MemoryStream(dib))
+                {
+                    using (Image png = Image.FromStream(mem))
+                    {
+                        Rectangle rect = new Rectangle(0, 0, width, height);
+                        Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+
+                        using (Graphics graphics = Graphics.FromImage(bitmap))
+                        {
+                            using (SolidBrush brush = new SolidBrush(backgroundColor))
+                            {
+                                graphics.FillRectangle(brush, rect);
+                                graphics.DrawImage(png, rect);
+                            }
+                        }
+
+                        return bitmap;
                     }
                 }
-
-                return bitmap;
             }
+        }
+
+        public void Save(string fileName)
+        {
+            Save(fileName, IconFormat.Icon);
+        }
+
+        public void Save(Stream stream)
+        {
+            Save(stream, IconFormat.Icon);
+        }
+
+        public void Save(string fileName, IconFormat format)
+        {
+            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Save(file, format);
+                file.Flush();
+            }
+        }
+
+        public void Save(Stream stream, IconFormat format)
+        {
+            switch (format)
+            {
+                case IconFormat.Raw:
+                    SaveRaw(stream);
+                    break;
+                case IconFormat.Resource:
+                    SaveResource(stream);
+                    break;
+                case IconFormat.Icon:
+                    SaveIcon(stream);
+                    break;
+            }
+        }
+
+        private void SaveRaw(Stream stream)
+        {
+            byte[] data = resource.ToBytes(language_id);
+
+            stream.Write(data, 0, data.Length);
+        }
+
+        private void SaveResource(Stream stream)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SaveIcon(Stream stream)
+        {
+            Utils.Write(Convert.ToUInt16(0), stream);
+            Utils.Write(Convert.ToUInt16(1), stream);
+            Utils.Write(Convert.ToUInt16(1), stream);
+
+            int colors = 0;
+
+            switch (color_count)
+            {
+                case 1:
+                    colors = 2;
+                    break;
+                case 2:
+                    colors = 4;
+                    break;
+                case 3:
+                    colors = 8;
+                    break;
+                case 4:
+                    colors = 16;
+                    break;
+                case 5:
+                    colors = 32;
+                    break;
+                case 6:
+                    colors = 64;
+                    break;
+                case 7:
+                    colors = 128;
+                    break;
+                //case 8:
+                //    colors = 256;
+                //    break;
+            }
+
+            Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), stream);
+            Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), stream);
+            Utils.Write(Convert.ToByte(colors), stream);
+            Utils.Write(Convert.ToByte(0), stream);
+            Utils.Write(Convert.ToUInt16(1), stream);
+            Utils.Write(Convert.ToUInt16(color_count), stream);
+            Utils.Write(dib.Length, stream);
+            Utils.Write(22, stream);
+
+            Utils.Write(dib, stream);
         }
 
         #endregion
 
         #region Properties
 
-        public byte Width
+        public Resource Resource
+        {
+            get
+            {
+                return resource;
+            }
+        }
+
+        public uint Language
+        {
+            get
+            {
+                return language_id;
+            }
+        }
+
+        public ushort Width
         {
             get
             {
@@ -191,7 +279,7 @@ namespace Workshell.PE
             }
         }
 
-        public byte Height
+        public ushort Height
         {
             get
             {
