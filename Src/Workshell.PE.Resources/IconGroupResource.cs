@@ -149,7 +149,7 @@ namespace Workshell.PE
             if (!resource.Languages.Contains(language))
                 return null;
 
-            byte[] data = resource.ToBytes(language);
+            byte[] data = resource.GetBytes(language);
             MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
 
             using (mem)
@@ -227,7 +227,7 @@ namespace Workshell.PE
 
         private void SaveRaw(Stream stream)
         {
-            byte[] data = resource.ToBytes(language_id);
+            byte[] data = resource.GetBytes(language_id);
 
             stream.Write(data, 0, data.Length);
         }
@@ -264,53 +264,23 @@ namespace Workshell.PE
                 Utils.Write(Convert.ToByte(0), stream);
                 Utils.Write(Convert.ToUInt16(1), stream);
 
-                ushort colors;
+                ushort colors = Convert.ToUInt16(Math.Log(entry.ColorCount) / Math.Log(2));
 
-                if (entry.ColorCount <= 2)
-                {
-                    colors = 1;
-                }
-                else if (entry.ColorCount <= 4)
-                {
-                    colors = 2;
-                }
-                else if (entry.ColorCount <= 8)
-                {
-                    colors = 3;
-                }
-                else if (entry.ColorCount <= 16)
-                {
-                    colors = 4;
-                }
-                else if (entry.ColorCount <= 32)
-                {
-                    colors = 5;
-                }
-                else if (entry.ColorCount <= 64)
-                {
-                    colors = 6;
-                }
-                else if (entry.ColorCount <= 128)
-                {
-                    colors = 7;
-                }
-                else
-                {
+                if (colors >= 256)
                     colors = 0;
-                }
 
                 Utils.Write(colors, stream);
                 Utils.Write(entry.BytesInRes, stream);
                 Utils.Write(offsets[i], stream);
             }
 
-            ResourceType icon_type = resource.Type.Resources.FirstOrDefault(t => t.Id == ResourceType.RT_ICON);
+            ResourceType icon_type = resource.Type.Resources.First(t => t.Id == ResourceType.RT_ICON);
 
             for (var i = 0; i < entries.Length; i++)
             {
                 IconGroupResourceEntry entry = entries[i];
-                Resource resource = icon_type.FirstOrDefault(r => r.Id == entry.IconId);
-                byte[] data = resource.ToBytes(language_id);
+                Resource resource = icon_type.First(r => r.Id == entry.IconId);
+                byte[] data = resource.GetBytes(language_id);
 
                 Utils.Write(data, stream);                
             }

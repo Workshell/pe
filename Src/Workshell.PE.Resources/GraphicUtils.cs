@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 namespace Workshell.PE
 {
 
-    internal static class IconUtils
+    internal static class GraphicUtils
     {
 
         #region Methods

@@ -38,7 +38,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public sealed class Resource
+    public sealed class Resource : ISupportsBytes
     {
 
         public const uint DEFAULT_LANGUAGE = 1033;
@@ -91,12 +91,12 @@ namespace Workshell.PE
             }
         }
 
-        public byte[] ToBytes()
+        public byte[] GetBytes()
         {
-            return ToBytes(DEFAULT_LANGUAGE);
+            return GetBytes(DEFAULT_LANGUAGE);
         }
 
-        public byte[] ToBytes(uint languageId)
+        public byte[] GetBytes(uint languageId)
         {
             if (!languages.ContainsKey(languageId))
             {
@@ -112,14 +112,28 @@ namespace Workshell.PE
             }
         }
 
-        public void ToStream(Stream stream)
+        public void Save(string fileName)
         {
-            ToStream(DEFAULT_LANGUAGE, stream);
+            Save(fileName, DEFAULT_LANGUAGE);
         }
 
-        public void ToStream(uint languageId, Stream stream)
+        public void Save(string fileName, uint language)
         {
-            byte[] data = ToBytes(languageId);
+            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Save(file, language);
+                file.Flush();
+            }
+        }
+
+        public void Save(Stream stream)
+        {
+            Save(stream, DEFAULT_LANGUAGE);
+        }
+
+        public void Save(Stream stream, uint language)
+        {
+            byte[] data = GetBytes(language);
 
             stream.Write(data, 0, data.Length);
         }

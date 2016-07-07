@@ -35,107 +35,81 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Workshell.PE.Extensions;
+
 namespace Workshell.PE
 {
 
-    public enum CursorSaveFormat
+    public enum BitmapSaveFormat
     {
         Raw,
         Resource,
-        Cursor
+        Bitmap
     }
 
-    public class CursorResource
+    public class BitmapResource
     {
 
         private Resource resource;
         private uint language_id;
-        private ushort hotspot_x;
-        private ushort hotspot_y;
         private byte[] dib;
 
-        internal CursorResource(Resource sourceResource, uint languageId, ushort hotspotX, ushort hotspotY, byte[] dibData)
+        internal BitmapResource(Resource sourceResource, uint languageId, byte[] dibData)
         {
             resource = sourceResource;
             language_id = languageId;
-            hotspot_x = hotspotX;
-            hotspot_y = hotspotY;
             dib = dibData;
         }
 
         #region Static Methods
 
-        public static CursorResource Load(Resource resource)
+        public static BitmapResource Load(Resource resource)
         {
             return Load(resource, Resource.DEFAULT_LANGUAGE);
         }
 
-        public static CursorResource Load(Resource resource, uint language)
+        public static BitmapResource Load(Resource resource, uint language)
         {
             if (!resource.Languages.Contains(language))
                 return null;
 
             byte[] data = resource.GetBytes(language);
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
 
-            using (mem)
-            {
-                ushort hotspot_x = Utils.ReadUInt16(mem);
-                ushort hotspot_y = Utils.ReadUInt16(mem);
-                byte[] dib;
+            BitmapResource result = new PE.BitmapResource(resource, language, data);
 
-                using (MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream())
-                {
-                    mem.CopyTo(dib_mem, 4096);
-
-                    dib = mem.ToArray();
-                }
-
-                CursorResource cursor = new CursorResource(resource, language, hotspot_x, hotspot_y, dib);
-
-                return cursor;
-            }
+            return result;
         }
 
         #endregion
 
         #region Methods
 
-        public Cursor ToCursor()
+        public Bitmap ToBitmap()
         {
             MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
 
             using (mem)
             {
-                Save(mem);
+                MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
+
+                using (dib_mem)
+                {
+                    BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
+                    BITMAPFILEHEADER file_header = new BITMAPFILEHEADER();
+
+                    file_header.Tag = 19778;
+                    file_header.Size = (Utils.SizeOf<BITMAPFILEHEADER>() + dib.Length).ToUInt32();
+                    file_header.Reserved1 = 0;
+                    file_header.Reserved2 = 0;
+                    file_header.BitmapOffset = Utils.SizeOf<BITMAPFILEHEADER>().ToUInt32() + header.biSize;
+
+                    Utils.Write<BITMAPFILEHEADER>(file_header, mem);
+                    Utils.Write(dib, mem);
+                }
+
                 mem.Seek(0, SeekOrigin.Begin);
 
-                Cursor cursor = new Cursor(mem);
-
-                return cursor;
-            }
-        }
-
-        public Bitmap ToBitmap()
-        {
-            return ToBitmap(Color.Transparent);
-        }
-
-        public Bitmap ToBitmap(Color backgroundColor)
-        {
-            using (Cursor cursor = ToCursor())
-            {
-                Rectangle rect = new Rectangle(0, 0, cursor.Size.Width, cursor.Size.Height);
-                Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
-
-                using (Graphics graphics = Graphics.FromImage(bitmap))
-                {
-                    using (SolidBrush brush = new SolidBrush(backgroundColor))
-                    {
-                        graphics.FillRectangle(brush, rect);
-                        cursor.Draw(graphics, rect);
-                    }
-                }
+                Bitmap bitmap = (Bitmap)Image.FromStream(mem);
 
                 return bitmap;
             }
@@ -143,15 +117,15 @@ namespace Workshell.PE
 
         public void Save(string fileName)
         {
-            Save(fileName, CursorSaveFormat.Cursor);
+            Save(fileName, BitmapSaveFormat.Bitmap);
         }
 
         public void Save(Stream stream)
         {
-            Save(stream, CursorSaveFormat.Cursor);
+            Save(stream, BitmapSaveFormat.Bitmap);
         }
 
-        public void Save(string fileName, CursorSaveFormat format)
+        public void Save(string fileName, BitmapSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -160,18 +134,18 @@ namespace Workshell.PE
             }
         }
 
-        public void Save(Stream stream, CursorSaveFormat format)
+        public void Save(Stream stream, BitmapSaveFormat format)
         {
             switch (format)
             {
-                case CursorSaveFormat.Raw:
+                case BitmapSaveFormat.Raw:
                     SaveRaw(stream);
                     break;
-                case CursorSaveFormat.Resource:
+                case BitmapSaveFormat.Resource:
                     SaveResource(stream);
                     break;
-                case CursorSaveFormat.Cursor:
-                    SaveCursor(stream);
+                case BitmapSaveFormat.Bitmap:
+                    SaveBitmap(stream);
                     break;
             }
         }
@@ -188,29 +162,10 @@ namespace Workshell.PE
             throw new NotImplementedException();
         }
 
-        private void SaveCursor(Stream stream)
+        private void SaveBitmap(Stream stream)
         {
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
-
-            using (mem)
-            {
-                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
-
-                Utils.Write(Convert.ToUInt16(0), stream);
-                Utils.Write(Convert.ToUInt16(2), stream);
-                Utils.Write(Convert.ToUInt16(1), stream);
-
-                Utils.Write(Convert.ToByte(header.biWidth), stream);
-                Utils.Write(Convert.ToByte(header.biHeight), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(hotspot_x, stream);
-                Utils.Write(hotspot_y, stream);
-                Utils.Write(dib.Length, stream);
-                Utils.Write(22, stream);
-
-                Utils.Write(dib, stream);
-            }
+            using (Bitmap bitmap = ToBitmap())
+                bitmap.Save(stream, ImageFormat.Bmp);
         }
 
         #endregion
@@ -230,22 +185,6 @@ namespace Workshell.PE
             get
             {
                 return language_id;
-            }
-        }
-
-        public ushort HotspotX
-        {
-            get
-            {
-                return hotspot_x;
-            }
-        }
-
-        public ushort HotspotY
-        {
-            get
-            {
-                return hotspot_y;
             }
         }
 

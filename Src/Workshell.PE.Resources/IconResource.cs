@@ -79,12 +79,12 @@ namespace Workshell.PE
             if (!resource.Languages.Contains(language))
                 return null;
 
-            byte[] data = resource.ToBytes(language);
+            byte[] data = resource.GetBytes(language);
             MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
 
             using (mem)
             {
-                if (!IconUtils.IsPNG(data))
+                if (!GraphicUtils.IsPNG(data))
                 {
                     BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
 
@@ -222,7 +222,7 @@ namespace Workshell.PE
 
         private void SaveRaw(Stream stream)
         {
-            byte[] data = resource.ToBytes(language_id);
+            byte[] data = resource.GetBytes(language_id);
 
             stream.Write(data, 0, data.Length);
         }
@@ -238,35 +238,10 @@ namespace Workshell.PE
             Utils.Write(Convert.ToUInt16(1), stream);
             Utils.Write(Convert.ToUInt16(1), stream);
 
-            int colors = 0;
+            uint colors = 0;
 
-            switch (color_count)
-            {
-                case 1:
-                    colors = 2;
-                    break;
-                case 2:
-                    colors = 4;
-                    break;
-                case 3:
-                    colors = 8;
-                    break;
-                case 4:
-                    colors = 16;
-                    break;
-                case 5:
-                    colors = 32;
-                    break;
-                case 6:
-                    colors = 64;
-                    break;
-                case 7:
-                    colors = 128;
-                    break;
-                //case 8:
-                //    colors = 256;
-                //    break;
-            }
+            if (color_count != 0 && color_count < 8)
+                colors = Convert.ToUInt32(Math.Pow(2,color_count));
 
             Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), stream);
             Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), stream);
