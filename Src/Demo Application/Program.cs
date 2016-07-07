@@ -22,8 +22,10 @@ namespace Workshell.PE.Demo
             //string file_name = Assembly.GetEntryAssembly().Location;
             //string file_name = @"C:\Windows\SysWOW64\kernel32.dll";
             //string file_name = @"C:\Windows\System32\kernel32.dll";
-            string file_name = @"C:\Windows\SysWOW64\shell32.dll";
+            //string file_name = @"C:\Windows\SysWOW64\shell32.dll";
             //string file_name = @"C:\Windows\System32\shell32.dll";
+            string file_name = @"C:\Windows\System32\user32.dll";
+            //string file_name = @"C:\Windows\explorer.exe";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
             string error_message;
@@ -37,15 +39,13 @@ namespace Workshell.PE.Demo
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
             Resources resources = Resources.Get(image);
-            ResourceType icon_groups = resources.FirstOrDefault(type => type.Id == ResourceType.RT_GROUP_ICON);
-            Resource group_resource = icon_groups.FirstOrDefault(res => res.Id == 7);
-            IconGroupResource icon_group = IconGroupResource.Load(group_resource, Resource.DEFAULT_LANGUAGE);
-            IconGroupResourceEntry icon_entry = icon_group.FirstOrDefault();
-            ResourceType icons = resources.FirstOrDefault(type => type.Id == ResourceType.RT_ICON);
-            Resource resource = icons.FirstOrDefault(res => res.Id == /*icon_entry.IconId*/105);
-            IconResource icon_resource = IconResource.FromResource(resource, Resource.DEFAULT_LANGUAGE);
+            ResourceType types = resources.First(t => t.Id == ResourceType.RT_BITMAP);
+            Resource resource = types.First(t => t.Id == 32661);
+            BitmapResource bitmap_resource = BitmapResource.Load(resource);
 
-            icon_group.Save(@"D:\test.ico", IconGroupFormat.Icon);
+            var x = bitmap_resource.ToBitmap();
+
+            x.Save(@"D:\test.bmp");
 
             //Console.ReadKey();
         }
