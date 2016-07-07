@@ -12,7 +12,7 @@ using Workshell.PE.Native;
 namespace Workshell.PE
 {
 
-    public enum IconGroupFormat
+    public enum IconGroupSaveFormat
     {
         Raw,
         Resource,
@@ -123,8 +123,9 @@ namespace Workshell.PE
                 return null;
 
             byte[] data = resource.ToBytes(language);
+            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
 
-            using (MemoryStream mem = new MemoryStream(data))
+            using (mem)
             {
                 NEWHEADER header = Utils.Read<NEWHEADER>(mem);
 
@@ -164,15 +165,15 @@ namespace Workshell.PE
 
         public void Save(string fileName)
         {
-            Save(fileName, IconGroupFormat.Icon);
+            Save(fileName, IconGroupSaveFormat.Icon);
         }
 
         public void Save(Stream stream)
         {
-            Save(stream, IconGroupFormat.Icon);
+            Save(stream, IconGroupSaveFormat.Icon);
         }
 
-        public void Save(string fileName, IconGroupFormat format)
+        public void Save(string fileName, IconGroupSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -181,17 +182,17 @@ namespace Workshell.PE
             }
         }
 
-        public void Save(Stream stream, IconGroupFormat format)
+        public void Save(Stream stream, IconGroupSaveFormat format)
         {
             switch (format)
             {
-                case IconGroupFormat.Raw:
+                case IconGroupSaveFormat.Raw:
                     SaveRaw(stream);
                     break;
-                case IconGroupFormat.Resource:
+                case IconGroupSaveFormat.Resource:
                     SaveResource(stream);
                     break;
-                case IconGroupFormat.Icon:
+                case IconGroupSaveFormat.Icon:
                     SaveIcon(stream);
                     break;
             }

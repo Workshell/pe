@@ -315,6 +315,7 @@ namespace Workshell.PE
 
         private static Dictionary<uint, Tuple<string, string>> type_info;
 
+        private ExecutableImage image;
         private ResourceType[] types;
 
         static Resources()
@@ -324,8 +325,9 @@ namespace Workshell.PE
             PopulateTypeInfo();
         }
 
-        internal Resources(ResourceDirectory rootDirectory)
+        internal Resources(ExecutableImage exeImage, ResourceDirectory rootDirectory)
         {
+            image = exeImage;
             types = LoadTypes(rootDirectory);
         }
 
@@ -338,7 +340,7 @@ namespace Workshell.PE
             if (root_directory == null)
                 return null;
 
-            Resources result = new Resources(root_directory);
+            Resources result = new Resources(image, root_directory);
 
             return result;
         }
@@ -534,6 +536,14 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
+
+        public ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
 
         public int Count
         {

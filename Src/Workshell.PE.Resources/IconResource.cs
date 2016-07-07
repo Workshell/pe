@@ -11,7 +11,7 @@ using System.Windows.Forms;
 namespace Workshell.PE
 {
 
-    public enum IconFormat
+    public enum IconSaveFormat
     {
         Raw,
         Resource,
@@ -53,10 +53,11 @@ namespace Workshell.PE
                 return null;
 
             byte[] data = resource.ToBytes(language);
+            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
 
-            if (!IconUtils.IsPNG(data))
+            using (mem)
             {
-                using (MemoryStream mem = new MemoryStream(data))
+                if (!IconUtils.IsPNG(data))
                 {
                     BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
 
@@ -69,10 +70,7 @@ namespace Workshell.PE
 
                     return icon;
                 }
-            }
-            else
-            {
-                using (MemoryStream mem = new MemoryStream(data))
+                else
                 {
                     using (Image png = Image.FromStream(mem))
                     {
@@ -95,7 +93,9 @@ namespace Workshell.PE
 
         public Icon ToIcon()
         {
-            using (MemoryStream mem = new MemoryStream())
+            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
+
+            using (mem)
             {
                 Save(mem);
                 mem.Seek(0, SeekOrigin.Begin);
@@ -134,7 +134,9 @@ namespace Workshell.PE
             }
             else
             {
-                using (MemoryStream mem = new MemoryStream(dib))
+                MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
+
+                using (mem)
                 {
                     using (Image png = Image.FromStream(mem))
                     {
@@ -158,15 +160,15 @@ namespace Workshell.PE
 
         public void Save(string fileName)
         {
-            Save(fileName, IconFormat.Icon);
+            Save(fileName, IconSaveFormat.Icon);
         }
 
         public void Save(Stream stream)
         {
-            Save(stream, IconFormat.Icon);
+            Save(stream, IconSaveFormat.Icon);
         }
 
-        public void Save(string fileName, IconFormat format)
+        public void Save(string fileName, IconSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -175,17 +177,17 @@ namespace Workshell.PE
             }
         }
 
-        public void Save(Stream stream, IconFormat format)
+        public void Save(Stream stream, IconSaveFormat format)
         {
             switch (format)
             {
-                case IconFormat.Raw:
+                case IconSaveFormat.Raw:
                     SaveRaw(stream);
                     break;
-                case IconFormat.Resource:
+                case IconSaveFormat.Resource:
                     SaveResource(stream);
                     break;
-                case IconFormat.Icon:
+                case IconSaveFormat.Icon:
                     SaveIcon(stream);
                     break;
             }

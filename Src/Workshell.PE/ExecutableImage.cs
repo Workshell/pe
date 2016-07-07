@@ -56,7 +56,7 @@ namespace Workshell.PE
             _stream = sourceStream;
             _own_stream = ownStream;
             _calc = null;
-            _memory_stream_provider = new DefaultMemoryStreamProvider();
+            _memory_stream_provider = null;
 
             _dos_header = null;
             _dos_stub = null;
@@ -409,14 +409,14 @@ namespace Workshell.PE
         {
             get
             {
+                if (_memory_stream_provider == null)
+                    _memory_stream_provider = new DefaultMemoryStreamProvider();
+
                 return _memory_stream_provider;
             }
             set
             {
                 _memory_stream_provider = value;
-
-                if (_memory_stream_provider == null)
-                    _memory_stream_provider = new DefaultMemoryStreamProvider();
             }
         }
 
