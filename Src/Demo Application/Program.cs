@@ -39,13 +39,9 @@ namespace Workshell.PE.Demo
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
             Resources resources = Resources.Get(image);
-            ResourceType types = resources.First(t => t.Id == ResourceType.RT_BITMAP);
-            Resource resource = types.First(t => t.Id == 32661);
-            BitmapResource bitmap_resource = BitmapResource.Load(resource);
-
-            var x = bitmap_resource.ToBitmap();
-
-            x.Save(@"D:\test.bmp");
+            ResourceType types = resources.First(t => t.Id == ResourceType.RT_VERSION);
+            Resource resource = types.First();
+            VersionResource version = VersionResource.Load(resource);
 
             //Console.ReadKey();
         }

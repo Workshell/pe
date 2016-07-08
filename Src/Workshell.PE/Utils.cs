@@ -216,6 +216,49 @@ namespace Workshell.PE
             return builder.ToString();
         }
 
+        public static string ReadUnicodeString(Stream stream)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            while (true)
+            {
+                ushort value = Utils.ReadUInt16(stream);
+
+                if (value == 0)
+                    break;
+
+                builder.Append((char)value);
+            }
+
+            return builder.ToString();
+        }
+
+        public static string ReadUnicodeString(Stream stream, int charCount)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            for(var i = 0; i < charCount; i++)
+            {
+                ushort value = Utils.ReadUInt16(stream);
+
+                if (value == 0)
+                    break;
+
+                builder.Append((char)value);
+            }
+
+            return builder.ToString();
+        }
+
+        public static byte[] ReadBytes(Stream stream, long size)
+        {
+            byte[] buffer = new byte[size];
+
+            stream.Read(buffer, 0, buffer.Length);
+
+            return buffer;
+        }
+
         public static byte[] ReadBytes(Stream stream, long offset, long size)
         {
             byte[] buffer = new byte[size];
@@ -424,6 +467,13 @@ namespace Workshell.PE
         public static uint LoDWord(ulong value)
         {
             return Convert.ToUInt32(value & 0xFFFFFFFF);
+        }
+
+        public static ulong MakeUInt64(uint ms, uint ls)
+        {
+            ulong result = (((ulong)ms) << 32) | ls;
+
+            return result;
         }
 
         #endregion
