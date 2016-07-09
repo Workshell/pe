@@ -136,6 +136,9 @@ namespace Workshell.PE
             if (!resource.Languages.Contains(language))
                 return null;
 
+            if (resource.Type.Id != ResourceType.RT_GROUP_CURSOR)
+                return null;
+
             byte[] data = resource.GetBytes(language);
             MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
 

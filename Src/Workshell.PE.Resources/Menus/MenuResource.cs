@@ -26,6 +26,7 @@
 #endregion
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -36,48 +37,53 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Workshell.PE.Extensions;
+using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
 
-    public enum BitmapSaveFormat
+    public enum MenuSaveFormat
     {
         Raw,
-        Resource,
-        Bitmap
+        Resource
     }
 
-    public class BitmapResource
+    public sealed class MenuResource
     {
 
         private Resource resource;
         private uint language_id;
-        private byte[] dib;
 
-        internal BitmapResource(Resource sourceResource, uint languageId, byte[] dibData)
+        internal MenuResource(Resource sourceResource, uint languageId, byte[] data)
         {
             resource = sourceResource;
             language_id = languageId;
-            dib = dibData;
+
+            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
+
+            using (mem)
+            {
+
+            }
         }
 
         #region Static Methods
 
-        public static BitmapResource Load(Resource resource)
+        public static MenuResource Load(Resource resource)
         {
             return Load(resource, Resource.DEFAULT_LANGUAGE);
         }
 
-        public static BitmapResource Load(Resource resource, uint language)
+        public static MenuResource Load(Resource resource, uint language)
         {
             if (!resource.Languages.Contains(language))
                 return null;
 
-            if (resource.Type.Id != ResourceType.RT_BITMAP)
+            if (resource.Type.Id != ResourceType.RT_MENU)
                 return null;
 
             byte[] data = resource.GetBytes(language);
-            BitmapResource result = new PE.BitmapResource(resource, language, data);
+            MenuResource result = new MenuResource(resource, language, data);
 
             return result;
         }
@@ -86,48 +92,17 @@ namespace Workshell.PE
 
         #region Methods
 
-        public Bitmap ToBitmap()
-        {
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
-
-            using (mem)
-            {
-                MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
-
-                using (dib_mem)
-                {
-                    BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
-                    BITMAPFILEHEADER file_header = new BITMAPFILEHEADER();
-
-                    file_header.Tag = 19778;
-                    file_header.Size = (Utils.SizeOf<BITMAPFILEHEADER>() + dib.Length).ToUInt32();
-                    file_header.Reserved1 = 0;
-                    file_header.Reserved2 = 0;
-                    file_header.BitmapOffset = Utils.SizeOf<BITMAPFILEHEADER>().ToUInt32() + header.biSize;
-
-                    Utils.Write<BITMAPFILEHEADER>(file_header, mem);
-                    Utils.Write(dib, mem);
-                }
-
-                mem.Seek(0, SeekOrigin.Begin);
-
-                Bitmap bitmap = (Bitmap)Image.FromStream(mem);
-
-                return bitmap;
-            }
-        }
-
         public void Save(string fileName)
         {
-            Save(fileName, BitmapSaveFormat.Bitmap);
+            Save(fileName, MenuSaveFormat.Raw);
         }
 
         public void Save(Stream stream)
         {
-            Save(stream, BitmapSaveFormat.Bitmap);
+            Save(stream, MenuSaveFormat.Raw);
         }
 
-        public void Save(string fileName, BitmapSaveFormat format)
+        public void Save(string fileName, MenuSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -136,18 +111,15 @@ namespace Workshell.PE
             }
         }
 
-        public void Save(Stream stream, BitmapSaveFormat format)
+        public void Save(Stream stream, MenuSaveFormat format)
         {
             switch (format)
             {
-                case BitmapSaveFormat.Raw:
+                case MenuSaveFormat.Raw:
                     SaveRaw(stream);
                     break;
-                case BitmapSaveFormat.Resource:
+                case MenuSaveFormat.Resource:
                     SaveResource(stream);
-                    break;
-                case BitmapSaveFormat.Bitmap:
-                    SaveBitmap(stream);
                     break;
             }
         }
@@ -162,12 +134,6 @@ namespace Workshell.PE
         private void SaveResource(Stream stream)
         {
             throw new NotImplementedException();
-        }
-
-        private void SaveBitmap(Stream stream)
-        {
-            using (Bitmap bitmap = ToBitmap())
-                bitmap.Save(stream, ImageFormat.Bmp);
         }
 
         #endregion
@@ -187,14 +153,6 @@ namespace Workshell.PE
             get
             {
                 return language_id;
-            }
-        }
-
-        public byte[] DIB
-        {
-            get
-            {
-                return dib;
             }
         }
 

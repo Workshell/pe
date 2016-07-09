@@ -99,6 +99,9 @@ namespace Workshell.PE
             if (!resource.Languages.Contains(language))
                 return null;
 
+            if (resource.Type.Id != ResourceType.RT_VERSION)
+                return null;
+
             byte[] data = resource.GetBytes(language);
             VersionResource result = new VersionResource(resource, language, data);
 

@@ -183,6 +183,9 @@ namespace Workshell.PE
             if (!resource.Languages.Contains(language))
                 return null;
 
+            if (resource.Type.Id != ResourceType.RT_STRING)
+                return null;
+
             byte[] data = resource.GetBytes(language);
             StringTableResource result = new StringTableResource(resource, language, data);
 

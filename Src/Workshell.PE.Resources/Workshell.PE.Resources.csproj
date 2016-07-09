@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Menus\MenuResource.cs" />
     <Compile Include="Native\VS_FIXEDFILEINFO.cs" />
     <Compile Include="StringTableResource.cs" />
     <Compile Include="Version\VarFileInfo.cs" />
