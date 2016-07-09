@@ -49,15 +49,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Native\VS_FIXEDFILEINFO.cs" />
+    <Compile Include="StringTableResource.cs" />
     <Compile Include="Version\VarFileInfo.cs" />
     <Compile Include="Version\StringFileInfo.cs" />
-    <Compile Include="VersionResource.cs" />
-    <Compile Include="BitmapResource.cs" />
-    <Compile Include="IconResource.cs" />
-    <Compile Include="IconGroupResource.cs" />
-    <Compile Include="CursorGroupResource.cs" />
-    <Compile Include="CursorResource.cs" />
-    <Compile Include="GraphicUtils.cs" />
+    <Compile Include="Version\VersionResource.cs" />
+    <Compile Include="Graphics\BitmapResource.cs" />
+    <Compile Include="Graphics\IconResource.cs" />
+    <Compile Include="Graphics\IconGroupResource.cs" />
+    <Compile Include="Graphics\CursorGroupResource.cs" />
+    <Compile Include="Graphics\CursorResource.cs" />
+    <Compile Include="Graphics\GraphicUtils.cs" />
     <Compile Include="Native\BITMAPFILEHEADER.cs" />
     <Compile Include="Native\BITMAPINFOHEADER.cs" />
     <Compile Include="Native\CURSORDIR.cs" />
