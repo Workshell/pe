@@ -111,7 +111,7 @@ namespace Workshell.PE
         public const ushort SUBLANG_HINDI_INDIA = 0x0439;
         public const ushort SUBLANG_HUNGARIAN_HUNGARY = 0x040E;
         public const ushort SUBLANG_ICELANDIC_ICELAND = 0x040F;
-        public const ushort SUBLANG_IGBO_NIGERIA	= 0x0470
+        public const ushort SUBLANG_IGBO_NIGERIA = 0x0470;
         public const ushort SUBLANG_INDONESIAN_INDONESIA = 0x0421;
         public const ushort SUBLANG_INUKTITUT_CANADA_LATIN = 0x085D;
         public const ushort SUBLANG_INUKTITUT_CANADA = 0x045D;

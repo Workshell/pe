@@ -48,11 +48,12 @@ namespace Workshell.PE
         Resource
     }
 
-    public sealed class MenuResource
+    public sealed class MenuResource : IEnumerable<MenuItem>
     {
 
         private Resource resource;
         private uint language_id;
+        private MenuItem[] items;
 
         internal MenuResource(Resource sourceResource, uint languageId, byte[] data)
         {
@@ -63,7 +64,13 @@ namespace Workshell.PE
 
             using (mem)
             {
+                ushort version = Utils.ReadUInt16(mem);
+                ushort header_size = Utils.ReadUInt16(mem);
+                List<MenuItem> menu_items = new List<MenuItem>();
 
+                LoadMenu(mem, menu_items);
+
+                items = menu_items.ToArray();
             }
         }
 
@@ -91,6 +98,17 @@ namespace Workshell.PE
         #endregion
 
         #region Methods
+
+        public IEnumerator<MenuItem> GetEnumerator()
+        {
+            for (var i = 0; i < items.Length; i++)
+                yield return items[i];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public void Save(string fileName)
         {
@@ -136,6 +154,60 @@ namespace Workshell.PE
             throw new NotImplementedException();
         }
 
+        private void LoadMenu(Stream stream, List<MenuItem> items)
+        {
+            while (true)
+            {
+                ushort flags = Utils.ReadUInt16(stream);
+                MenuItemFlags menu_item_flags = (MenuItemFlags)flags;
+
+                if ((menu_item_flags & MenuItemFlags.Popup) == MenuItemFlags.Popup)
+                {
+                    StringBuilder builder = new StringBuilder();
+
+                    while (true)
+                    {
+                        ushort value = Utils.ReadUInt16(stream);
+
+                        if (value == 0)
+                            break;
+
+                        builder.Append((char)value);
+                    }
+
+                    List<MenuItem> sub_menu_items = new List<MenuItem>();
+
+                    LoadMenu(stream, sub_menu_items);
+
+                    PopupMenuItem popup_menu_item = new PopupMenuItem(0, builder.ToString(), flags, sub_menu_items.ToArray());
+
+                    items.Add(popup_menu_item);
+                }
+                else
+                {
+                    ushort id = Utils.ReadUInt16(stream);
+                    StringBuilder builder = new StringBuilder();
+
+                    while (true)
+                    {
+                        ushort value = Utils.ReadUInt16(stream);
+
+                        if (value == 0)
+                            break;
+
+                        builder.Append((char)value);
+                    }
+
+                    MenuItem menu_item = new MenuItem(id, builder.ToString(), flags);
+
+                    items.Add(menu_item);
+                }
+
+                if ((menu_item_flags & MenuItemFlags.EndMenu) == MenuItemFlags.EndMenu)
+                    break;
+            }
+        }
+
         #endregion
 
         #region Properties
@@ -153,6 +225,22 @@ namespace Workshell.PE
             get
             {
                 return language_id;
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                return items.Length;
+            }
+        }
+
+        public MenuItem this[int index]
+        {
+            get
+            {
+                return items[index];
             }
         }
 
