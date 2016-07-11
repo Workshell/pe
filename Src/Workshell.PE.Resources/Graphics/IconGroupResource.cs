@@ -34,9 +34,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Extensions;
-using Workshell.PE.Native;
+using Workshell.PE.Resources.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Resources
 {
 
     public enum IconGroupSaveFormat

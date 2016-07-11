@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Workshell.PE;
+using Workshell.PE.Resources;
 
 namespace Workshell.PE.Demo
 {
@@ -39,10 +40,10 @@ namespace Workshell.PE.Demo
             }
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-            Resources resources = Resources.Get(image);
-            ResourceType types = resources.First(t => t.Id == ResourceType.RT_MENU);
-            Resource resource = types.First(r => r.Id == 1500);
-            MenuResource menus = MenuResource.Load(resource);
+            ResourceCollection resources = ResourceCollection.Get(image);
+            ResourceType types = resources.First(t => t.Id == ResourceType.RT_DIALOG);
+            Resource resource = types.First(r => r.Id == 1900);
+            DialogResource dialog = DialogResource.Load(resource);
 
             //Console.ReadKey();
         }

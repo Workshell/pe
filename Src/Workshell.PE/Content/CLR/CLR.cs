@@ -34,22 +34,22 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
-    public sealed class CLR : ExecutableImageContent
+    public sealed class CLRContent : ExecutableImageContent
     {
 
         private CLRHeader header;
         private CLRMetaData meta_data;
 
-        internal CLR(DataDirectory dataDirectory, Location dataLocation) : base(dataDirectory,dataLocation)
+        internal CLRContent(DataDirectory dataDirectory, Location dataLocation) : base(dataDirectory,dataLocation)
         {
         }
 
         #region Static Methods
 
-        public static CLR Get(ExecutableImage image)
+        public static CLRContent Get(ExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.CLRRuntimeHeader))
                 return null;
@@ -64,7 +64,7 @@ namespace Workshell.PE
             ulong file_offset = calc.RVAToOffset(section, directory.VirtualAddress);
             ulong image_base = directory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;         
             Location location = new Location(file_offset, directory.VirtualAddress, image_base + directory.VirtualAddress, directory.Size, directory.Size, section);
-            CLR result = new CLR(directory, location);
+            CLRContent result = new CLRContent(directory, location);
 
             return result;
         }

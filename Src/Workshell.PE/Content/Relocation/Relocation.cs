@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 using Workshell.PE.Annotations;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Relocations
 {
 
     public enum RelocationType : byte

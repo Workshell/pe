@@ -96,6 +96,20 @@ namespace Workshell.PE
             return Read<T>(buffer);
         }
 
+        public static byte ReadByte(byte[] bytes, int index)
+        {
+            return bytes[index];
+        }
+
+        public static byte ReadByte(Stream stream)
+        {
+            byte[] buffer = new byte[1];
+
+            stream.Read(buffer, 0, buffer.Length);
+
+            return ReadByte(buffer, 0);
+        }
+
         public static short ReadInt16(byte[] bytes)
         {
             return BitConverter.ToInt16(bytes,0);

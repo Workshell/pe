@@ -36,7 +36,7 @@ using Workshell.MoreLinq;
 
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE
+namespace Workshell.PE.Imports
 {
 
     public sealed class ImportHintNameEntry : ISupportsLocation, ISupportsBytes

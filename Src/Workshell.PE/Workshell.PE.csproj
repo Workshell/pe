@@ -84,6 +84,7 @@
     <Compile Include="Content\Resources\ResourceDataEntry.cs" />
     <Compile Include="Content\Resources\ResourceDirectory.cs" />
     <Compile Include="Content\Resources\ResourceDirectoryEntry.cs" />
+    <Compile Include="Content\Resources\ResourceId.cs" />
     <Compile Include="Content\Resources\Resources.cs" />
     <Compile Include="Content\TLS\TLSDirectory.cs" />
     <Compile Include="DataDirectory.cs" />

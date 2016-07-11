@@ -39,7 +39,7 @@ using System.Windows.Forms;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Resources
 {
 
     public enum StringTableSaveFormat

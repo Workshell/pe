@@ -37,7 +37,7 @@ using Workshell.PE.Annotations;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Exports
 {
 
     public class ExportDirectory : ExecutableImageContent, ISupportsBytes

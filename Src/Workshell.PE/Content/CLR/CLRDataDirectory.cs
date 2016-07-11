@@ -33,7 +33,7 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
     public sealed class CLRDataDirectory

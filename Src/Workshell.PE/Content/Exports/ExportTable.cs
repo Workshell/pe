@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE
+namespace Workshell.PE.Exports
 {
 
     public sealed class ExportTable<T> : ExecutableImageContent, IEnumerable<T>, ISupportsBytes

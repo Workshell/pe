@@ -32,19 +32,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE
+namespace Workshell.PE.Imports
 {
 
     public sealed class DelayImportLibrary : IEnumerable<DelayImportLibraryFunction>
     {
 
-        private DelayImports imports;
+        private DelayImportCollection imports;
         private DelayImportAddressTable address_table;
         private DelayImportHintNameTable name_table;
         private string name;
         private DelayImportLibraryFunction[] functions;
 
-        internal DelayImportLibrary(DelayImports owningImports, DelayImportAddressTable addressTable, DelayImportHintNameTable nameTable, string libraryName)
+        internal DelayImportLibrary(DelayImportCollection owningImports, DelayImportAddressTable addressTable, DelayImportHintNameTable nameTable, string libraryName)
         {
             imports = owningImports;
             address_table = addressTable;
@@ -124,7 +124,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public DelayImports Imports
+        public DelayImportCollection Imports
         {
             get
             {

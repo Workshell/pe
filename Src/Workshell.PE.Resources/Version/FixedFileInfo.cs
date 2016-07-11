@@ -34,8 +34,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Resources.Native;
 
-namespace Workshell.PE.Native
+namespace Workshell.PE.Resources
 {
 
     [Flags]

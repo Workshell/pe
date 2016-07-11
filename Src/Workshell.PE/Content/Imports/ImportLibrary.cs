@@ -32,19 +32,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE
+namespace Workshell.PE.Imports
 {
 
     public sealed class ImportLibrary : IEnumerable<ImportLibraryFunction>
     {
 
-        private Imports imports;
+        private ImportCollection imports;
         private ImportAddressTable address_table;
         private ImportHintNameTable name_table;
         private string name;
         private ImportLibraryFunction[] functions;
 
-        internal ImportLibrary(Imports owningImports, ImportAddressTable addressTable, ImportHintNameTable nameTable, string libraryName)
+        internal ImportLibrary(ImportCollection owningImports, ImportAddressTable addressTable, ImportHintNameTable nameTable, string libraryName)
         {
             imports = owningImports;
             address_table = addressTable;
@@ -124,7 +124,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public Imports Imports
+        public ImportCollection Imports
         {
             get
             {

@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 
 using Workshell.MoreLinq;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
     public sealed class CLRMetaDataStream : ISupportsLocation, ISupportsBytes

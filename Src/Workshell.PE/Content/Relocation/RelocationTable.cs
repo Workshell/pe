@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Relocations
 {
 
     public sealed class RelocationTable : ExecutableImageContent, IEnumerable<RelocationBlock>, ISupportsBytes

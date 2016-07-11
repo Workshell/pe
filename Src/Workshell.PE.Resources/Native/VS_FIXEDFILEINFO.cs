@@ -32,7 +32,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE.Native
+namespace Workshell.PE.Resources.Native
 {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

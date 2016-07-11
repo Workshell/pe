@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
     public sealed class CLRMetaDataStreamTableEntry : ISupportsLocation, ISupportsBytes

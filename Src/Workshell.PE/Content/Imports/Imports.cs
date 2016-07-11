@@ -34,22 +34,22 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Imports
 {
 
-    public sealed class Imports : IEnumerable<ImportLibrary>
+    public sealed class ImportCollection : IEnumerable<ImportLibrary>
     {
 
         private ImportLibrary[] libraries;
 
-        internal Imports(Tuple<string,ImportAddressTable,ImportHintNameTable>[] importLibraries)
+        internal ImportCollection(Tuple<string,ImportAddressTable,ImportHintNameTable>[] importLibraries)
         {
             libraries = LoadLibraries(importLibraries);
         }
 
         #region Static Methods
 
-        public static Imports Get(ExecutableImage image)
+        public static ImportCollection Get(ExecutableImage image)
         {
             ImportDirectory directory = ImportDirectory.Get(image);
 
@@ -69,7 +69,7 @@ namespace Workshell.PE
             return Get(ilt, hnt);
         }
 
-        public static Imports Get(ImportAddressTables ilt, ImportHintNameTable hnTable)
+        public static ImportCollection Get(ImportAddressTables ilt, ImportHintNameTable hnTable)
         {
             List<Tuple<string, ImportAddressTable, ImportHintNameTable>> libraries = new List<Tuple<string, ImportAddressTable, ImportHintNameTable>>();
             LocationCalculator calc = ilt.DataDirectory.Directories.Image.GetCalculator();
@@ -97,7 +97,7 @@ namespace Workshell.PE
                 libraries.Add(tuple);
             }
 
-            Imports imports = new Imports(libraries.ToArray());
+            ImportCollection imports = new ImportCollection(libraries.ToArray());
 
             return imports;
         }

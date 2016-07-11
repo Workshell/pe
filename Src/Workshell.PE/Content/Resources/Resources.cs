@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Resources
 {
 
     public sealed class Resource : ISupportsBytes
@@ -45,8 +45,7 @@ namespace Workshell.PE
 
         private ResourceType type;
         private ResourceDirectoryEntry directory_entry;
-        private uint id;
-        private string name;
+        private ResourceId id;
         private Dictionary<uint, ResourceDirectoryEntry> languages;
 
         internal Resource(ResourceType owningType, ResourceDirectoryEntry directoryEntry)
@@ -57,12 +56,10 @@ namespace Workshell.PE
             if (directory_entry.NameType == NameType.ID)
             {
                 id = directory_entry.GetId();
-                name = null;
             }
             else
             {
-                id = 0;
-                name = directory_entry.GetName();
+                id = directory_entry.GetName();
             }
 
             languages = LoadLanguages();
@@ -140,14 +137,7 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            if (id != 0)
-            {
-                return id.ToString();
-            }
-            else
-            {
-                return name;
-            }
+            return id.ToString();
         }
 
         private Dictionary<uint, ResourceDirectoryEntry> LoadLanguages()
@@ -175,19 +165,11 @@ namespace Workshell.PE
             }
         }
 
-        public uint Id
+        public ResourceId Id
         {
             get
             {
                 return id;
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                return name;
             }
         }
 
@@ -228,13 +210,12 @@ namespace Workshell.PE
         public const ushort RT_HTML = 23;
         public const ushort RT_MANIFEST = 24;
 
-        private Resources resources;
+        private ResourceCollection resources;
         private ResourceDirectoryEntry directory_entry;
-        private uint id;
-        private string name;
+        private ResourceId id;
         private Resource[] resource_items;
 
-        internal ResourceType(Resources owningResources, ResourceDirectoryEntry directoryEntry)
+        internal ResourceType(ResourceCollection owningResources, ResourceDirectoryEntry directoryEntry)
         {
             resources = owningResources;
             directory_entry = directoryEntry;
@@ -242,12 +223,10 @@ namespace Workshell.PE
             if (directory_entry.NameType == NameType.ID)
             {
                 id = directory_entry.GetId();
-                name = null;
             }
             else
             {
-                id = 0;
-                name = directory_entry.GetName();
+                id = directory_entry.GetName();
             }
 
             resource_items = LoadResources();
@@ -274,13 +253,13 @@ namespace Workshell.PE
         {
             string result;
 
-            if (id == 0)
+            if (!id.IsNumeric)
             {
-                result = name;
+                result = id.ToString();
             }
             else
             {
-                string constant = PE.Resources.GetTypeConstant(id);
+                string constant = ResourceCollection.GetTypeConstant(id);
 
                 result = String.Format("{0} ({1})", id, constant);
             }
@@ -307,7 +286,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public Resources Resources
+        public ResourceCollection Resources
         {
             get
             {
@@ -315,19 +294,11 @@ namespace Workshell.PE
             }
         }
 
-        public uint Id
+        public ResourceId Id
         {
             get
             {
                 return id;
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                return name;
             }
         }
 
@@ -351,7 +322,7 @@ namespace Workshell.PE
 
     }
 
-    public sealed class Resources : IEnumerable<ResourceType>
+    public sealed class ResourceCollection : IEnumerable<ResourceType>
     {
 
         private static Dictionary<uint, Tuple<string, string>> type_info;
@@ -359,14 +330,14 @@ namespace Workshell.PE
         private ExecutableImage image;
         private ResourceType[] types;
 
-        static Resources()
+        static ResourceCollection()
         {
             type_info = new Dictionary<uint, Tuple<string, string>>();
 
             PopulateTypeInfo();
         }
 
-        internal Resources(ExecutableImage exeImage, ResourceDirectory rootDirectory)
+        internal ResourceCollection(ExecutableImage exeImage, ResourceDirectory rootDirectory)
         {
             image = exeImage;
             types = LoadTypes(rootDirectory);
@@ -374,14 +345,14 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static Resources Get(ExecutableImage image)
+        public static ResourceCollection Get(ExecutableImage image)
         {
             ResourceDirectory root_directory = ResourceDirectory.GetRootDirectory(image);
 
             if (root_directory == null)
                 return null;
 
-            Resources result = new Resources(image, root_directory);
+            ResourceCollection result = new ResourceCollection(image, root_directory);
 
             return result;
         }

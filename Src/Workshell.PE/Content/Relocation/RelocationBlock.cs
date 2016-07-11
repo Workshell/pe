@@ -32,7 +32,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE
+namespace Workshell.PE.Relocations
 {
 
     public sealed class RelocationBlock : IEnumerable<Relocation>, ISupportsLocation, ISupportsBytes

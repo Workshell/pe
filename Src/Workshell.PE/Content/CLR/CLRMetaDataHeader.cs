@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 using Workshell.PE.Annotations;
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
     public sealed class CLRMetaDataHeader : ISupportsLocation, ISupportsBytes

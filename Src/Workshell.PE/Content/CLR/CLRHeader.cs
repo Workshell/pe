@@ -36,7 +36,7 @@ using Workshell.PE.Annotations;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
     [Flags]
@@ -61,7 +61,7 @@ namespace Workshell.PE
     public sealed class CLRHeader : ISupportsLocation, ISupportsBytes
     {
 
-        private CLR clr;
+        private CLRContent clr;
         private Location location;
         private IMAGE_COR20_HEADER header;
         private Version runtime_version;
@@ -73,7 +73,7 @@ namespace Workshell.PE
         private CLRDataDirectory export_address_table;
         private CLRDataDirectory native_header;
 
-        internal CLRHeader(CLR clrContent, Location clrLocation, IMAGE_COR20_HEADER clrHeader)
+        internal CLRHeader(CLRContent clrContent, Location clrLocation, IMAGE_COR20_HEADER clrHeader)
         {
             clr = clrContent;           
             location = clrLocation;
@@ -90,7 +90,7 @@ namespace Workshell.PE
 
         #region Static Methods
 
-        public static CLRHeader Get(CLR clr)
+        public static CLRHeader Get(CLRContent clr)
         {
             LocationCalculator calc = clr.DataDirectory.Directories.Image.GetCalculator();
             ulong offset = calc.RVAToOffset(clr.DataDirectory.VirtualAddress);
@@ -193,7 +193,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public CLR CLR
+        public CLRContent CLR
         {
             get
             {

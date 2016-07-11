@@ -31,7 +31,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE
+namespace Workshell.PE.Imports
 {
 
     public enum DelayImportLibraryBindingType

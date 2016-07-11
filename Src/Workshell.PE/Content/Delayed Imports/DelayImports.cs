@@ -34,22 +34,22 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Imports
 {
 
-    public sealed class DelayImports : IEnumerable<DelayImportLibrary>
+    public sealed class DelayImportCollection : IEnumerable<DelayImportLibrary>
     {
 
         private DelayImportLibrary[] libraries;
 
-        internal DelayImports(Tuple<string,DelayImportAddressTable,DelayImportHintNameTable>[] importLibraries)
+        internal DelayImportCollection(Tuple<string,DelayImportAddressTable,DelayImportHintNameTable>[] importLibraries)
         {
             libraries = LoadLibraries(importLibraries);
         }
 
         #region Static Methods
 
-        public static DelayImports Get(ExecutableImage image)
+        public static DelayImportCollection Get(ExecutableImage image)
         {
             DelayImportDirectory directory = DelayImportDirectory.Get(image);
 
@@ -70,7 +70,7 @@ namespace Workshell.PE
         }
 
 
-        public static DelayImports Get(DelayImportAddressTables ilt, DelayImportHintNameTable hnTable)
+        public static DelayImportCollection Get(DelayImportAddressTables ilt, DelayImportHintNameTable hnTable)
         {
             List<Tuple<string, DelayImportAddressTable, DelayImportHintNameTable>> libraries = new List<Tuple<string, DelayImportAddressTable, DelayImportHintNameTable>>();
             LocationCalculator calc = ilt.DataDirectory.Directories.Image.GetCalculator();
@@ -98,7 +98,7 @@ namespace Workshell.PE
                 libraries.Add(tuple);
             }
 
-            DelayImports imports = new DelayImports(libraries.ToArray());
+            DelayImportCollection imports = new DelayImportCollection(libraries.ToArray());
 
             return imports;
         }

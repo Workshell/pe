@@ -36,7 +36,7 @@ using System.Threading.Tasks;
 using Workshell.PE.Annotations;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Debug
 {
 
     public sealed class DebugData : ISupportsLocation, ISupportsBytes

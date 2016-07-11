@@ -48,6 +48,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dialogs\DialogEx.cs" />
+    <Compile Include="Dialogs\DialogResource.cs" />
+    <Compile Include="Styles.cs" />
     <Compile Include="LanguageIdentifiers.cs" />
     <Compile Include="LocaleIdentifiers.cs" />
     <Compile Include="Menus\MenuItem.cs" />
@@ -84,6 +87,7 @@
   <ItemGroup>
     <None Include="Workshell.PE.snk" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

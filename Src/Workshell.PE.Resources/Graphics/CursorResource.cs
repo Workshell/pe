@@ -35,7 +35,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Workshell.PE
+using Workshell.PE.Resources.Native;
+
+namespace Workshell.PE.Resources
 {
 
     public enum CursorSaveFormat

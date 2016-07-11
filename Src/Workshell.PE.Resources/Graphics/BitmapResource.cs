@@ -36,8 +36,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Workshell.PE.Extensions;
+using Workshell.PE.Resources.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Resources
 {
 
     public enum BitmapSaveFormat
@@ -77,7 +78,7 @@ namespace Workshell.PE
                 return null;
 
             byte[] data = resource.GetBytes(language);
-            BitmapResource result = new PE.BitmapResource(resource, language, data);
+            BitmapResource result = new BitmapResource(resource, language, data);
 
             return result;
         }

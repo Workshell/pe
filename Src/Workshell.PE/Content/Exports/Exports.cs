@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
-namespace Workshell.PE
+namespace Workshell.PE.Exports
 {
 
     public sealed class Export
@@ -95,19 +95,19 @@ namespace Workshell.PE
 
     }
 
-    public sealed class Exports : IEnumerable<Export>
+    public sealed class ExportCollection : IEnumerable<Export>
     {
 
         private Export[] _exports;
 
-        internal Exports(Export[] exports)
+        internal ExportCollection(Export[] exports)
         {
             _exports = exports;
         }
 
         #region Static Methods
 
-        public static Exports Get(ExecutableImage image)
+        public static ExportCollection Get(ExecutableImage image)
         {
             ExportDirectory directory = ExportDirectory.Get(image);
 
@@ -132,7 +132,7 @@ namespace Workshell.PE
             return Get(directory, function_addresses, name_addresses, ordinals);
         }
 
-        public static Exports Get(ExportDirectory directory, ExportTable<uint> functionAddresses, ExportTable<uint> nameAddresses, ExportTable<ushort> ordinals)
+        public static ExportCollection Get(ExportDirectory directory, ExportTable<uint> functionAddresses, ExportTable<uint> nameAddresses, ExportTable<ushort> ordinals)
         {
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();
@@ -181,7 +181,7 @@ namespace Workshell.PE
                 }
             }
 
-            Exports result = new Exports(exports.OrderBy(e => e.Ordinal).ToArray());
+            ExportCollection result = new ExportCollection(exports.OrderBy(e => e.Ordinal).ToArray());
 
             return result;
         }

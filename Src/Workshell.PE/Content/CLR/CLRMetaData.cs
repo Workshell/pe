@@ -32,13 +32,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE
+namespace Workshell.PE.CLR
 {
 
     public sealed class CLRMetaData : ISupportsLocation, ISupportsBytes
     {
 
-        internal CLRMetaData(CLR clr, Location location, CLRHeader header)
+        internal CLRMetaData(CLRContent clr, Location location, CLRHeader header)
         {
             CLR = clr;
             Location = location;
@@ -80,7 +80,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public CLR CLR
+        public CLRContent CLR
         {
             get;
             private set;

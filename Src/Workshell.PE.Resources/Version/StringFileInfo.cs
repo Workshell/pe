@@ -35,7 +35,7 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE
+namespace Workshell.PE.Resources
 {
 
     public sealed class StringFileInfo : IEnumerable<VerStringTable>

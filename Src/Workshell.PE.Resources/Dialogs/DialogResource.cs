@@ -42,20 +42,21 @@ using Workshell.PE.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum MenuSaveFormat
+    public enum DialogSaveFormat
     {
         Raw,
         Resource
     }
 
-    public sealed class MenuResource : IEnumerable<MenuItem>
+    public sealed class DialogResource
     {
 
         private Resource resource;
         private uint language_id;
-        private MenuItem[] items;
+        private bool is_extended;
+        private DialogEx dialog_ex;
 
-        internal MenuResource(Resource sourceResource, uint languageId, byte[] data)
+        internal DialogResource(Resource sourceResource, uint languageId, byte[] data)
         {
             resource = sourceResource;
             language_id = languageId;
@@ -64,33 +65,41 @@ namespace Workshell.PE.Resources
 
             using (mem)
             {
-                ushort version = Utils.ReadUInt16(mem);
-                ushort header_size = Utils.ReadUInt16(mem);
-                List<MenuItem> menu_items = new List<MenuItem>();
+                ushort ver = Utils.ReadUInt16(mem);
+                ushort sig = Utils.ReadUInt16(mem);
 
-                LoadMenu(mem, menu_items);
+                is_extended = (ver == 1 && sig == 0xFFFF);
 
-                items = menu_items.ToArray();
+                mem.Seek(0, SeekOrigin.Begin);
+
+                if (!is_extended)
+                {
+                    //dialog = null;
+                }
+                else
+                {
+                    dialog_ex = new DialogEx(mem);
+                }
             }
         }
 
         #region Static Methods
 
-        public static MenuResource Load(Resource resource)
+        public static DialogResource Load(Resource resource)
         {
             return Load(resource, Resource.DEFAULT_LANGUAGE);
         }
 
-        public static MenuResource Load(Resource resource, uint language)
+        public static DialogResource Load(Resource resource, uint language)
         {
             if (!resource.Languages.Contains(language))
                 return null;
 
-            if (resource.Type.Id != ResourceType.RT_MENU)
+            if (resource.Type.Id != ResourceType.RT_DIALOG)
                 return null;
 
             byte[] data = resource.GetBytes(language);
-            MenuResource result = new MenuResource(resource, language, data);
+            DialogResource result = new DialogResource(resource, language, data);
 
             return result;
         }
@@ -99,28 +108,17 @@ namespace Workshell.PE.Resources
 
         #region Methods
 
-        public IEnumerator<MenuItem> GetEnumerator()
-        {
-            for (var i = 0; i < items.Length; i++)
-                yield return items[i];
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
         public void Save(string fileName)
         {
-            Save(fileName, MenuSaveFormat.Raw);
+            Save(fileName, DialogSaveFormat.Raw);
         }
 
         public void Save(Stream stream)
         {
-            Save(stream, MenuSaveFormat.Raw);
+            Save(stream, DialogSaveFormat.Raw);
         }
 
-        public void Save(string fileName, MenuSaveFormat format)
+        public void Save(string fileName, DialogSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -129,14 +127,14 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public void Save(Stream stream, MenuSaveFormat format)
+        public void Save(Stream stream, DialogSaveFormat format)
         {
             switch (format)
             {
-                case MenuSaveFormat.Raw:
+                case DialogSaveFormat.Raw:
                     SaveRaw(stream);
                     break;
-                case MenuSaveFormat.Resource:
+                case DialogSaveFormat.Resource:
                     SaveResource(stream);
                     break;
             }
@@ -152,60 +150,6 @@ namespace Workshell.PE.Resources
         private void SaveResource(Stream stream)
         {
             throw new NotImplementedException();
-        }
-
-        private void LoadMenu(Stream stream, List<MenuItem> items)
-        {
-            while (true)
-            {
-                ushort flags = Utils.ReadUInt16(stream);
-                MenuItemFlags menu_item_flags = (MenuItemFlags)flags;
-
-                if ((menu_item_flags & MenuItemFlags.Popup) == MenuItemFlags.Popup)
-                {
-                    StringBuilder builder = new StringBuilder();
-
-                    while (true)
-                    {
-                        ushort value = Utils.ReadUInt16(stream);
-
-                        if (value == 0)
-                            break;
-
-                        builder.Append((char)value);
-                    }
-
-                    List<MenuItem> sub_menu_items = new List<MenuItem>();
-
-                    LoadMenu(stream, sub_menu_items);
-
-                    PopupMenuItem popup_menu_item = new PopupMenuItem(0, builder.ToString(), flags, sub_menu_items.ToArray());
-
-                    items.Add(popup_menu_item);
-                }
-                else
-                {
-                    ushort id = Utils.ReadUInt16(stream);
-                    StringBuilder builder = new StringBuilder();
-
-                    while (true)
-                    {
-                        ushort value = Utils.ReadUInt16(stream);
-
-                        if (value == 0)
-                            break;
-
-                        builder.Append((char)value);
-                    }
-
-                    MenuItem menu_item = new MenuItem(id, builder.ToString(), flags);
-
-                    items.Add(menu_item);
-                }
-
-                if ((menu_item_flags & MenuItemFlags.EndMenu) == MenuItemFlags.EndMenu)
-                    break;
-            }
         }
 
         #endregion
@@ -228,19 +172,11 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public int Count
+        public bool IsExtended
         {
             get
             {
-                return items.Length;
-            }
-        }
-
-        public MenuItem this[int index]
-        {
-            get
-            {
-                return items[index];
+                return is_extended;
             }
         }
 

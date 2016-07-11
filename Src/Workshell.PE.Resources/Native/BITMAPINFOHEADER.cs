@@ -32,7 +32,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE
+namespace Workshell.PE.Resources.Native
 {
 
     public enum BitmapCompressionMode : uint
