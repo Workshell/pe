@@ -42,7 +42,7 @@ namespace Workshell.PE.Demo
             ExecutableImage image = ExecutableImage.FromFile(file_name);
             ResourceCollection resources = ResourceCollection.Get(image);
             ResourceType types = resources.First(t => t.Id == ResourceType.RT_DIALOG);
-            Resource resource = types.First(r => r.Id == 1900);
+            Resource resource = types.First(r => r.Id == 2200);
             DialogResource dialog = DialogResource.Load(resource);
 
             //Console.ReadKey();

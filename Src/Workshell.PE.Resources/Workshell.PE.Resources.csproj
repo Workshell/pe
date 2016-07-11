@@ -48,8 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dialogs\Dialog.cs" />
     <Compile Include="Dialogs\DialogEx.cs" />
     <Compile Include="Dialogs\DialogResource.cs" />
+    <Compile Include="ResourceUtils.cs" />
     <Compile Include="Styles.cs" />
     <Compile Include="LanguageIdentifiers.cs" />
     <Compile Include="LocaleIdentifiers.cs" />

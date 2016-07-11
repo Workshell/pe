@@ -1,4 +1,31 @@
-﻿using System;
+﻿#region License
+//  Copyright(c) 2016, Workshell Ltd
+//  All rights reserved.
+//  
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are met:
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of Workshell Ltd nor the names of its contributors
+//  may be used to endorse or promote products
+//  derived from this software without specific prior written permission.
+//  
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
+//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -195,34 +222,49 @@ namespace Workshell.PE.Resources
     }
 
     [Flags]
+    public enum ScrollBarStyle : uint
+    {
+        SBS_HORZ                    = 0x0000,
+        SBS_VERT                    = 0x0001,
+        SBS_TOPALIGN                = 0x0002,
+        SBS_LEFTALIGN               = 0x0002,
+        SBS_BOTTOMALIGN             = 0x0004,
+        SBS_RIGHTALIGN              = 0x0004,
+        SBS_SIZEBOXTOPLEFTALIGN     = 0x0002,
+        SBS_SIZEBOXBOTTOMRIGHTALIGN = 0x0004,
+        SBS_SIZEBOX                 = 0x0008,
+        SBS_SIZEGRIP                = 0x0010
+    }
+
+    [Flags]
     public enum WindowStyleEx : uint
     {
-        WS_EX_DLGMODALFRAME = 0x00000001,
-        WS_EX_NOPARENTNOTIFY = 0x00000004,
-        WS_EX_TOPMOST = 0x00000008,
-        WS_EX_ACCEPTFILES = 0x00000010,
-        WS_EX_TRANSPARENT = 0x00000020,
-        WS_EX_MDICHILD = 0x00000040,
-        WS_EX_TOOLWINDOW = 0x00000080,
-        WS_EX_WINDOWEDGE = 0x00000100,
-        WS_EX_CLIENTEDGE = 0x00000200,
-        WS_EX_CONTEXTHELP = 0x00000400,
-        WS_EX_RIGHT = 0x00001000,
-        WS_EX_LEFT = 0x00000000,
-        WS_EX_RTLREADING = 0x00002000,
-        WS_EX_LTRREADING = 0x00000000,
-        WS_EX_LEFTSCROLLBAR = 0x00004000,
-        WS_EX_RIGHTSCROLLBAR = 0x00000000,
-        WS_EX_CONTROLPARENT = 0x00010000,
-        WS_EX_STATICEDGE = 0x00020000,
-        WS_EX_APPWINDOW = 0x00040000,
-        WS_EX_OVERLAPPEDWINDOW = (WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE),
-        WS_EX_PALETTEWINDOW = (WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST),
-        WS_EX_LAYERED = 0x00080000,
-        WS_EX_NOINHERITLAYOUT = 0x00100000, // Disable inheritence of mirroring by children
-        WS_EX_LAYOUTRTL = 0x00400000, // Right to left mirroring
-        WS_EX_COMPOSITED = 0x02000000,
-        WS_EX_NOACTIVATE = 0x08000000
+        WS_EX_DLGMODALFRAME     = 0x00000001,
+        WS_EX_NOPARENTNOTIFY    = 0x00000004,
+        WS_EX_TOPMOST           = 0x00000008,
+        WS_EX_ACCEPTFILES       = 0x00000010,
+        WS_EX_TRANSPARENT       = 0x00000020,
+        WS_EX_MDICHILD          = 0x00000040,
+        WS_EX_TOOLWINDOW        = 0x00000080,
+        WS_EX_WINDOWEDGE        = 0x00000100,
+        WS_EX_CLIENTEDGE        = 0x00000200,
+        WS_EX_CONTEXTHELP       = 0x00000400,
+        WS_EX_RIGHT             = 0x00001000,
+        WS_EX_LEFT              = 0x00000000,
+        WS_EX_RTLREADING        = 0x00002000,
+        WS_EX_LTRREADING        = 0x00000000,
+        WS_EX_LEFTSCROLLBAR     = 0x00004000,
+        WS_EX_RIGHTSCROLLBAR    = 0x00000000,
+        WS_EX_CONTROLPARENT     = 0x00010000,
+        WS_EX_STATICEDGE        = 0x00020000,
+        WS_EX_APPWINDOW         = 0x00040000,
+        WS_EX_OVERLAPPEDWINDOW  = (WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE),
+        WS_EX_PALETTEWINDOW     = (WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST),
+        WS_EX_LAYERED           = 0x00080000,
+        WS_EX_NOINHERITLAYOUT   = 0x00100000, // Disable inheritence of mirroring by children
+        WS_EX_LAYOUTRTL         = 0x00400000, // Right to left mirroring
+        WS_EX_COMPOSITED        = 0x02000000,
+        WS_EX_NOACTIVATE        = 0x08000000
     }
 
 }

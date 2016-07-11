@@ -54,6 +54,7 @@ namespace Workshell.PE.Resources
         private Resource resource;
         private uint language_id;
         private bool is_extended;
+        private Dialog dialog;
         private DialogEx dialog_ex;
 
         internal DialogResource(Resource sourceResource, uint languageId, byte[] data)
@@ -74,7 +75,7 @@ namespace Workshell.PE.Resources
 
                 if (!is_extended)
                 {
-                    //dialog = null;
+                    dialog = null;
                 }
                 else
                 {
@@ -107,6 +108,16 @@ namespace Workshell.PE.Resources
         #endregion
 
         #region Methods
+
+        public Dialog GetDialog()
+        {
+            return dialog;
+        }
+
+        public DialogEx GetDialogEx()
+        {
+            return dialog_ex;
+        }
 
         public void Save(string fileName)
         {
