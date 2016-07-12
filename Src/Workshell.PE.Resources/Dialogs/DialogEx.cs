@@ -240,6 +240,7 @@ namespace Workshell.PE.Resources
         private ResourceId cls;
         private string title;
         private Font font;
+        private CharacterSet char_set;
         private DialogItemEx[] items;
 
         internal DialogEx(Stream stream)
@@ -296,7 +297,9 @@ namespace Workshell.PE.Resources
                 ushort point_size = Utils.ReadUInt16(stream);
                 ushort weight = Utils.ReadUInt16(stream);
                 byte italic = Utils.ReadByte(stream);
-                byte charset = Utils.ReadByte(stream);
+
+                char_set = (CharacterSet)Utils.ReadByte(stream);
+
                 string type_face = Utils.ReadUnicodeString(stream);
 
                 font = new Font(type_face, point_size);
@@ -425,6 +428,14 @@ namespace Workshell.PE.Resources
             get
             {
                 return font;
+            }
+        }
+
+        public CharacterSet CharSet
+        {
+            get
+            {
+                return char_set;
             }
         }
 
