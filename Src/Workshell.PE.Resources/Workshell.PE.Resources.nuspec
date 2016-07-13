@@ -3,9 +3,9 @@
     <metadata>
         <id>Workshell.PE.Resources</id>
         <version>$version$</version>
-        <title>Workshell PE Resource Extensions</title>
-		<summary>A set of classes for Workshell PE to help deal with resources.</summary>
-        <description>A set of classes that extends Workshell PE to help deal with the standard resource types within an executable such as bitmaps, icons, cursors etc.</description>
+        <title>Workshell.PE.Resources</title>
+		<summary>A set of classes for Workshell.PE to help deal with resources.</summary>
+        <description>A set of classes that extends the Workshell.PE class library to help deal with the standard resource types within an executable such as bitmaps, icons, cursors etc.</description>
         <authors>Workshell Ltd</authors>
 		<copyright>Workshell Ltd</copyright>
         <language>en-US</language>

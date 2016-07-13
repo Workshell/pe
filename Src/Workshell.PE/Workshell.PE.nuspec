@@ -3,7 +3,7 @@
     <metadata>
         <id>Workshell.PE</id>
         <version>$version$</version>
-        <title>Workshell PE</title>
+        <title>Workshell.PE</title>
 		<summary>A class library for reading the Portable Executable file format.</summary>
         <description>A full featured class library for reading the Portable Executable file format covering all major sections.</description>
         <authors>Workshell Ltd</authors>
