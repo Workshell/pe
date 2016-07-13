@@ -33,7 +33,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 using Workshell.PE.Resources.Native;
 
@@ -106,21 +105,6 @@ namespace Workshell.PE.Resources
 
         #region Methods
 
-        public Cursor ToCursor()
-        {
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
-
-            using (mem)
-            {
-                Save(mem);
-                mem.Seek(0, SeekOrigin.Begin);
-
-                Cursor cursor = new Cursor(mem);
-
-                return cursor;
-            }
-        }
-
         public Bitmap ToBitmap()
         {
             return ToBitmap(Color.Transparent);
@@ -128,21 +112,59 @@ namespace Workshell.PE.Resources
 
         public Bitmap ToBitmap(Color backgroundColor)
         {
-            using (Cursor cursor = ToCursor())
-            {
-                Rectangle rect = new Rectangle(0, 0, cursor.Size.Width, cursor.Size.Height);
-                Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+            MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
 
-                using (Graphics graphics = Graphics.FromImage(bitmap))
+            using (dib_mem)
+            {
+                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
+
+                ushort width = Convert.ToUInt16(header.biWidth);
+                ushort height = Convert.ToUInt16(header.biHeight / 2);
+                byte color_count = Convert.ToByte(header.biBitCount);
+
+                MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
+
+                using (mem)
                 {
-                    using (SolidBrush brush = new SolidBrush(backgroundColor))
+                    Utils.Write(Convert.ToUInt16(0), mem);
+                    Utils.Write(Convert.ToUInt16(1), mem);
+                    Utils.Write(Convert.ToUInt16(1), mem);
+
+                    uint colors = 0;
+
+                    if (color_count != 0 && color_count < 8)
+                        colors = Convert.ToUInt32(Math.Pow(2, color_count));
+
+                    Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
+                    Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
+                    Utils.Write(Convert.ToByte(colors), mem);
+                    Utils.Write(Convert.ToByte(0), mem);
+                    Utils.Write(Convert.ToUInt16(1), mem);
+                    Utils.Write(Convert.ToUInt16(color_count), mem);
+                    Utils.Write(dib.Length, mem);
+                    Utils.Write(22, mem);
+
+                    Utils.Write(dib, mem);
+
+                    mem.Seek(0, SeekOrigin.Begin);
+
+                    using (Icon icon = new Icon(mem))
                     {
-                        graphics.FillRectangle(brush, rect);
-                        cursor.Draw(graphics, rect);
+                        Rectangle rect = new Rectangle(0, 0, icon.Width, icon.Height);
+                        Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+
+                        using (Graphics graphics = Graphics.FromImage(bitmap))
+                        {
+                            using (SolidBrush brush = new SolidBrush(backgroundColor))
+                            {
+                                graphics.FillRectangle(brush, rect);
+                                graphics.DrawIcon(icon, rect);
+                            }
+                        }
+
+                        return bitmap;
                     }
                 }
-
-                return bitmap;
             }
         }
 
