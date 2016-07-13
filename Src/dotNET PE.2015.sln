@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Debug Application", "Debug 
 		{2B06CBF8-136A-4BEC-8624-861992139489} = {2B06CBF8-136A-4BEC-8624-861992139489}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PE Dump", "PE Dump\PE Dump.csproj", "{3A01212E-8461-41A0-B154-22CBA75929A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{BE0852C4-A347-4E12-84C3-550AE6E5636F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE0852C4-A347-4E12-84C3-550AE6E5636F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE0852C4-A347-4E12-84C3-550AE6E5636F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A01212E-8461-41A0-B154-22CBA75929A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A01212E-8461-41A0-B154-22CBA75929A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A01212E-8461-41A0-B154-22CBA75929A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A01212E-8461-41A0-B154-22CBA75929A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

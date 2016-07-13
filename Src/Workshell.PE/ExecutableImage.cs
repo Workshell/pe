@@ -308,7 +308,7 @@ namespace Workshell.PE
             bool is_clr = false;
             int clr_dir_index = (int)DataDirectoryType.CLRRuntimeHeader;
 
-            if (clr_dir_index < 0 || clr_dir_index > (data_directories.Length - 1))
+            if (clr_dir_index >= 0 && clr_dir_index <= (data_directories.Length - 1))
             {
                 IMAGE_DATA_DIRECTORY clr_dir = data_directories[clr_dir_index];
 
@@ -319,7 +319,7 @@ namespace Workshell.PE
             bool is_signed = false;
             int cert_dir_index = (int)DataDirectoryType.CertificateTable;
 
-            if (cert_dir_index < 0 || cert_dir_index > (data_directories.Length - 1))
+            if (cert_dir_index >= 0 && cert_dir_index <= (data_directories.Length - 1))
             {
                 IMAGE_DATA_DIRECTORY cert_dir = data_directories[cert_dir_index];
 
