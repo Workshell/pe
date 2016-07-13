@@ -23,14 +23,14 @@ namespace Workshell.PE.Demo
             //string file_name = Assembly.GetEntryAssembly().Location;
             //string file_name = @"C:\Windows\SysWOW64\kernel32.dll";
             //string file_name = @"C:\Windows\System32\kernel32.dll";
-            //string file_name = @"C:\Windows\SysWOW64\shell32.dll";
+            string file_name = @"C:\Windows\SysWOW64\shell32.dll";
             //string file_name = @"C:\Windows\System32\shell32.dll";
             //string file_name = @"C:\Windows\System32\user32.dll";
             //string file_name = @"C:\Windows\explorer.exe";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
             //string file_name = @"C:\Program Files (x86)\Notepad++\notepad++.exe";
-            string file_name = @"C:\Windows\WinSxS\x86_microsoft-windows-notepad.resources_31bf3856ad364e35_6.3.9600.16384_en-gb_aafce17aef6b0109\notepad.exe.mui";
+            //string file_name = @"C:\Windows\WinSxS\x86_microsoft-windows-notepad.resources_31bf3856ad364e35_6.3.9600.16384_en-gb_aafce17aef6b0109\notepad.exe.mui";
             string error_message;
 
             if (!ExecutableImage.IsValid(file_name,out error_message))
@@ -42,11 +42,12 @@ namespace Workshell.PE.Demo
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
             ResourceCollection resources = ResourceCollection.Get(image);
-            ResourceType types = resources.First(t => t.Id == ResourceType.RT_ACCELERATOR);
-            Resource resource = types.First(r => r.Id == "MAINACC");
-            AcceleratorResource accelerators = AcceleratorResource.Load(resource, 2057);
+            ResourceType types = resources.First(t => t.Id == ResourceType.RT_CURSOR);
+            Resource resource = types.First(r => r.Id == 97);
+            CursorResource cursor_resource = CursorResource.Load(resource);
 
-            //Console.ReadKey();
+            cursor_resource.Save(@"D:\test.cur");
+
         }
 
     }

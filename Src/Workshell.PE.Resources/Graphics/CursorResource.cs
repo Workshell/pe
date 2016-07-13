@@ -93,7 +93,7 @@ namespace Workshell.PE.Resources
                 {
                     mem.CopyTo(dib_mem, 4096);
 
-                    dib = mem.ToArray();
+                    dib = dib_mem.ToArray();
                 }
 
                 CursorResource cursor = new CursorResource(resource, language, hotspot_x, hotspot_y, dib);
