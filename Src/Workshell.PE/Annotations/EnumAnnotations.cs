@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -83,6 +84,7 @@ namespace Workshell.PE.Annotations
     {
 
         private List<EnumAnnotation<T>> list;
+        private int type_size;
 
         public EnumAnnotations()
         {
@@ -107,6 +109,10 @@ namespace Workshell.PE.Annotations
 
                 list.Add(annotation);
             }
+
+            Type underlaying_type = Enum.GetUnderlyingType(typeof(T));
+
+            type_size = Marshal.SizeOf(underlaying_type);
         }
 
         #region Methods
@@ -148,6 +154,14 @@ namespace Workshell.PE.Annotations
                 EnumAnnotation<T> annotation = list.FirstOrDefault(a => value.Equals(a.Value));
 
                 return annotation;
+            }
+        }
+
+        public int TypeSize
+        {
+            get
+            {
+                return type_size;
             }
         }
 
