@@ -38,16 +38,16 @@ namespace Workshell.PE.Relocations
     public sealed class RelocationBlock : IEnumerable<Relocation>, ISupportsLocation, ISupportsBytes
     {
 
-        private RelocationTable blocks;
+        private RelocationTable table;
         private Location location;
         private uint page_rva;
         private uint block_size;
         private Lazy<Section> reloc_section;
         private Relocation[] relocations;
 
-        internal RelocationBlock(RelocationTable relocBlocks, Location blockLocation, uint pageRVA, uint blockSize, ushort[] relocs)
+        internal RelocationBlock(RelocationTable relocTable, Location blockLocation, uint pageRVA, uint blockSize, ushort[] relocs)
         {
-            blocks = relocBlocks;
+            table = relocTable;
             location = blockLocation;
             page_rva = pageRVA;
             block_size = blockSize;
@@ -85,7 +85,7 @@ namespace Workshell.PE.Relocations
 
         public byte[] GetBytes()
         {
-            Stream stream = blocks.DataDirectory.Directories.Image.GetStream();
+            Stream stream = table.DataDirectory.Directories.Image.GetStream();
             byte[] buffer = Utils.ReadBytes(stream,location);
 
             return buffer;
@@ -93,7 +93,7 @@ namespace Workshell.PE.Relocations
 
         private Section GetSection()
         {
-            LocationCalculator calc = blocks.DataDirectory.Directories.Image.GetCalculator();
+            LocationCalculator calc = table.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(page_rva);
 
             return section;
@@ -103,11 +103,11 @@ namespace Workshell.PE.Relocations
 
         #region Properties
 
-        public RelocationTable Blocks
+        public RelocationTable Table
         {
             get
             {
-                return blocks;
+                return table;
             }
         }
 
