@@ -17,6 +17,13 @@ This is a class library for reading the Portable Executable file format converin
 
 For help getting started please see the wiki. Any suggestions for improvements and ideas welcome.
 
+# NuGet
+
+Stable builds are available as NuGet packages:
+
+* https://www.nuget.org/packages/Workshell.PE/
+* https://www.nuget.org/packages/Workshell.PE.Resources/
+
 # Simplified BSD License
 
 Copyright (c) 2016, Workshell Ltd
