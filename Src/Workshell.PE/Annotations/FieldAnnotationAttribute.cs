@@ -43,6 +43,7 @@ namespace Workshell.PE.Annotations
             Description = desc;
             ArrayLength = 0;
             Flags = false;
+            FlagType = null;
         }
 
         #region Properties
