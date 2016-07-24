@@ -81,7 +81,6 @@ namespace Workshell.PE.Imports
         {
             if (name == null)
             {           
-                StringBuilder builder = new StringBuilder(256);
                 LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
                 Stream stream = directory.DataDirectory.Directories.Image.GetStream();
                 ulong offset = calc.RVAToOffset(descriptor.Name);
@@ -164,7 +163,7 @@ namespace Workshell.PE.Imports
         {
             get
             {
-                return descriptor.Attributes;
+                return descriptor.BoundDelayIAT;
             }
         }
 
@@ -173,7 +172,7 @@ namespace Workshell.PE.Imports
         {
             get
             {
-                return descriptor.Attributes;
+                return descriptor.UnloadDelayIAT;
             }
         }
 
@@ -182,7 +181,7 @@ namespace Workshell.PE.Imports
         {
             get
             {
-                return descriptor.Attributes;
+                return descriptor.TimeDateStamp;
             }
         }
 
