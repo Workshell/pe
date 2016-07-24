@@ -19,4 +19,7 @@
 			</group>
         </dependencies>
     </metadata>
+	<files>
+		<file src="..\..\Bin\$configuration$\peres.pdb" target="lib\net40" />
+	</files>
 </package>

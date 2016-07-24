@@ -17,4 +17,7 @@
             <group targetFramework=".NETFramework4.0" />
         </dependencies>
     </metadata>
+	<files>
+		<file src="..\..\Bin\$configuration$\pe.pdb" target="lib\net40" />
+	</files>
 </package>
