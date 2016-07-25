@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using Workshell.PE;
+using Workshell.PE.Imports;
 using Workshell.PE.Resources;
 
 namespace Workshell.PE.Demo
@@ -24,8 +25,8 @@ namespace Workshell.PE.Demo
             //string file_name = @"C:\Windows\SysWOW64\kernel32.dll";
             //string file_name = @"C:\Windows\System32\kernel32.dll";
             //string file_name = @"C:\Windows\SysWOW64\shell32.dll";
-            //string file_name = @"C:\Windows\System32\shell32.dll";
-            string file_name = @"C:\Windows\System32\user32.dll";
+            string file_name = @"C:\Windows\System32\shell32.dll";
+            //string file_name = @"C:\Windows\System32\user32.dll";
             //string file_name = @"C:\Windows\explorer.exe";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
@@ -41,19 +42,9 @@ namespace Workshell.PE.Demo
             }
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-            ResourceCollection resources = ResourceCollection.Get(image);
+            DelayImportDirectory directory = DelayImportDirectory.Get(image);
+            DelayImportAddressTables tables = DelayImportAddressTables.GetAddressTable(directory);
 
-            ResourceType group_types = resources.First(t => t.Id == ResourceType.RT_GROUP_CURSOR);
-            Resource group_resource = group_types.First(r => r.Id == 100);
-            CursorGroupResource cursor_group_resource = CursorGroupResource.Load(group_resource);
-
-            ResourceType types = resources.First(t => t.Id == ResourceType.RT_CURSOR);
-            Resource resource = types.First(r => r.Id == 92);
-            CursorResource cursor_resource = CursorResource.Load(resource);
-
-            Bitmap bitmap = cursor_resource.ToBitmap();
-
-            bitmap.Save(@"D:\test.bmp");
 
         }
 

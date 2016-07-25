@@ -337,6 +337,9 @@ namespace Workshell.PE.Imports
 
         public static DelayImportAddressTables GetLookupTable(DelayImportDirectory directory)
         {
+            if (directory == null)
+                return null;
+
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             bool is_64bit = directory.DataDirectory.Directories.Image.Is64Bit;
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();
@@ -393,6 +396,9 @@ namespace Workshell.PE.Imports
 
         public static DelayImportAddressTables GetAddressTable(DelayImportDirectory directory)
         {
+            if (directory == null)
+                return null;
+
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();          
             bool is_64bit = directory.DataDirectory.Directories.Image.Is64Bit;
             Stream stream = directory.DataDirectory.Directories.Image.GetStream();

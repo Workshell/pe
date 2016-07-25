@@ -73,7 +73,7 @@ namespace Workshell.PE.Resources
                 Section section = calc.RVAToSection(rva);
                 Location location = new Location(offset, rva, va, entry_size, entry_size, section);
 
-                ResourceDirectoryEntry entry = new ResourceDirectoryEntry(DataDirectory, location,this,directory_entry);
+                ResourceDirectoryEntry entry = new ResourceDirectoryEntry(DataDirectory, location, this, directory_entry);
 
                 list.Add(entry);
                 offset += entry_size;

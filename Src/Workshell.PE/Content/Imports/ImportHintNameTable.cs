@@ -139,6 +139,9 @@ namespace Workshell.PE.Imports
 
         public static ImportHintNameTable Get(ImportDirectory directory)
         {
+            if (directory == null)
+                return null;
+
             Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>> entries = new Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>>();
             ImportAddressTables ilt = ImportAddressTables.GetLookupTable(directory);
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
