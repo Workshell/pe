@@ -163,6 +163,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
+
         public Location Location
         {
             get
@@ -349,14 +357,6 @@ namespace Workshell.PE
         public abstract uint NumberOfRvaAndSizes
         {
             get;
-        }
-
-        protected ExecutableImage Image
-        {
-            get
-            {
-                return image;
-            }
         }
 
         #endregion

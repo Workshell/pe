@@ -140,6 +140,14 @@ namespace Workshell.PE
 
         #region Properties
 
+        public ExecutableImage Image
+        {
+            get
+            {
+                return image;
+            }
+        }
+
         public Location Location
         {
             get

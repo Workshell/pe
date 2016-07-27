@@ -54,7 +54,7 @@ namespace Workshell.PE.Exports
         public static ExportTable<uint> GetFunctionAddressTable(ExportDirectory directory)
         {
             if (directory == null)
-                throw new ArgumentNullException("directory", "No export directory was specified.");
+                return null;
 
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.AddressOfFunctions);
@@ -83,7 +83,7 @@ namespace Workshell.PE.Exports
         public static ExportTable<uint> GetNameAddressTable(ExportDirectory directory)
         {
             if (directory == null)
-                throw new ArgumentNullException("directory", "No export directory was specified.");
+                return null;
 
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.AddressOfNames);
@@ -112,7 +112,7 @@ namespace Workshell.PE.Exports
         public static ExportTable<ushort> GetOrdinalTable(ExportDirectory directory)
         {
             if (directory == null)
-                throw new ArgumentNullException("directory", "No export directory was specified.");
+                return null;
 
             LocationCalculator calc = directory.DataDirectory.Directories.Image.GetCalculator();
             Section section = calc.RVAToSection(directory.AddressOfNameOrdinals);
