@@ -9,6 +9,7 @@ using Mono.Options;
 using Workshell.PE;
 using Workshell.PE.Annotations;
 using Workshell.PE.Debug;
+using Workshell.PE.LoadConfiguration;
 
 namespace Workshell.PE.Dump
 {
@@ -26,6 +27,7 @@ namespace Workshell.PE.Dump
         private bool show_data_directories;
         private bool show_section_table;
         private bool show_debug;
+        private bool show_load_config;
 
         public Program()
         {
@@ -40,6 +42,7 @@ namespace Workshell.PE.Dump
             options.Add("data-directories", "", v => show_data_directories = v != null);
             options.Add("sections", "", v => show_section_table = v != null);
             options.Add("debug", "", v => show_debug = v != null);
+            options.Add("load-config", "", v => show_load_config = v != null);
 
             offset_type = "fo";
             show_all = false;
@@ -50,6 +53,7 @@ namespace Workshell.PE.Dump
             show_data_directories = false;
             show_section_table = false;
             show_debug = false;
+            show_load_config = false;
         }
 
         #region Static Methods
@@ -115,6 +119,7 @@ namespace Workshell.PE.Dump
                         show_data_directories = true;
                         show_section_table = true;
                         show_debug = true;
+                        show_load_config = true;
                     }
 
                     int result = ShowBasicDetails(image, file_name);
@@ -139,6 +144,9 @@ namespace Workshell.PE.Dump
 
                     if (result == 0 && show_debug)
                         result = ShowDebugDirectory(image);
+
+                    if (result == 0 && show_load_config)
+                        result = ShowLoadConfig(image);
 
                     return result;
                 }
@@ -924,6 +932,109 @@ namespace Workshell.PE.Dump
             string result = String.Format("{0}  {1}", Utils.IntToHex(value, 8), annotation.HeaderName);
 
             return result;
+        }
+
+        private int ShowLoadConfig(ExecutableImage image)
+        {
+            LoadConfigDirectory directory = LoadConfigDirectory.Get(image);
+
+            if (directory == null)
+                return 0;
+
+            Console.WriteLine("[ Load Configuration ]");
+            Console.WriteLine();
+
+            Console.WriteLine("    File Offset:      {0}", Utils.IntToHex(directory.Location.FileOffset));
+            Console.WriteLine("    Virtual Address:  {0}", Utils.IntToHex(directory.Location.VirtualAddress));
+            Console.WriteLine("    RVA:              {0}", Utils.IntToHex(directory.Location.RelativeVirtualAddress));
+            Console.WriteLine("    Size:             {1} ({0})", Utils.FormatBytes(Convert.ToInt64(directory.Location.FileSize)), directory.Location.FileSize);
+            Console.WriteLine();
+
+            List<Tuple<string, string, string>> tuples = new List<Tuple<string, string, string>>();
+            ulong offset;
+
+            if (offset_type == "fo")
+            {
+                offset = directory.Location.FileOffset;
+            }
+            else if (offset_type == "vo")
+            {
+                offset = 0;
+            }
+            else if (offset_type == "va")
+            {
+                offset = directory.Location.VirtualAddress;
+            }
+            else
+            {
+                offset = directory.Location.RelativeVirtualAddress;
+            }
+
+            int address_size = (image.Is64Bit ? 16 : 8);
+
+            string[] VARY_FIELDS = {
+                "DeCommitFreeBlockThreshold",
+                "DeCommitTotalFreeThreshold",
+                "LockPrefixTable",
+                "MaximumAllocationSize",
+                "VirtualMemoryThreshold",
+                "ProcessAffinityMask",
+                "EditList",
+                "SecurityCookie",
+                "SEHandlerTable",
+                "SEHandlerCount",
+                "GuardCFCheckFunctionPointer",
+                "Reserved2",
+                "GuardCFFunctionTable",
+                "GuardCFFunctionCount"
+            };
+            FieldAnnotations annotations = FieldAnnotations.Get(directory);
+
+            foreach (FieldAnnotation annotation in annotations)
+            {
+                int size = annotation.Size * 2;
+
+                if (VARY_FIELDS.Contains(annotation.Name, StringComparer.OrdinalIgnoreCase))
+                    size = (image.Is64Bit ? 16 : 8);
+
+                int array_size = (annotation.IsArray ? annotation.ArraySize : annotation.Size);
+                object value = (annotation.IsArray ? Utils.GetDefaultValue(annotation.Type.GetElementType()) : annotation.Value);
+
+                Tuple<string, string, string> tuple = new Tuple<string, string, string>(Utils.IntToHex(offset, address_size), Utils.IntToHex(value, size), annotation.Description);
+
+                tuples.Add(tuple);
+
+                offset += Convert.ToUInt32(array_size);
+            }
+
+            int max_value_len = 0;
+            int max_desc_len = 0;
+
+            foreach (var tuple in tuples)
+            {
+                if (tuple.Item2.Length > max_value_len)
+                    max_value_len = tuple.Item2.Length;
+
+                if (tuple.Item3.Length > max_desc_len)
+                    max_desc_len = tuple.Item3.Length;
+            }
+
+            string header = String.Format("{0}  {1}  {2}", "Address".PadRight(address_size + 2), "Value".PadRight(max_value_len), "Description".PadRight(max_desc_len));
+
+            Console.WriteLine("    " + header);
+            Console.WriteLine("    " + String.Empty.PadRight(header.Length, '-'));
+
+            foreach (var tuple in tuples)
+                Console.WriteLine("    {0}  {1}  {2}", tuple.Item1.PadRight(address_size + 2), tuple.Item2.PadRight(max_value_len), tuple.Item3.PadRight(max_desc_len));
+
+            Console.WriteLine();
+
+            //ShowOptionalHeader_SubSystem(image);
+            //ShowOptionalHeader_DllCharacteristics(image);
+            //
+            //Console.WriteLine();
+
+            return 0;
         }
 
         #endregion
