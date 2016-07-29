@@ -338,7 +338,7 @@ namespace Workshell.PE.Debug
         {
             get
             {
-                return this[index];
+                return entries[index];
             }
         }
 

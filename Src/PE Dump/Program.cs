@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Mono.Options;
 using Workshell.PE;
 using Workshell.PE.Annotations;
+using Workshell.PE.Debug;
 
 namespace Workshell.PE.Dump
 {
@@ -24,6 +25,7 @@ namespace Workshell.PE.Dump
         private bool show_opt_header;
         private bool show_data_directories;
         private bool show_section_table;
+        private bool show_debug;
 
         public Program()
         {
@@ -37,6 +39,7 @@ namespace Workshell.PE.Dump
             options.Add("optional-header", "", v => show_opt_header = v != null);
             options.Add("data-directories", "", v => show_data_directories = v != null);
             options.Add("sections", "", v => show_section_table = v != null);
+            options.Add("debug", "", v => show_debug = v != null);
 
             offset_type = "fo";
             show_all = false;
@@ -46,6 +49,7 @@ namespace Workshell.PE.Dump
             show_opt_header = false;
             show_data_directories = false;
             show_section_table = false;
+            show_debug = false;
         }
 
         #region Static Methods
@@ -110,6 +114,7 @@ namespace Workshell.PE.Dump
                         show_opt_header = true;
                         show_data_directories = true;
                         show_section_table = true;
+                        show_debug = true;
                     }
 
                     int result = ShowBasicDetails(image, file_name);
@@ -131,6 +136,9 @@ namespace Workshell.PE.Dump
 
                     if (result == 0 && show_section_table)
                         result = ShowSectionTable(image);
+
+                    if (result == 0 && show_debug)
+                        result = ShowDebugDirectory(image);
 
                     return result;
                 }
@@ -823,6 +831,99 @@ namespace Workshell.PE.Dump
             }
 
             return results.ToArray();
+        }
+
+        private int ShowDebugDirectory(ExecutableImage image)
+        {
+            DebugDirectory directory = DebugDirectory.Get(image);
+
+            if (directory == null)
+                return 0;
+
+            Console.WriteLine("[ Debug Directory ]");
+            Console.WriteLine();
+
+            Console.WriteLine("    File Offset:      {0}", Utils.IntToHex(directory.Location.FileOffset));
+            Console.WriteLine("    Virtual Address:  {0}", Utils.IntToHex(directory.Location.VirtualAddress));
+            Console.WriteLine("    RVA:              {0}", Utils.IntToHex(directory.Location.RelativeVirtualAddress));
+            Console.WriteLine("    Size:             {1} ({0})", Utils.FormatBytes(Convert.ToInt64(directory.Location.FileSize)), directory.Location.FileSize);
+            Console.WriteLine();
+
+            int address_size = (image.Is64Bit ? 16 : 8);
+            ulong offset;
+
+            if (offset_type == "fo")
+            {
+                offset = directory.Location.FileOffset;
+            }
+            else if (offset_type == "vo")
+            {
+                offset = 0;
+            }
+            else if (offset_type == "va")
+            {
+                offset = directory.Location.VirtualAddress;
+            }
+            else
+            {
+                offset = directory.Location.RelativeVirtualAddress;
+            }
+
+            foreach (DebugDirectoryEntry entry in directory)
+            {
+                string name = entry.GetEntryType().ToString();
+                string type = ShowDebugDirectory_Type(entry);
+                List<string> lines = new List<string>();
+
+                lines.Add(String.Format("Entry Offset:         {0}", Utils.IntToHex(offset, address_size)));
+                lines.Add(String.Format("Characteristics:      {0}", Utils.IntToHex(entry.Characteristics)));
+                lines.Add(String.Format("Date/Time Stamp:      {0}", Utils.IntToHex(entry.TimeDateStamp)));
+                lines.Add(String.Format("Major Version:        {0}", Utils.IntToHex(entry.MajorVersion)));
+                lines.Add(String.Format("Minor Version:        {0}", Utils.IntToHex(entry.MinorVersion)));
+                lines.Add(String.Format("Type:                 {0}", type));
+                lines.Add(String.Format("Size of Data:         {0} ({1})", entry.SizeOfData, Utils.FormatBytes(entry.SizeOfData)));
+                lines.Add(String.Format("Address of Raw Data:  {0}", Utils.IntToHex(entry.AddressOfRawData)));
+                lines.Add(String.Format("Pointer to Raw Data:  {0}", Utils.IntToHex(entry.PointerToRawData)));
+
+                int max_len = name.Length;
+
+                foreach (var line in lines)
+                {
+                    if (line.Length > max_len)
+                        max_len = line.Length;
+                }
+
+                max_len = max_len + 2;
+
+                Console.WriteLine("    " + name.PadRight(max_len));
+                Console.WriteLine("    " + String.Empty.PadRight(max_len, '-'));
+
+                foreach (var line in lines)
+                    Console.WriteLine("    " + line.PadRight(max_len));
+
+                Console.WriteLine();
+
+                offset += entry.Location.FileSize;
+            }
+
+            Console.WriteLine();
+
+            return 0;
+        }
+
+        private string ShowDebugDirectory_Type(DebugDirectoryEntry directoryEntry)
+        {
+            DebugDirectoryEntryType type = directoryEntry.GetEntryType();
+            EnumAnnotations<DebugDirectoryEntryType> annotations = new EnumAnnotations<DebugDirectoryEntryType>();
+            EnumAnnotation<DebugDirectoryEntryType> annotation = annotations.FirstOrDefault(a => a.Value == type);
+
+            if (annotation == null)
+                return null;
+
+            long value = Convert.ToInt64(annotation.Value);
+            string result = String.Format("{0}  {1}", Utils.IntToHex(value, 8), annotation.HeaderName);
+
+            return result;
         }
 
         #endregion
