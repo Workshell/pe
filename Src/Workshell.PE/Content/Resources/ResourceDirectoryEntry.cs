@@ -135,7 +135,7 @@ namespace Workshell.PE.Resources
                 Section section = calc.RVAToSection(rva);
                 Location location = new Location(file_offset, rva, va, size, size, section);
 
-                directory = new ResourceDirectory(parent_directory.DataDirectory,location,parent_directory);
+                directory = new ResourceDirectory(parent_directory.DataDirectory,location,this);
             }
 
             return directory;

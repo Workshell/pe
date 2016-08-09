@@ -43,10 +43,10 @@ namespace Workshell.PE.Resources
     {
 
         private IMAGE_RESOURCE_DIRECTORY directory;
-        private ResourceDirectory parent_directory;
+        private ResourceDirectoryEntry directory_entry;
         private ResourceDirectoryEntry[] entries;
 
-        internal ResourceDirectory(DataDirectory dataDirectory, Location dataLocation, ResourceDirectory parentDirectory) : base(dataDirectory,dataLocation)
+        internal ResourceDirectory(DataDirectory dataDirectory, Location dataLocation, ResourceDirectoryEntry directoryEntry) : base(dataDirectory,dataLocation)
         {
             LocationCalculator calc = DataDirectory.Directories.Image.GetCalculator();
             Stream stream = DataDirectory.Directories.Image.GetStream();
@@ -54,7 +54,7 @@ namespace Workshell.PE.Resources
             stream.Seek(dataLocation.FileOffset.ToInt64(),SeekOrigin.Begin);
 
             directory = Utils.Read<IMAGE_RESOURCE_DIRECTORY>(stream);
-            parent_directory = parentDirectory;
+            directory_entry = directoryEntry;
 
             int count = directory.NumberOfNamedEntries + directory.NumberOfIdEntries;
             List<ResourceDirectoryEntry> list = new List<ResourceDirectoryEntry>(count);
@@ -135,11 +135,11 @@ namespace Workshell.PE.Resources
 
         #region Properties
 
-        public ResourceDirectory Parent
+        public ResourceDirectoryEntry DirectoryEntry
         {
             get
             {
-                return parent_directory;
+                return directory_entry;
             }
         }
 
