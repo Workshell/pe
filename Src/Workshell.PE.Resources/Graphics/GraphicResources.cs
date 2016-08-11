@@ -29,16 +29,53 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Workshell.PE.Resources
 {
 
-    internal static class GraphicUtils
+    [Serializable]
+    public class GraphicResourcesException : Exception
+    {
+
+        public GraphicResourcesException() : base()
+        {
+        }
+
+        public GraphicResourcesException(string message) : base(message)
+        {
+        }
+
+        public GraphicResourcesException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected GraphicResourcesException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+
+    }
+
+    public static class GraphicResources
     {
 
         #region Methods
+
+        public static void Register()
+        {
+            Register(false);
+        }
+
+        public static void Register(bool throwOnFail)
+        {
+            if (!BitmapResource.Register() && throwOnFail)
+                throw new GraphicResourcesException("Could not register BitmapResource, already registered.");
+
+            if (!CursorGroupResource.Register() && throwOnFail)
+                throw new GraphicResourcesException("Could not register CursorGroupResource, already registered.");
+        }
 
         public static bool IsPNG(byte[] data)
         {

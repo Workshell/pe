@@ -70,7 +70,7 @@
     <Compile Include="Graphics\IconGroupResource.cs" />
     <Compile Include="Graphics\CursorGroupResource.cs" />
     <Compile Include="Graphics\CursorResource.cs" />
-    <Compile Include="Graphics\GraphicUtils.cs" />
+    <Compile Include="Graphics\GraphicResources.cs" />
     <Compile Include="Native\BITMAPFILEHEADER.cs" />
     <Compile Include="Native\BITMAPINFOHEADER.cs" />
     <Compile Include="Native\CURSORDIR.cs" />

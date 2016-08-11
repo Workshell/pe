@@ -28,6 +28,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -42,14 +43,13 @@ namespace Workshell.PE.Resources
     public enum CursorGroupSaveFormat
     {
         Raw,
-        Resource,
         Cursor
     }
 
-    public sealed class CursorGroupResourceEntry
+    public sealed class CursorGroupEntry
     {
 
-        internal CursorGroupResourceEntry(CURSOR_RESDIR resDir)
+        internal CursorGroupEntry(CURSOR_RESDIR resDir)
         {
             Width = resDir.Cursor.Width;
             Height = resDir.Cursor.Height;
@@ -110,66 +110,23 @@ namespace Workshell.PE.Resources
 
     }
 
-    public sealed class CursorGroupResource : IEnumerable<CursorGroupResourceEntry>
+    public sealed class CursorGroup : IEnumerable<CursorGroupEntry>
     {
 
-        private Resource resource;
+        private CursorGroupResource resource;
         private uint language_id;
-        private CursorGroupResourceEntry[] entries;
+        private CursorGroupEntry[] entries;
 
-        internal CursorGroupResource(Resource sourceResource, uint languageId, CursorGroupResourceEntry[] groupEntries)
+        internal CursorGroup(CursorGroupResource cursorResource, uint languageId, CursorGroupEntry[] groupEntries)
         {
-            resource = sourceResource;
+            resource = cursorResource;
             language_id = languageId;
             entries = groupEntries;
         }
 
-        #region Static Methods
-
-        public static CursorGroupResource Load(Resource resource)
-        {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static CursorGroupResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_GROUP_CURSOR)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                NEWHEADER header = Utils.Read<NEWHEADER>(mem);
-
-                if (header.ResType != 2)
-                    throw new Exception("Not a cursor group resource.");
-
-                CursorGroupResourceEntry[] entries = new CursorGroupResourceEntry[header.ResCount];
-
-                for (var i = 0; i < header.ResCount; i++)
-                {
-                    CURSOR_RESDIR cursor = Utils.Read<CURSOR_RESDIR>(mem);
-                    CursorGroupResourceEntry entry = new CursorGroupResourceEntry(cursor);
-
-                    entries[i] = entry;
-                }
-
-                CursorGroupResource group = new CursorGroupResource(resource, language, entries);
-
-                return group;
-            }
-        }
-
-        #endregion
-
         #region Methods
 
-        public IEnumerator<CursorGroupResourceEntry> GetEnumerator()
+        public IEnumerator<CursorGroupEntry> GetEnumerator()
         {
             for (var i = 0; i < entries.Length; i++)
                 yield return entries[i];
@@ -180,131 +137,11 @@ namespace Workshell.PE.Resources
             return GetEnumerator();
         }
 
-        public void Save(string fileName)
-        {
-            Save(fileName, CursorSaveFormat.Cursor);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, CursorSaveFormat.Cursor);
-        }
-
-        public void Save(string fileName, CursorSaveFormat format)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                Save(file, format);
-                file.Flush();
-            }
-        }
-
-        public void Save(Stream stream, CursorSaveFormat format)
-        {
-            switch (format)
-            {
-                case CursorSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case CursorSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-                case CursorSaveFormat.Cursor:
-                    SaveCursor(stream);
-                    break;
-            }
-        }
-
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SaveCursor(Stream stream)
-        {
-            List<Tuple<ushort, ushort, ushort, byte[]>> cursors = new List<Tuple<ushort, ushort, ushort, byte[]>>(entries.Length);
-
-            for (var i = 0; i < entries.Length; i++)
-            {
-                CursorGroupResourceEntry entry = entries[i];
-                ResourceType res_type = resource.Type.Resources.First(t => t.Id == ResourceType.RT_CURSOR);
-                Resource res = res_type.First(c => c.Id == entry.CursorId);
-                byte[] data = res.GetBytes(language_id);
-
-                ushort hotspot_x = 0;
-                ushort hotspot_y = 0;
-                byte[] dib = new byte[0];
-
-                using (MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data))
-                {
-                    hotspot_x = Utils.ReadUInt16(mem);
-                    hotspot_y = Utils.ReadUInt16(mem);
-
-                    using (MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream())
-                    {
-                        mem.CopyTo(dib_mem, 4096);
-
-                        dib = dib_mem.ToArray();
-                    }
-                }
-
-                Tuple<ushort, ushort, ushort, byte[]> tuple = new Tuple<ushort, ushort, ushort, byte[]>(entry.CursorId, hotspot_x, hotspot_y, dib);
-
-                cursors.Add(tuple);
-            }
-
-            uint[] offsets = new uint[entries.Length];
-            uint offset = Convert.ToUInt32(6 + (16 * offsets.Length));
-
-            for (var i = 0; i < entries.Length; i++)
-            {
-                CursorGroupResourceEntry entry = entries[i];
-                Tuple<ushort, ushort, ushort, byte[]> tuple = cursors[i];
-
-                offsets[i] = offset;
-                offset += tuple.Item4.Length.ToUInt32();
-            }
-
-            Utils.Write(Convert.ToUInt16(0), stream);
-            Utils.Write(Convert.ToUInt16(2), stream);
-            Utils.Write(Convert.ToUInt16(entries.Length), stream);
-
-            for (var i = 0; i < entries.Length; i++)
-            {
-                CursorGroupResourceEntry entry = entries[i];
-                Tuple<ushort, ushort, ushort, byte[]> tuple = cursors[i];
-
-                Utils.Write(Convert.ToByte(entry.Width), stream);
-                Utils.Write(Convert.ToByte(entry.Height), stream);
-                Utils.Write(Convert.ToByte(entry.BitCount), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(tuple.Item2, stream);
-                Utils.Write(tuple.Item3, stream);
-                Utils.Write(tuple.Item4.Length, stream);
-                Utils.Write(offsets[i], stream);
-            }
-
-            for (var i = 0; i < entries.Length; i++)
-            {
-                CursorGroupResourceEntry entry = entries[i];
-                Tuple<ushort, ushort, ushort, byte[]> tuple = cursors[i];
-
-                stream.Write(tuple.Item4, 0, tuple.Item4.Length);
-            }
-        }
-
         #endregion
 
         #region Properties
 
-        public Resource Resource
+        public CursorGroupResource Resource
         {
             get
             {
@@ -328,11 +165,159 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public CursorGroupResourceEntry this[int index]
+        public CursorGroupEntry this[int index]
         {
             get
             {
                 return entries[index];
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class CursorGroupResource : Resource
+    {
+
+        public CursorGroupResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
+        {
+
+        }
+
+        #region Static Methods
+
+        public static bool Register()
+        {
+            ResourceId resource_type = new ResourceId(ResourceType.RT_GROUP_CURSOR);
+
+            return ResourceType.Register(resource_type, typeof(CursorGroupResource));
+        }
+
+        #endregion
+
+        #region Methods
+
+        public CursorGroup ToGroup()
+        {
+            return ToGroup(DEFAULT_LANGUAGE);
+        }
+
+        public CursorGroup ToGroup(uint languageId)
+        {
+            byte[] data = GetBytes(languageId);
+            MemoryStream mem = new MemoryStream();
+
+            using (mem)
+            {
+                NEWHEADER header = Utils.Read<NEWHEADER>(mem);
+
+                if (header.ResType != 2)
+                    throw new Exception("Not a cursor group resource.");
+
+                CursorGroupEntry[] entries = new CursorGroupEntry[header.ResCount];
+
+                for (var i = 0; i < header.ResCount; i++)
+                {
+                    CURSOR_RESDIR cursor = Utils.Read<CURSOR_RESDIR>(mem);
+                    CursorGroupEntry entry = new CursorGroupEntry(cursor);
+
+                    entries[i] = entry;
+                }
+
+                CursorGroup group = new CursorGroup(this, languageId, entries);
+
+                return group;
+            }
+        }
+
+        public void Save(string fileName, uint languageId, CursorSaveFormat format)
+        {
+            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Save(file, languageId, format);
+                file.Flush();
+            }
+        }
+
+        public void Save(Stream stream, uint languageId, CursorSaveFormat format)
+        {
+            if (format == CursorSaveFormat.Raw)
+            {
+                Save(stream, languageId);
+            }
+            else
+            {
+                CursorGroup group = ToGroup(languageId);
+                List<Tuple<ushort, ushort, ushort, byte[]>> cursors = new List<Tuple<ushort, ushort, ushort, byte[]>>(group.Count);
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    CursorGroupEntry entry = group[i];
+                    ResourceType res_type = Type.Resources.First(t => t.Id == ResourceType.RT_CURSOR);
+                    Resource res = res_type.First(c => c.Id == entry.CursorId);
+                    byte[] data = res.GetBytes(languageId);
+
+                    ushort hotspot_x = 0;
+                    ushort hotspot_y = 0;
+                    byte[] dib = new byte[0];
+
+                    using (MemoryStream mem = new MemoryStream(data))
+                    {
+                        hotspot_x = Utils.ReadUInt16(mem);
+                        hotspot_y = Utils.ReadUInt16(mem);
+
+                        using (MemoryStream dib_mem = new MemoryStream())
+                        {
+                            mem.CopyTo(dib_mem, 4096);
+
+                            dib = dib_mem.ToArray();
+                        }
+                    }
+
+                    Tuple<ushort, ushort, ushort, byte[]> tuple = new Tuple<ushort, ushort, ushort, byte[]>(entry.CursorId, hotspot_x, hotspot_y, dib);
+
+                    cursors.Add(tuple);
+                }
+
+                uint[] offsets = new uint[group.Count];
+                uint offset = Convert.ToUInt32(6 + (16 * offsets.Length));
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    CursorGroupEntry entry = group[i];
+                    Tuple<ushort, ushort, ushort, byte[]> tuple = cursors[i];
+
+                    offsets[i] = offset;
+                    offset += tuple.Item4.Length.ToUInt32();
+                }
+
+                Utils.Write(Convert.ToUInt16(0), stream);
+                Utils.Write(Convert.ToUInt16(2), stream);
+                Utils.Write(Convert.ToUInt16(group.Count), stream);
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    CursorGroupEntry entry = group[i];
+                    Tuple<ushort, ushort, ushort, byte[]> tuple = cursors[i];
+
+                    Utils.Write(Convert.ToByte(entry.Width), stream);
+                    Utils.Write(Convert.ToByte(entry.Height), stream);
+                    Utils.Write(Convert.ToByte(entry.BitCount), stream);
+                    Utils.Write(Convert.ToByte(0), stream);
+                    Utils.Write(tuple.Item2, stream);
+                    Utils.Write(tuple.Item3, stream);
+                    Utils.Write(tuple.Item4.Length, stream);
+                    Utils.Write(offsets[i], stream);
+                }
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    CursorGroupEntry entry = group[i];
+                    Tuple<ushort, ushort, ushort, byte[]> tuple = cursors[i];
+
+                    stream.Write(tuple.Item4, 0, tuple.Item4.Length);
+                }
             }
         }
 

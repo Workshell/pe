@@ -42,9 +42,12 @@ namespace Workshell.PE.Demo
             }
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-            DelayImportDirectory directory = DelayImportDirectory.Get(image);
-            DelayImportAddressTables tables = DelayImportAddressTables.GetAddressTable(directory);
 
+            BitmapResource.Register();
+
+            ResourceCollection resources = ResourceCollection.Get(image);
+            ResourceType resource_type = resources.First(type => type.Id == ResourceType.RT_BITMAP);
+            Resource resource = resource_type.FirstOrDefault(res => res.Id == 135);
 
         }
 

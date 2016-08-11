@@ -57,6 +57,22 @@ namespace Workshell.PE.Resources
             return buffer;
         }
 
+        public void Save(string fileName)
+        {
+            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Save(file);
+                file.Flush();
+            }
+        }
+
+        public void Save(Stream stream)
+        {
+            byte[] data = GetBytes();
+
+            stream.Write(data, 0, data.Length);
+        }
+
         #endregion
 
         #region Properties

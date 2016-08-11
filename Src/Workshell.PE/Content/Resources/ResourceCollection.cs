@@ -30,6 +30,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -38,7 +40,29 @@ using Workshell.PE.Native;
 namespace Workshell.PE.Resources
 {
 
-    public sealed class Resource : ISupportsBytes
+    [Serializable]
+    public class ResourceException : Exception
+    {
+
+        public ResourceException() : base()
+        {
+        }
+
+        public ResourceException(string message) : base(message)
+        {
+        }
+
+        public ResourceException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected ResourceException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+
+    }
+
+    public class Resource : ISupportsBytes
     {
 
         public const uint DEFAULT_LANGUAGE = 1033;
@@ -97,7 +121,7 @@ namespace Workshell.PE.Resources
         {
             if (!languages.ContainsKey(languageId))
             {
-                return new byte[0];
+                throw new ResourceException(String.Format("Cannot find specified language: {0}", languageId));
             }
             else
             {
@@ -128,7 +152,7 @@ namespace Workshell.PE.Resources
             Save(stream, DEFAULT_LANGUAGE);
         }
 
-        public void Save(Stream stream, uint language)
+        public virtual void Save(Stream stream, uint language)
         {
             byte[] data = GetBytes(language);
 
@@ -210,10 +234,17 @@ namespace Workshell.PE.Resources
         public const ushort RT_HTML = 23;
         public const ushort RT_MANIFEST = 24;
 
+        private static Dictionary<ResourceId, Type> resource_types;
+
         private ResourceCollection resources;
         private ResourceDirectoryEntry directory_entry;
         private ResourceId id;
         private Resource[] resource_items;
+
+        static ResourceType()
+        {
+            resource_types = new Dictionary<ResourceId, Type>();    
+        }
 
         internal ResourceType(ResourceCollection owningResources, ResourceDirectoryEntry directoryEntry)
         {
@@ -231,6 +262,42 @@ namespace Workshell.PE.Resources
 
             resource_items = LoadResources();
         }
+
+        #region Static Methods
+
+        public static bool Register(ResourceId typeId, Type dataType)
+        {
+            if (resource_types.ContainsKey(typeId))
+                return false;
+
+            resource_types.Add(typeId, dataType);
+
+            return true;
+        }
+
+        public static bool Unregister(ResourceId typeId)
+        {
+            if (!resource_types.ContainsKey(typeId))
+                return false;
+
+            resource_types.Remove(typeId);
+
+            return true;
+        }
+
+        private static Type Get(ResourceId typeId)
+        {
+            if (resource_types.ContainsKey(typeId))
+            {
+                return resource_types[typeId];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        #endregion
 
         #region Methods
 
@@ -274,7 +341,20 @@ namespace Workshell.PE.Resources
 
             foreach(ResourceDirectoryEntry entry in directory)
             {
-                Resource resource = new Resource(this, entry);
+                Type resource_type = Get(id);
+                Resource resource = null;
+
+                if (resource_type != null)
+                {
+                    if (!resource_type.IsSubclassOf(typeof(Resource)))
+                        throw new Exception("Type must be a subclass of Resource.");
+
+                    resource = (Resource)Activator.CreateInstance(resource_type, this, entry);
+                }
+                else
+                {
+                    resource = new Resource(this, entry);
+                }
 
                 results.Add(resource);
             }
@@ -519,6 +599,50 @@ namespace Workshell.PE.Resources
         #endregion
 
         #region Methods
+
+        public Resource Find(ResourceDirectoryEntry typeEntry, ResourceDirectoryEntry nameEntry, ResourceDirectoryEntry langEntry)
+        {
+            foreach(ResourceType type in types)
+            {
+                ResourceId type_id;
+
+                if (typeEntry.NameType == NameType.ID)
+                {
+                    type_id = new ResourceId(typeEntry.GetId());
+                }
+                else
+                {
+                    type_id = new ResourceId(typeEntry.GetName());
+                }
+
+                if (type.Id == type_id)
+                {
+                    foreach(Resource res in type)
+                    {
+                        ResourceId res_id;
+
+                        if (nameEntry.NameType == NameType.ID)
+                        {
+                            res_id = new ResourceId(nameEntry.GetId());
+                        }
+                        else
+                        {
+                            res_id = new ResourceId(nameEntry.GetName());
+                        }
+
+                        if (res.Id == res_id)
+                        {
+                            uint lang_id = langEntry.GetId();
+
+                            if (res.Languages.Contains(lang_id))
+                                return res;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
 
         public IEnumerator<ResourceType> GetEnumerator()
         {

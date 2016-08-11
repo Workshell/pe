@@ -44,43 +44,23 @@ namespace Workshell.PE.Resources
     public enum BitmapSaveFormat
     {
         Raw,
-        Resource,
         Bitmap
     }
 
-    public class BitmapResource
+    public sealed class BitmapResource : Resource
     {
 
-        private Resource resource;
-        private uint language_id;
-        private byte[] dib;
-
-        internal BitmapResource(Resource sourceResource, uint languageId, byte[] dibData)
+        public BitmapResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
         {
-            resource = sourceResource;
-            language_id = languageId;
-            dib = dibData;
         }
 
         #region Static Methods
 
-        public static BitmapResource Load(Resource resource)
+        public static bool Register()
         {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
+            ResourceId resource_type = new ResourceId(ResourceType.RT_BITMAP);
 
-        public static BitmapResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_BITMAP)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            BitmapResource result = new BitmapResource(resource, language, data);
-
-            return result;
+            return ResourceType.Register(resource_type, typeof(BitmapResource));
         }
 
         #endregion
@@ -89,11 +69,17 @@ namespace Workshell.PE.Resources
 
         public Bitmap ToBitmap()
         {
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
+            return ToBitmap(DEFAULT_LANGUAGE);
+        }
+
+        public Bitmap ToBitmap(uint languageId)
+        {
+            MemoryStream mem = new MemoryStream();
 
             using (mem)
             {
-                MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
+                byte[] dib = GetBytes(languageId);
+                MemoryStream dib_mem = new MemoryStream(dib);
 
                 using (dib_mem)
                 {
@@ -112,90 +98,36 @@ namespace Workshell.PE.Resources
 
                 mem.Seek(0, SeekOrigin.Begin);
 
-                Bitmap bitmap = (Bitmap)Image.FromStream(mem);
+                using (Bitmap bitmap = (Bitmap)Image.FromStream(mem))
+                {
+                    Bitmap result = new Bitmap(bitmap); // Create a copy of the image so we can release the stream
 
-                return bitmap;
+                    return result;
+                }
             }
         }
 
-        public void Save(string fileName)
-        {
-            Save(fileName, BitmapSaveFormat.Bitmap);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, BitmapSaveFormat.Bitmap);
-        }
-
-        public void Save(string fileName, BitmapSaveFormat format)
+        public void Save(string fileName, uint languageId, BitmapSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                Save(file, format);
+                Save(file, languageId, format);
                 file.Flush();
             }
         }
 
-        public void Save(Stream stream, BitmapSaveFormat format)
+        public void Save(Stream stream, uint languageId, BitmapSaveFormat format)
         {
-            switch (format)
+            if (format == BitmapSaveFormat.Raw)
             {
-                case BitmapSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case BitmapSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-                case BitmapSaveFormat.Bitmap:
-                    SaveBitmap(stream);
-                    break;
+                Save(stream, languageId);
             }
-        }
-
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SaveBitmap(Stream stream)
-        {
-            using (Bitmap bitmap = ToBitmap())
-                bitmap.Save(stream, ImageFormat.Bmp);
-        }
-
-        #endregion
-
-        #region Properties
-
-        public Resource Resource
-        {
-            get
+            else
             {
-                return resource;
-            }
-        }
-
-        public uint Language
-        {
-            get
-            {
-                return language_id;
-            }
-        }
-
-        public byte[] DIB
-        {
-            get
-            {
-                return dib;
+                using (Bitmap bitmap = ToBitmap(languageId))
+                {
+                    bitmap.Save(stream, ImageFormat.Bmp);
+                }
             }
         }
 

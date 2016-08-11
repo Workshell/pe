@@ -89,7 +89,7 @@ namespace Workshell.PE.Resources
 
             using (mem)
             {
-                if (!GraphicUtils.IsPNG(data))
+                if (!GraphicResources.IsPNG(data))
                 {
                     BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
 
