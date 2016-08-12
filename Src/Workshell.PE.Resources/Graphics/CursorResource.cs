@@ -39,80 +39,100 @@ using Workshell.PE.Resources.Native;
 namespace Workshell.PE.Resources
 {
 
+    public sealed class CursorInfo
+    {
+
+        internal CursorInfo(uint languageId, ushort hotspotX, ushort hotspotY, byte[] dib)
+        {
+            Language = languageId;
+            Hotspot = new Point(hotspotX, hotspotY);
+            DIB = dib;
+        }
+
+        #region Properties
+
+        public uint Language
+        {
+            get;
+            private set;
+        }
+
+        public Point Hotspot
+        {
+            get;
+            private set;
+        }
+
+        public byte[] DIB
+        {
+            get;
+            private set;
+        }
+
+        #endregion
+
+    }
+
     public enum CursorSaveFormat
     {
         Raw,
-        Resource,
-        Cursor
+        Cursor,
+        Icon,
+        Bitmap
     }
 
-    public class CursorResource
+    public class CursorResource : Resource
     {
 
-        private Resource resource;
-        private uint language_id;
-        private ushort hotspot_x;
-        private ushort hotspot_y;
-        private byte[] dib;
-
-        internal CursorResource(Resource sourceResource, uint languageId, ushort hotspotX, ushort hotspotY, byte[] dibData)
+        public CursorResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
         {
-            resource = sourceResource;
-            language_id = languageId;
-            hotspot_x = hotspotX;
-            hotspot_y = hotspotY;
-            dib = dibData;
         }
 
         #region Static Methods
 
-        public static CursorResource Load(Resource resource)
+        public static bool Register()
         {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
+            ResourceId resource_type = new ResourceId(ResourceType.RT_CURSOR);
 
-        public static CursorResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_CURSOR)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                ushort hotspot_x = Utils.ReadUInt16(mem);
-                ushort hotspot_y = Utils.ReadUInt16(mem);
-                byte[] dib;
-
-                using (MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream())
-                {
-                    mem.CopyTo(dib_mem, 4096);
-
-                    dib = dib_mem.ToArray();
-                }
-
-                CursorResource cursor = new CursorResource(resource, language, hotspot_x, hotspot_y, dib);
-
-                return cursor;
-            }
+            return ResourceType.Register(resource_type, typeof(CursorResource));
         }
 
         #endregion
 
         #region Methods
 
-        public Bitmap ToBitmap()
+        public CursorInfo GetInfo()
         {
-            return ToBitmap(Color.Transparent);
+            return GetInfo(DEFAULT_LANGUAGE);
         }
 
-        public Bitmap ToBitmap(Color backgroundColor)
+        public CursorInfo GetInfo(uint languageId)
         {
-            MemoryStream dib_mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
+            Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
+            CursorInfo result = new CursorInfo(languageId, tuple.Item1, tuple.Item2, tuple.Item3);
+
+            return result;
+        }
+
+        public Icon ToIcon()
+        {
+            return ToIcon(Color.Transparent);
+        }
+
+        public Icon ToIcon(Color backgroundColor)
+        {
+            return ToIcon(DEFAULT_LANGUAGE, Color.Transparent);
+        }
+
+        public Icon ToIcon(uint languageId)
+        {
+            return ToIcon(languageId, Color.Transparent);
+        }
+
+        public Icon ToIcon(uint languageId, Color backgroundColor)
+        {
+            Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
+            MemoryStream dib_mem = new MemoryStream(tuple.Item3);
 
             using (dib_mem)
             {
@@ -122,7 +142,7 @@ namespace Workshell.PE.Resources
                 ushort height = Convert.ToUInt16(header.biHeight / 2);
                 byte color_count = Convert.ToByte(header.biBitCount);
 
-                MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream();
+                MemoryStream mem = new MemoryStream();
 
                 using (mem)
                 {
@@ -141,146 +161,140 @@ namespace Workshell.PE.Resources
                     Utils.Write(Convert.ToByte(0), mem);
                     Utils.Write(Convert.ToUInt16(1), mem);
                     Utils.Write(Convert.ToUInt16(color_count), mem);
-                    Utils.Write(dib.Length, mem);
+                    Utils.Write(tuple.Item3.Length, mem);
                     Utils.Write(22, mem);
 
-                    Utils.Write(dib, mem);
+                    Utils.Write(tuple.Item3, mem);
 
                     mem.Seek(0, SeekOrigin.Begin);
 
-                    using (Icon icon = new Icon(mem))
-                    {
-                        Rectangle rect = new Rectangle(0, 0, icon.Width, icon.Height);
-                        Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+                    Icon icon = new Icon(mem);
 
-                        using (Graphics graphics = Graphics.FromImage(bitmap))
-                        {
-                            using (SolidBrush brush = new SolidBrush(backgroundColor))
-                            {
-                                graphics.FillRectangle(brush, rect);
-                                graphics.DrawIcon(icon, rect);
-                            }
-                        }
-
-                        return bitmap;
-                    }
+                    return icon;
                 }
             }
         }
 
-        public void Save(string fileName)
+        public Bitmap ToBitmap()
         {
-            Save(fileName, CursorSaveFormat.Cursor);
+            return ToBitmap(Color.Transparent);
         }
 
-        public void Save(Stream stream)
+        public Bitmap ToBitmap(Color backgroundColor)
         {
-            Save(stream, CursorSaveFormat.Cursor);
+            return ToBitmap(DEFAULT_LANGUAGE, Color.Transparent);
         }
 
-        public void Save(string fileName, CursorSaveFormat format)
+        public Bitmap ToBitmap(uint languageId)
+        {
+            return ToBitmap(languageId, Color.Transparent);
+        }
+
+        public Bitmap ToBitmap(uint languageId, Color backgroundColor)
+        {
+            using (Icon icon = ToIcon(languageId, backgroundColor))
+            {
+                Rectangle rect = new Rectangle(0, 0, icon.Width, icon.Height);
+                Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+
+                using (Graphics graphics = Graphics.FromImage(bitmap))
+                {
+                    using (SolidBrush brush = new SolidBrush(backgroundColor))
+                    {
+                        graphics.FillRectangle(brush, rect);
+                        graphics.DrawIcon(icon, rect);
+                    }
+                }
+
+                return bitmap;
+            }
+        }
+
+        public void Save(string fileName, uint languageId, CursorSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                Save(file, format);
+                Save(file, languageId, format);
                 file.Flush();
             }
         }
 
-        public void Save(Stream stream, CursorSaveFormat format)
+        public void Save(Stream stream, uint languageId, CursorSaveFormat format)
         {
             switch (format)
             {
                 case CursorSaveFormat.Raw:
-                    SaveRaw(stream);
+                    Save(stream, languageId);
                     break;
-                case CursorSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
+                case CursorSaveFormat.Icon:
+                    {
+                        using (Icon icon = ToIcon(languageId))
+                        {
+                            icon.Save(stream);
+                        }
+
+                        break;
+                    }
+                case CursorSaveFormat.Bitmap:
+                    {
+                        using (Bitmap bitmap = ToBitmap(languageId))
+                        {
+                            bitmap.Save(stream, ImageFormat.Bmp);
+                        }
+
+                        break;
+                    }
                 case CursorSaveFormat.Cursor:
-                    SaveCursor(stream);
-                    break;
+                default:
+                    {
+                        Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
+                        MemoryStream mem = new MemoryStream(tuple.Item3);
+
+                        using (mem)
+                        {
+                            BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
+
+                            Utils.Write(Convert.ToUInt16(0), stream);
+                            Utils.Write(Convert.ToUInt16(2), stream);
+                            Utils.Write(Convert.ToUInt16(1), stream);
+
+                            Utils.Write(Convert.ToByte(header.biWidth), stream);
+                            Utils.Write(Convert.ToByte(header.biHeight), stream);
+                            Utils.Write(Convert.ToByte(0), stream);
+                            Utils.Write(Convert.ToByte(0), stream);
+                            Utils.Write(tuple.Item1, stream);
+                            Utils.Write(tuple.Item2, stream);
+                            Utils.Write(tuple.Item3.Length, stream);
+                            Utils.Write(22, stream);
+
+                            Utils.Write(tuple.Item3, stream);
+                        }
+
+                        break;
+                    }
             }
         }
 
-        private void SaveRaw(Stream stream)
+        private Tuple<ushort, ushort, byte[]> Load(uint languageId)
         {
-            byte[] data = resource.GetBytes(language_id);
+            byte[] data = GetBytes(languageId);
 
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SaveCursor(Stream stream)
-        {
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(dib);
-
-            using (mem)
+            using (MemoryStream mem = new MemoryStream(data))
             {
-                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(mem);
+                ushort hotspot_x = Utils.ReadUInt16(mem);
+                ushort hotspot_y = Utils.ReadUInt16(mem);
+                byte[] dib;
 
-                Utils.Write(Convert.ToUInt16(0), stream);
-                Utils.Write(Convert.ToUInt16(2), stream);
-                Utils.Write(Convert.ToUInt16(1), stream);
+                using (MemoryStream dib_mem = new MemoryStream(data.Length - (sizeof(ushort) * 2)))
+                {
+                    mem.CopyTo(dib_mem, 4096);
 
-                Utils.Write(Convert.ToByte(header.biWidth), stream);
-                Utils.Write(Convert.ToByte(header.biHeight), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(hotspot_x, stream);
-                Utils.Write(hotspot_y, stream);
-                Utils.Write(dib.Length, stream);
-                Utils.Write(22, stream);
+                    dib = dib_mem.ToArray();
+                }
 
-                Utils.Write(dib, stream);
-            }
-        }
+                Tuple<ushort, ushort, byte[]> tuple = new Tuple<ushort, ushort, byte[]>(hotspot_x, hotspot_y, dib);
 
-        #endregion
-
-        #region Properties
-
-        public Resource Resource
-        {
-            get
-            {
-                return resource;
-            }
-        }
-
-        public uint Language
-        {
-            get
-            {
-                return language_id;
-            }
-        }
-
-        public ushort HotspotX
-        {
-            get
-            {
-                return hotspot_x;
-            }
-        }
-
-        public ushort HotspotY
-        {
-            get
-            {
-                return hotspot_y;
-            }
-        }
-
-        public byte[] DIB
-        {
-            get
-            {
-                return dib;
+                return tuple;
             }
         }
 

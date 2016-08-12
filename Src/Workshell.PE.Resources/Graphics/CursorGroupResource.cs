@@ -40,12 +40,6 @@ using Workshell.PE.Resources.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum CursorGroupSaveFormat
-    {
-        Raw,
-        Cursor
-    }
-
     public sealed class CursorGroupEntry
     {
 
@@ -177,12 +171,17 @@ namespace Workshell.PE.Resources
 
     }
 
+    public enum CursorGroupSaveFormat
+    {
+        Raw,
+        Cursor
+    }
+
     public sealed class CursorGroupResource : Resource
     {
 
         public CursorGroupResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
         {
-
         }
 
         #region Static Methods
