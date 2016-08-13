@@ -42,12 +42,6 @@ using Workshell.PE.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum StringTableSaveFormat
-    {
-        Raw,
-        Resource
-    }
-
     public sealed class StringTableEntry
     {
 
@@ -106,93 +100,19 @@ namespace Workshell.PE.Resources
 
     }
 
-    public sealed class StringTableResource : IEnumerable<StringTableEntry>
+    public sealed class StringTable : IEnumerable<StringTableEntry>
     {
 
-        private Resource resource;
+        private StringTableResource resource;
         private uint language_id;
         private StringTableEntry[] strings;
 
-        internal StringTableResource(Resource sourceResource, uint languageId, byte[] data)
+        internal StringTable(StringTableResource tableResource, uint languageId, StringTableEntry[] tableEntries)
         {
-            resource = sourceResource;
+            resource = tableResource;
             language_id = languageId;
-
-            List<string> list = new List<string>();
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                while (mem.Position < mem.Length)
-                {
-                    ushort count = Utils.ReadUInt16(mem);
-
-                    if (count == 0)
-                    {
-                        list.Add(null);
-                    }
-                    else
-                    {
-                        StringBuilder builder = new StringBuilder(count);
-
-                        for (var i = 0; i < count; i++)
-                        {
-                            ushort value = Utils.ReadUInt16(mem);
-
-                            builder.Append((char)value);
-                        }
-
-                        list.Add(builder.ToString());
-                    }
-                }
-            }
-
-            strings = new StringTableEntry[list.Count];
-
-            ushort base_id = Convert.ToUInt16((resource.Id - 1) << 4);
-
-            for(var i = 0; i < list.Count; i++)
-            {
-                StringTableEntry entry;
-                string value = list[i];
-
-                if (value == null)
-                {
-                    entry = new StringTableEntry(0, value);
-                }
-                else
-                {
-                    ushort id = Convert.ToUInt16(base_id + i);
-
-                    entry = new StringTableEntry(id, value);
-                }
-
-                strings[i] = entry;
-            }
+            strings = tableEntries;
         }
-
-        #region Static Methods
-
-        public static StringTableResource Load(Resource resource)
-        {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static StringTableResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_STRING)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            StringTableResource result = new StringTableResource(resource, language, data);
-
-            return result;
-        }
-
-        #endregion
 
         #region Methods
 
@@ -207,55 +127,11 @@ namespace Workshell.PE.Resources
             return GetEnumerator();
         }
 
-        public void Save(string fileName)
-        {
-            Save(fileName, VersionSaveFormat.Raw);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, VersionSaveFormat.Raw);
-        }
-
-        public void Save(string fileName, VersionSaveFormat format)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                Save(file, format);
-                file.Flush();
-            }
-        }
-
-        public void Save(Stream stream, VersionSaveFormat format)
-        {
-            switch (format)
-            {
-                case VersionSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case VersionSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-            }
-        }
-
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region Properties
 
-        public Resource Resource
+        public StringTableResource Resource
         {
             get
             {
@@ -285,6 +161,98 @@ namespace Workshell.PE.Resources
             {
                 return strings[index];
             }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class StringTableResource : Resource
+    {
+
+        private Resource resource;
+        private uint language_id;
+        private StringTableEntry[] strings;
+
+        public StringTableResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
+        {
+        }
+
+        #region Static Methods
+
+        public static bool Register()
+        {
+            ResourceId resource_type = new ResourceId(ResourceType.RT_STRING);
+
+            return ResourceType.Register(resource_type, typeof(StringTableResource));
+        }
+
+        #endregion
+
+        #region Methods
+
+        public StringTable ToTable()
+        {
+            return ToTable(DEFAULT_LANGUAGE);
+        }
+
+        public StringTable ToTable(uint languageId)
+        {
+            byte[] data = GetBytes(languageId);
+
+            List<string> list = new List<string>();
+
+            using (MemoryStream mem = new MemoryStream(data))
+            {
+                while (mem.Position < mem.Length)
+                {
+                    ushort count = Utils.ReadUInt16(mem);
+
+                    if (count == 0)
+                    {
+                        list.Add(null);
+                    }
+                    else
+                    {
+                        StringBuilder builder = new StringBuilder(count);
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            ushort value = Utils.ReadUInt16(mem);
+
+                            builder.Append((char)value);
+                        }
+
+                        list.Add(builder.ToString());
+                    }
+                }
+            }
+
+            StringTableEntry[] strings = new StringTableEntry[list.Count];
+            ushort base_id = Convert.ToUInt16((resource.Id - 1) << 4);
+
+            for (var i = 0; i < list.Count; i++)
+            {
+                StringTableEntry entry;
+                string value = list[i];
+
+                if (value == null)
+                {
+                    entry = new StringTableEntry(0, value);
+                }
+                else
+                {
+                    ushort id = Convert.ToUInt16(base_id + i);
+
+                    entry = new StringTableEntry(id, value);
+                }
+
+                strings[i] = entry;
+            }
+
+            StringTable table = new StringTable(this, languageId, strings);
+
+            return table;
         }
 
         #endregion
