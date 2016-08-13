@@ -37,6 +37,28 @@ namespace Workshell.PE.Resources
     public sealed class Dialog
     {
 
+        internal Dialog(DialogResource dialogResource, uint languageId)
+        {
+            Resource = dialogResource;
+            Language = languageId;
+        }
+
+        #region Properties
+
+        public DialogResource Resource
+        {
+            get;
+            private set;
+        }
+
+        public uint Language
+        {
+            get;
+            private set;
+        }
+
+        #endregion
+
     }
 
 }

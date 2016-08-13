@@ -231,6 +231,9 @@ namespace Workshell.PE.Resources
     public sealed class DialogEx : IEnumerable<DialogItemEx>
     {
 
+        private DialogResource resource;
+        private uint language_id;
+
         private uint help_id;
         private uint ex_styles;
         private uint styles;
@@ -243,8 +246,11 @@ namespace Workshell.PE.Resources
         private CharacterSet char_set;
         private DialogItemEx[] items;
 
-        internal DialogEx(Stream stream)
+        internal DialogEx(DialogResource dialogResource, uint languageId, Stream stream)
         {
+            resource = dialogResource;
+            language_id = languageId;
+
             ushort ver = Utils.ReadUInt16(stream);
             ushort sig = Utils.ReadUInt16(stream);
        
@@ -358,6 +364,22 @@ namespace Workshell.PE.Resources
         #endregion
 
         #region Properties
+
+        public DialogResource Resource
+        {
+            get
+            {
+                return resource;
+            }
+        }
+
+        public uint Language
+        {
+            get
+            {
+                return language_id;
+            }
+        }
 
         public uint HelpId
         {

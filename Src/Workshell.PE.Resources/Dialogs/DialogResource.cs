@@ -42,152 +42,75 @@ using Workshell.PE.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum DialogSaveFormat
-    {
-        Raw,
-        Resource
-    }
-
-    public sealed class DialogResource
+    public sealed class DialogResource : Resource
     {
 
-        private Resource resource;
-        private uint language_id;
-        private bool is_extended;
-        private Dialog dialog;
-        private DialogEx dialog_ex;
-
-        internal DialogResource(Resource sourceResource, uint languageId, byte[] data)
+        public DialogResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
         {
-            resource = sourceResource;
-            language_id = languageId;
-
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                ushort ver = Utils.ReadUInt16(mem);
-                ushort sig = Utils.ReadUInt16(mem);
-
-                is_extended = (ver == 1 && sig == 0xFFFF);
-
-                mem.Seek(0, SeekOrigin.Begin);
-
-                if (!is_extended)
-                {
-                    dialog = null;
-                }
-                else
-                {
-                    dialog_ex = new DialogEx(mem);
-                }
-            }
         }
 
         #region Static Methods
 
-        public static DialogResource Load(Resource resource)
+        public static bool Register()
         {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
+            ResourceId resource_type = new ResourceId(ResourceType.RT_DIALOG);
 
-        public static DialogResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_DIALOG)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            DialogResource result = new DialogResource(resource, language, data);
-
-            return result;
+            return ResourceType.Register(resource_type, typeof(DialogResource));
         }
 
         #endregion
 
         #region Methods
 
-        public Dialog GetDialog()
+        public Dialog GetDialog(uint languageId)
         {
-            return dialog;
-        }
+            byte[] data = GetBytes(languageId);
 
-        public DialogEx GetDialogEx()
-        {
-            return dialog_ex;
-        }
-
-        public void Save(string fileName)
-        {
-            Save(fileName, DialogSaveFormat.Raw);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, DialogSaveFormat.Raw);
-        }
-
-        public void Save(string fileName, DialogSaveFormat format)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (MemoryStream mem = new MemoryStream(data))
             {
-                Save(file, format);
-                file.Flush();
+                ushort ver = Utils.ReadUInt16(mem);
+                ushort sig = Utils.ReadUInt16(mem);
+
+                bool is_extended = (ver == 1 && sig == 0xFFFF);
+
+                mem.Seek(0, SeekOrigin.Begin);
+
+                if (!is_extended)
+                {
+                    Dialog dialog = new Dialog(this, languageId);
+
+                    return dialog;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
-        public void Save(Stream stream, DialogSaveFormat format)
+        public DialogEx GetDialogEx(uint languageId)
         {
-            switch (format)
+            byte[] data = GetBytes(languageId);
+
+            using (MemoryStream mem = new MemoryStream(data))
             {
-                case DialogSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case DialogSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-            }
-        }
+                ushort ver = Utils.ReadUInt16(mem);
+                ushort sig = Utils.ReadUInt16(mem);
 
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
+                bool is_extended = (ver == 1 && sig == 0xFFFF);
 
-            stream.Write(data, 0, data.Length);
-        }
+                mem.Seek(0, SeekOrigin.Begin);
 
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
+                if (!is_extended)
+                {
+                    return null;
+                }
+                else
+                {
+                    DialogEx dialog = new DialogEx(this, languageId, mem);
 
-        #endregion
-
-        #region Properties
-
-        public Resource Resource
-        {
-            get
-            {
-                return resource;
-            }
-        }
-
-        public uint Language
-        {
-            get
-            {
-                return language_id;
-            }
-        }
-
-        public bool IsExtended
-        {
-            get
-            {
-                return is_extended;
+                    return dialog;
+                }
             }
         }
 
