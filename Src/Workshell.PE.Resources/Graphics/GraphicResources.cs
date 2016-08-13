@@ -75,6 +75,15 @@ namespace Workshell.PE.Resources
 
             if (!CursorGroupResource.Register() && throwOnFail)
                 throw new GraphicResourcesException("Could not register CursorGroupResource, already registered.");
+
+            if (!CursorResource.Register() && throwOnFail)
+                throw new GraphicResourcesException("Could not register CursorResource, already registered.");
+
+            if (!IconGroupResource.Register() && throwOnFail)
+                throw new GraphicResourcesException("Could not register IconGroupResource, already registered.");
+
+            if (!IconResource.Register() && throwOnFail)
+                throw new GraphicResourcesException("Could not register IconResource, already registered.");
         }
 
         public static bool IsPNG(byte[] data)

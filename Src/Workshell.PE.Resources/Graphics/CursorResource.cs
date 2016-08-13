@@ -42,14 +42,21 @@ namespace Workshell.PE.Resources
     public sealed class CursorInfo
     {
 
-        internal CursorInfo(uint languageId, ushort hotspotX, ushort hotspotY, byte[] dib)
+        internal CursorInfo(CursorResource cursor, uint languageId, ushort hotspotX, ushort hotspotY, byte[] dib)
         {
+            Cursor = cursor;
             Language = languageId;
             Hotspot = new Point(hotspotX, hotspotY);
             DIB = dib;
         }
 
         #region Properties
+
+        public CursorResource Cursor
+        {
+            get;
+            private set;
+        }
 
         public uint Language
         {
@@ -109,7 +116,7 @@ namespace Workshell.PE.Resources
         public CursorInfo GetInfo(uint languageId)
         {
             Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
-            CursorInfo result = new CursorInfo(languageId, tuple.Item1, tuple.Item2, tuple.Item3);
+            CursorInfo result = new CursorInfo(this, languageId, tuple.Item1, tuple.Item2, tuple.Item3);
 
             return result;
         }

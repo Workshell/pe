@@ -39,17 +39,10 @@ using Workshell.PE.Resources.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum IconGroupSaveFormat
-    {
-        Raw,
-        Resource,
-        Icon
-    }
-
-    public sealed class IconGroupResourceEntry
+    public sealed class IconGroupEntry
     {
 
-        internal IconGroupResourceEntry(ICON_RESDIR resDir)
+        internal IconGroupEntry(ICON_RESDIR resDir)
         {
             Width = resDir.Icon.Width;
             Height = resDir.Icon.Height;
@@ -123,66 +116,23 @@ namespace Workshell.PE.Resources
 
     }
 
-    public sealed class IconGroupResource : IEnumerable<IconGroupResourceEntry>
+    public sealed class IconGroup : IEnumerable<IconGroupEntry>
     {
 
-        private Resource resource;
+        private IconGroupResource resource;
         private uint language_id;
-        private IconGroupResourceEntry[] entries;
+        private IconGroupEntry[] entries;
 
-        internal IconGroupResource(Resource sourceResource, uint languageId, IconGroupResourceEntry[] groupEntries)
+        internal IconGroup(IconGroupResource groupResource, uint languageId, IconGroupEntry[] groupEntries)
         {
-            resource = sourceResource;
+            resource = groupResource;
             language_id = languageId;
             entries = groupEntries;
         }
 
-        #region Static Methods
-
-        public static IconGroupResource Load(Resource resource)
-        {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static IconGroupResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_GROUP_ICON)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                NEWHEADER header = Utils.Read<NEWHEADER>(mem);
-
-                if (header.ResType != 1)
-                    throw new Exception("Not an icon group resource.");
-
-                IconGroupResourceEntry[] entries = new IconGroupResourceEntry[header.ResCount];
-
-                for (var i = 0; i < header.ResCount; i++)
-                {
-                    ICON_RESDIR icon = Utils.Read<ICON_RESDIR>(mem);
-                    IconGroupResourceEntry entry = new IconGroupResourceEntry(icon);
-
-                    entries[i] = entry;
-                }
-
-                IconGroupResource group = new IconGroupResource(resource, language, entries);
-
-                return group;
-            }
-        }
-
-        #endregion
-
         #region Methods
 
-        public IEnumerator<IconGroupResourceEntry> GetEnumerator()
+        public IEnumerator<IconGroupEntry> GetEnumerator()
         {
             for (var i = 0; i < entries.Length; i++)
                 yield return entries[i];
@@ -193,107 +143,11 @@ namespace Workshell.PE.Resources
             return GetEnumerator();
         }
 
-        public void Save(string fileName)
-        {
-            Save(fileName, IconGroupSaveFormat.Icon);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, IconGroupSaveFormat.Icon);
-        }
-
-        public void Save(string fileName, IconGroupSaveFormat format)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                Save(file, format);
-                file.Flush();
-            }
-        }
-
-        public void Save(Stream stream, IconGroupSaveFormat format)
-        {
-            switch (format)
-            {
-                case IconGroupSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case IconGroupSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-                case IconGroupSaveFormat.Icon:
-                    SaveIcon(stream);
-                    break;
-            }
-        }
-
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SaveIcon(Stream stream)
-        {
-            uint[] offsets = new uint[entries.Length];
-            uint offset = Convert.ToUInt32(6 + (16 * offsets.Length));
-
-            for(var i = 0; i < entries.Length; i++)
-            {
-                IconGroupResourceEntry entry = entries[i];
-                offsets[i] = offset;
-
-                offset += entry.BytesInRes;
-            }
-
-            Utils.Write(Convert.ToUInt16(0), stream);
-            Utils.Write(Convert.ToUInt16(1), stream);
-            Utils.Write(Convert.ToUInt16(entries.Length), stream);
-
-            for (var i = 0; i < entries.Length; i++)
-            {
-                IconGroupResourceEntry entry = entries[i];
-
-                Utils.Write(Convert.ToByte(entry.Width >= 256 ? 0 : entry.Width), stream);
-                Utils.Write(Convert.ToByte(entry.Height >= 256 ? 0 : entry.Height), stream);
-                Utils.Write(Convert.ToByte(entry.ColorCount), stream);
-                Utils.Write(Convert.ToByte(0), stream);
-                Utils.Write(Convert.ToUInt16(1), stream);
-
-                ushort colors = Convert.ToUInt16(Math.Log(entry.ColorCount) / Math.Log(2));
-
-                if (colors >= 256)
-                    colors = 0;
-
-                Utils.Write(colors, stream);
-                Utils.Write(entry.BytesInRes, stream);
-                Utils.Write(offsets[i], stream);
-            }
-
-            ResourceType icon_type = resource.Type.Resources.First(t => t.Id == ResourceType.RT_ICON);
-
-            for (var i = 0; i < entries.Length; i++)
-            {
-                IconGroupResourceEntry entry = entries[i];
-                Resource resource = icon_type.First(r => r.Id == entry.IconId);
-                byte[] data = resource.GetBytes(language_id);
-
-                Utils.Write(data, stream);                
-            }
-        }
-
         #endregion
 
         #region Properties
 
-        public Resource Resource
+        public IconGroupResource Resource
         {
             get
             {
@@ -317,11 +171,139 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public IconGroupResourceEntry this[int index]
+        public IconGroupEntry this[int index]
         {
             get
             {
                 return entries[index];
+            }
+        }
+
+        #endregion
+
+    }
+
+    public enum IconGroupSaveFormat
+    {
+        Raw,
+        Icon
+    }
+
+    public sealed class IconGroupResource : Resource
+    {
+
+        public IconGroupResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
+        {
+        }
+
+        #region Static Methods
+
+        public static bool Register()
+        {
+            ResourceId resource_type = new ResourceId(ResourceType.RT_GROUP_ICON);
+
+            return ResourceType.Register(resource_type, typeof(IconGroupResource));
+        }
+
+        #endregion
+
+        #region Methods
+
+        public IconGroup ToGroup()
+        {
+            return ToGroup(DEFAULT_LANGUAGE);
+        }
+
+        public IconGroup ToGroup(uint languageId)
+        {
+            byte[] data = GetBytes(languageId);
+
+            using (MemoryStream mem = new MemoryStream())
+            {
+                NEWHEADER header = Utils.Read<NEWHEADER>(mem);
+
+                if (header.ResType != 1)
+                    throw new Exception("Not an icon group resource.");
+
+                IconGroupEntry[] entries = new IconGroupEntry[header.ResCount];
+
+                for (var i = 0; i < header.ResCount; i++)
+                {
+                    ICON_RESDIR icon = Utils.Read<ICON_RESDIR>(mem);
+                    IconGroupEntry entry = new IconGroupEntry(icon);
+
+                    entries[i] = entry;
+                }
+
+                IconGroup group = new IconGroup(this, languageId, entries);
+
+                return group;
+            }
+        }
+
+        public void Save(string fileName, uint languageId, IconSaveFormat format)
+        {
+            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Save(file, languageId, format);
+                file.Flush();
+            }
+        }
+
+        public void Save(Stream stream, uint languageId, IconSaveFormat format)
+        {
+            if (format == IconSaveFormat.Raw)
+            {
+                Save(stream, languageId);
+            }
+            else
+            {
+                IconGroup group = ToGroup(languageId);
+                uint[] offsets = new uint[group.Count];
+                uint offset = Convert.ToUInt32(6 + (16 * offsets.Length));
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    IconGroupEntry entry = group[i];
+                    offsets[i] = offset;
+
+                    offset += entry.BytesInRes;
+                }
+
+                Utils.Write(Convert.ToUInt16(0), stream);
+                Utils.Write(Convert.ToUInt16(1), stream);
+                Utils.Write(Convert.ToUInt16(group.Count), stream);
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    IconGroupEntry entry = group[i];
+
+                    Utils.Write(Convert.ToByte(entry.Width >= 256 ? 0 : entry.Width), stream);
+                    Utils.Write(Convert.ToByte(entry.Height >= 256 ? 0 : entry.Height), stream);
+                    Utils.Write(Convert.ToByte(entry.ColorCount), stream);
+                    Utils.Write(Convert.ToByte(0), stream);
+                    Utils.Write(Convert.ToUInt16(1), stream);
+
+                    ushort colors = Convert.ToUInt16(Math.Log(entry.ColorCount) / Math.Log(2));
+
+                    if (colors >= 256)
+                        colors = 0;
+
+                    Utils.Write(colors, stream);
+                    Utils.Write(entry.BytesInRes, stream);
+                    Utils.Write(offsets[i], stream);
+                }
+
+                ResourceType icon_type = Type.Resources.First(t => t.Id == ResourceType.RT_ICON);
+
+                for (var i = 0; i < group.Count; i++)
+                {
+                    IconGroupEntry entry = group[i];
+                    Resource resource = icon_type.First(r => r.Id == entry.IconId);
+                    byte[] data = resource.GetBytes(languageId);
+
+                    Utils.Write(data, stream);
+                }
             }
         }
 
