@@ -123,65 +123,19 @@ namespace Workshell.PE.Resources
 
     }
 
-    public enum AcceleratorSaveFormat
-    {
-        Raw,
-        Resource
-    }
-
-    public sealed class AcceleratorResource : IEnumerable<AcceleratorEntry>
+    public sealed class Accelerators : IEnumerable<AcceleratorEntry>
     {
 
-        private Resource resource;
+        private AcceleratorResource resource;
         private uint language_id;
         private AcceleratorEntry[] accelerators;
 
-        internal AcceleratorResource(Resource sourceResource, uint languageId, byte[] data)
+        internal Accelerators(AcceleratorResource acceleratorResource, uint languageId, AcceleratorEntry[] acceleratorEntries)
         {
-            resource = sourceResource;
+            resource = acceleratorResource;
             language_id = languageId;
-
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                int size = Utils.SizeOf<ACCELTABLEENTRY>();
-                long count = mem.Length / size;
-
-                accelerators = new AcceleratorEntry[count];
-
-                for (var i = 0; i < count; i++)
-                {
-                    ACCELTABLEENTRY table_entry = Utils.Read<ACCELTABLEENTRY>(mem, size);
-                    AcceleratorEntry entry = new AcceleratorEntry(table_entry.fFlags, table_entry.wAnsi, table_entry.wId);
-
-                    accelerators[i] = entry;
-                }
-            }
+            accelerators = acceleratorEntries;
         }
-
-        #region Static Methods
-
-        public static AcceleratorResource Load(Resource resource)
-        {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static AcceleratorResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_ACCELERATOR)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            AcceleratorResource result = new AcceleratorResource(resource, language, data);
-
-            return result;
-        }
-
-        #endregion
 
         #region Methods
 
@@ -196,55 +150,11 @@ namespace Workshell.PE.Resources
             return GetEnumerator();
         }
 
-        public void Save(string fileName)
-        {
-            Save(fileName, AcceleratorSaveFormat.Raw);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, AcceleratorSaveFormat.Raw);
-        }
-
-        public void Save(string fileName, AcceleratorSaveFormat format)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                Save(file, format);
-                file.Flush();
-            }
-        }
-
-        public void Save(Stream stream, AcceleratorSaveFormat format)
-        {
-            switch (format)
-            {
-                case AcceleratorSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case AcceleratorSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-            }
-        }
-
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
 
         #region Properties
 
-        public Resource Resource
+        public AcceleratorResource Resource
         {
             get
             {
@@ -275,6 +185,83 @@ namespace Workshell.PE.Resources
                 return accelerators[index];
             }
         }
+
+        #endregion
+
+    }
+
+    /*
+    public enum AcceleratorSaveFormat
+    {
+        Raw
+    }
+    */
+
+    public sealed class AcceleratorResource : Resource
+    {
+
+        public AcceleratorResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
+        {
+        }
+
+        #region Static Methods
+
+        public static bool Register()
+        {
+            ResourceId resource_type = new ResourceId(ResourceType.RT_ACCELERATOR);
+
+            return ResourceType.Register(resource_type, typeof(AcceleratorResource));
+        }
+
+        #endregion
+
+        #region Methods
+
+        public Accelerators Get(uint languageId)
+        {
+            byte[] data = GetBytes(languageId);
+
+            using (MemoryStream mem = new MemoryStream(data))
+            {
+                int size = Utils.SizeOf<ACCELTABLEENTRY>();
+                long count = mem.Length / size;
+
+                AcceleratorEntry[] accelerators = new AcceleratorEntry[count];
+
+                for (var i = 0; i < count; i++)
+                {
+                    ACCELTABLEENTRY table_entry = Utils.Read<ACCELTABLEENTRY>(mem, size);
+                    AcceleratorEntry entry = new AcceleratorEntry(table_entry.fFlags, table_entry.wAnsi, table_entry.wId);
+
+                    accelerators[i] = entry;
+                }
+
+                Accelerators result = new Accelerators(this, languageId, accelerators);
+
+                return result;
+            }
+        }
+
+        /*
+        public void Save(string fileName, uint languageId, AcceleratorSaveFormat format)
+        {
+            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Save(file, languageId, format);
+                file.Flush();
+            }
+        }
+
+        public void Save(Stream stream, uint languageId, AcceleratorSaveFormat format)
+        {
+            if (format == AcceleratorSaveFormat.Raw)
+            {
+                byte[] data = GetBytes(languageId);
+
+                stream.Write(data, 0, data.Length);
+            }
+        }
+        */
 
         #endregion
 
