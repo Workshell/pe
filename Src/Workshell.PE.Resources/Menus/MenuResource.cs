@@ -42,60 +42,19 @@ using Workshell.PE.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum MenuSaveFormat
-    {
-        Raw,
-        Resource
-    }
-
-    public sealed class MenuResource : IEnumerable<MenuItem>
+    public sealed class Menu : IEnumerable<MenuItem>
     {
 
-        private Resource resource;
+        private MenuResource resource;
         private uint language_id;
         private MenuItem[] items;
 
-        internal MenuResource(Resource sourceResource, uint languageId, byte[] data)
+        internal Menu(MenuResource menuResource, uint languageId, MenuItem[] menuItems)
         {
-            resource = sourceResource;
+            resource = menuResource;
             language_id = languageId;
-
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                ushort version = Utils.ReadUInt16(mem);
-                ushort header_size = Utils.ReadUInt16(mem);
-                List<MenuItem> menu_items = new List<MenuItem>();
-
-                LoadMenu(mem, menu_items);
-
-                items = menu_items.ToArray();
-            }
+            items = menuItems;
         }
-
-        #region Static Methods
-
-        public static MenuResource Load(Resource resource)
-        {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static MenuResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_MENU)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            MenuResource result = new MenuResource(resource, language, data);
-
-            return result;
-        }
-
-        #endregion
 
         #region Methods
 
@@ -110,48 +69,88 @@ namespace Workshell.PE.Resources
             return GetEnumerator();
         }
 
-        public void Save(string fileName)
-        {
-            Save(fileName, MenuSaveFormat.Raw);
-        }
+        #endregion
 
-        public void Save(Stream stream)
-        {
-            Save(stream, MenuSaveFormat.Raw);
-        }
+        #region Properties
 
-        public void Save(string fileName, MenuSaveFormat format)
+        public MenuResource Resource
         {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            get
             {
-                Save(file, format);
-                file.Flush();
+                return resource;
             }
         }
 
-        public void Save(Stream stream, MenuSaveFormat format)
+        public uint Language
         {
-            switch (format)
+            get
             {
-                case MenuSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case MenuSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
+                return language_id;
             }
         }
 
-        private void SaveRaw(Stream stream)
+        public int Count
         {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
+            get
+            {
+                return items.Length;
+            }
         }
 
-        private void SaveResource(Stream stream)
+        public MenuItem this[int index]
         {
-            throw new NotImplementedException();
+            get
+            {
+                return items[index];
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class MenuResource : Resource
+    {
+
+        public MenuResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
+        {
+        }
+
+        #region Static Methods
+
+        public static bool Register()
+        {
+            ResourceId resource_type = new ResourceId(ResourceType.RT_MENU);
+
+            return ResourceType.Register(resource_type, typeof(MenuResource));
+        }
+
+        #endregion
+
+        #region Methods
+
+        public Menu ToMenu()
+        {
+            return ToMenu(DEFAULT_LANGUAGE);
+        }
+
+        public Menu ToMenu(uint languageId)
+        {
+            byte[] data = GetBytes(languageId);
+
+            using (MemoryStream mem = new MemoryStream(data))
+            {
+                ushort version = Utils.ReadUInt16(mem);
+                ushort header_size = Utils.ReadUInt16(mem);
+                List<MenuItem> menu_items = new List<MenuItem>();
+
+                LoadMenu(mem, menu_items);
+
+                MenuItem[] items = menu_items.ToArray();
+                Menu menu = new Resources.Menu(this, languageId, items);
+
+                return menu;
+            }
         }
 
         private void LoadMenu(Stream stream, List<MenuItem> items)
@@ -205,42 +204,6 @@ namespace Workshell.PE.Resources
 
                 if ((menu_item_flags & MenuItemFlags.EndMenu) == MenuItemFlags.EndMenu)
                     break;
-            }
-        }
-
-        #endregion
-
-        #region Properties
-
-        public Resource Resource
-        {
-            get
-            {
-                return resource;
-            }
-        }
-
-        public uint Language
-        {
-            get
-            {
-                return language_id;
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return items.Length;
-            }
-        }
-
-        public MenuItem this[int index]
-        {
-            get
-            {
-                return items[index];
             }
         }
 
