@@ -64,7 +64,6 @@ namespace Workshell.PE
         private Stream _stream;
         private bool _own_stream;
         private LocationCalculator _calc;
-        private IMemoryStreamProvider _memory_stream_provider;
 
         private DOSHeader _dos_header;
         private DOSStub _dos_stub;
@@ -83,7 +82,6 @@ namespace Workshell.PE
             _stream = sourceStream;
             _own_stream = ownStream;
             _calc = null;
-            _memory_stream_provider = null;
 
             _dos_header = null;
             _dos_stub = null;
@@ -368,7 +366,7 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            using (var mem = _memory_stream_provider.GetStream())
+            using (MemoryStream mem = new MemoryStream())
             {
                 _stream.Seek(0,SeekOrigin.Begin);
                 _stream.CopyTo(mem,4096);
@@ -431,21 +429,6 @@ namespace Workshell.PE
         #endregion
 
         #region Properties
-
-        public IMemoryStreamProvider MemoryStreamProvider
-        {
-            get
-            {
-                if (_memory_stream_provider == null)
-                    _memory_stream_provider = new DefaultMemoryStreamProvider();
-
-                return _memory_stream_provider;
-            }
-            set
-            {
-                _memory_stream_provider = value;
-            }
-        }
 
         public bool Is32Bit
         {
