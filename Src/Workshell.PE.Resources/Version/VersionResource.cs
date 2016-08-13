@@ -41,126 +41,27 @@ using Workshell.PE.Native;
 namespace Workshell.PE.Resources
 {
 
-    public enum VersionSaveFormat
-    {
-        Raw,
-        Resource
-    }
-
-    public sealed class VersionResource
+    public sealed class VersionInfo
     {
 
-        private Resource resource;
+        private VersionResource resource;
         private uint language_id;
         private FixedFileInfo fixed_file_info;
         private StringFileInfo string_file_info;
         private VarFileInfo var_file_info;
 
-        internal VersionResource(Resource sourceResource, uint languageId, byte[] data)
+        internal VersionInfo(VersionResource versionResource, uint languageId, FixedFileInfo fixedInfo, StringFileInfo stringInfo, VarFileInfo varInfo)
         {
-            resource = sourceResource;
+            resource = versionResource;
             language_id = languageId;
-
-            MemoryStream mem = resource.Type.Resources.Image.MemoryStreamProvider.GetStream(data);
-
-            using (mem)
-            {
-                ushort len = Utils.ReadUInt16(mem);
-                ushort val_len = Utils.ReadUInt16(mem);
-                ushort type = Utils.ReadUInt16(mem);
-                string key = Utils.ReadUnicodeString(mem);
-
-                if (mem.Position % 4 != 0)
-                    Utils.ReadUInt16(mem);
-
-                fixed_file_info = new FixedFileInfo(mem);
-
-                if (mem.Position % 4 != 0)
-                    Utils.ReadUInt16(mem);
-
-                string_file_info = new StringFileInfo(this, mem);
-
-                if (mem.Position % 4 != 0)
-                    Utils.ReadUInt16(mem);
-
-                var_file_info = new VarFileInfo(this, mem);
-            }
+            fixed_file_info = fixedInfo;
+            string_file_info = stringInfo;
+            var_file_info = varInfo;
         }
-
-        #region Static Methods
-
-        public static VersionResource Load(Resource resource)
-        {
-            return Load(resource, Resource.DEFAULT_LANGUAGE);
-        }
-
-        public static VersionResource Load(Resource resource, uint language)
-        {
-            if (!resource.Languages.Contains(language))
-                return null;
-
-            if (resource.Type.Id != ResourceType.RT_VERSION)
-                return null;
-
-            byte[] data = resource.GetBytes(language);
-            VersionResource result = new VersionResource(resource, language, data);
-
-            return result;
-        }
-
-        #endregion
-
-        #region Methods
-
-        public void Save(string fileName)
-        {
-            Save(fileName, VersionSaveFormat.Raw);
-        }
-
-        public void Save(Stream stream)
-        {
-            Save(stream, VersionSaveFormat.Raw);
-        }
-
-        public void Save(string fileName, VersionSaveFormat format)
-        {
-            using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
-            {
-                Save(file, format);
-                file.Flush();
-            }
-        }
-
-        public void Save(Stream stream, VersionSaveFormat format)
-        {
-            switch (format)
-            {
-                case VersionSaveFormat.Raw:
-                    SaveRaw(stream);
-                    break;
-                case VersionSaveFormat.Resource:
-                    SaveResource(stream);
-                    break;
-            }
-        }
-
-        private void SaveRaw(Stream stream)
-        {
-            byte[] data = resource.GetBytes(language_id);
-
-            stream.Write(data, 0, data.Length);
-        }
-
-        private void SaveResource(Stream stream)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
 
         #region Properties
 
-        public Resource Resource
+        public VersionResource Resource
         {
             get
             {
@@ -192,11 +93,72 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public VarFileInfo Vars
+        public VarFileInfo Var
         {
             get
             {
                 return var_file_info;
+            }
+        }
+
+        #endregion
+
+    }
+
+    public sealed class VersionResource : Resource
+    {
+
+        public VersionResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
+        {
+        }
+
+        #region Static Methods
+
+        public static bool Register()
+        {
+            ResourceId resource_type = new ResourceId(ResourceType.RT_VERSION);
+
+            return ResourceType.Register(resource_type, typeof(VersionResource));
+        }
+
+        #endregion
+
+        #region Methods
+
+        public VersionInfo GetInfo()
+        {
+            return GetInfo(DEFAULT_LANGUAGE);
+        }
+
+        public VersionInfo GetInfo(uint languageId)
+        {
+            byte[] data = GetBytes(languageId);
+
+            using (MemoryStream mem = new MemoryStream(data))
+            {
+                ushort len = Utils.ReadUInt16(mem);
+                ushort val_len = Utils.ReadUInt16(mem);
+                ushort type = Utils.ReadUInt16(mem);
+                string key = Utils.ReadUnicodeString(mem);
+
+                if (mem.Position % 4 != 0)
+                    Utils.ReadUInt16(mem);
+
+                FixedFileInfo fixed_file_info = new FixedFileInfo(mem);
+
+                if (mem.Position % 4 != 0)
+                    Utils.ReadUInt16(mem);
+
+                StringFileInfo string_file_info = new StringFileInfo(this, mem);
+
+                if (mem.Position % 4 != 0)
+                    Utils.ReadUInt16(mem);
+
+                VarFileInfo var_file_info = new VarFileInfo(this, mem);
+
+                VersionInfo info = new VersionInfo(this, languageId, fixed_file_info, string_file_info, var_file_info);
+
+                return info;
             }
         }
 

@@ -73,10 +73,9 @@ namespace Workshell.PE.Resources
 
             tables = new List<VerStringTable>();
 
-            byte[] buffer = Utils.ReadBytes(stream, len - count);
-            MemoryStream mem = resource.Resource.Type.Resources.Image.MemoryStreamProvider.GetStream(buffer);
+            byte[] data = Utils.ReadBytes(stream, len - count);
 
-            using (mem)
+            using (MemoryStream mem = new MemoryStream(data))
             {
                 while (mem.Position < mem.Length)
                 {
