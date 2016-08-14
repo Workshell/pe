@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using Workshell.PE;
 using Workshell.PE.Imports;
 using Workshell.PE.Resources;
+using Workshell.PE.Relocations;
 
 namespace Workshell.PE.Demo
 {
@@ -25,8 +26,8 @@ namespace Workshell.PE.Demo
             //string file_name = @"C:\Windows\SysWOW64\kernel32.dll";
             //string file_name = @"C:\Windows\System32\kernel32.dll";
             //string file_name = @"C:\Windows\SysWOW64\shell32.dll";
-            string file_name = @"C:\Windows\System32\shell32.dll";
-            //string file_name = @"C:\Windows\System32\user32.dll";
+            //string file_name = @"C:\Windows\System32\shell32.dll";
+            string file_name = @"C:\Windows\System32\user32.dll";
             //string file_name = @"C:\Windows\explorer.exe";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
@@ -42,12 +43,8 @@ namespace Workshell.PE.Demo
             }
 
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-
-            BitmapResource.Register();
-
-            ResourceCollection resources = ResourceCollection.Get(image);
-            ResourceType resource_type = resources.First(type => type.Id == ResourceType.RT_BITMAP);
-            Resource resource = resource_type.FirstOrDefault(res => res.Id == 135);
+            RelocationTable relocations = RelocationTable.Get(image);
+            string section = relocations.Location.Section.Name;
 
         }
 

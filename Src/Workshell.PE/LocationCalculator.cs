@@ -87,13 +87,23 @@ namespace Workshell.PE
 
         public ulong OffsetToVA(ulong offset)
         {
-            foreach(SectionTableEntry entry in reader.SectionTable)
+            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.PointerToRawData).ToArray();
+            SectionTableEntry entry = null;
+
+            for(var i = 0; i < entries.Length; i++)
             {
-                if (offset >= entry.PointerToRawData && offset < (entry.PointerToRawData + entry.SizeOfRawData))
-                    return OffsetToVA(entry,offset);
+                if (offset >= entries[i].PointerToRawData && offset < (entries[i].PointerToRawData + entries[i].SizeOfRawData))
+                    entry = entries[i];
             }
 
-            return 0;
+            if (entry != null)
+            {
+                return OffsetToVA(entry, offset);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public ulong OffsetToVA(Section section, ulong offset)
@@ -123,24 +133,42 @@ namespace Workshell.PE
 
         public SectionTableEntry RVAToSectionTableEntry(uint rva)
         {
-            foreach(SectionTableEntry entry in reader.SectionTable)
+            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
+            SectionTableEntry entry = null;
+
+            for (var i = 0; i < entries.Length; i++)
             {
-                if (rva >= entry.VirtualAddress && rva <= (entry.VirtualAddress + entry.SizeOfRawData))
-                    return entry;
+                uint max_rva = entries[i].VirtualAddress + entries[i].SizeOfRawData;
+
+                if (i != (entries.Length - 1))
+                    max_rva = entries[i + 1].VirtualAddress;
+
+                if (rva >= entries[i].VirtualAddress && rva < max_rva)
+                    entry = entries[i];
             }
 
-            return null;
+            return entry;
         }
 
         public ulong RVAToOffset(uint rva)
         {
-            foreach(SectionTableEntry entry in reader.SectionTable)
+            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
+            SectionTableEntry entry = null;
+
+            for (var i = 0; i < entries.Length; i++)
             {
-                if (rva >= entry.VirtualAddress && rva < (entry.VirtualAddress + entry.SizeOfRawData))
-                    return RVAToOffset(entry,rva);
+                if (rva >= entries[i].VirtualAddress && rva < (entries[i].VirtualAddress + entries[i].SizeOfRawData))
+                    entry = entries[i];
             }
 
-            return 0;
+            if (entry != null)
+            {
+                return RVAToOffset(entry, rva);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public ulong RVAToOffset(Section section, uint rva)
@@ -157,13 +185,23 @@ namespace Workshell.PE
 
         public uint OffsetToRVA(ulong offset)
         {
-            foreach(SectionTableEntry entry in reader.SectionTable)
+            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.PointerToRawData).ToArray();
+            SectionTableEntry entry = null;
+
+            for (var i = 0; i < entries.Length; i++)
             {
-                if (offset >= entry.PointerToRawData && offset < (entry.PointerToRawData + entry.SizeOfRawData))
-                    return OffsetToRVA(entry,offset);
+                if (offset >= entries[i].PointerToRawData && offset < (entries[i].PointerToRawData + entries[i].SizeOfRawData))
+                    entry = entries[i];
             }
 
-            return 0;
+            if (entry != null)
+            {
+                return OffsetToRVA(entry, offset);
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public uint OffsetToRVA(Section section, ulong offset)
