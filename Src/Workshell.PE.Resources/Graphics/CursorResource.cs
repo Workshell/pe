@@ -42,11 +42,13 @@ namespace Workshell.PE.Resources
     public sealed class CursorInfo
     {
 
-        internal CursorInfo(CursorResource cursor, uint languageId, ushort hotspotX, ushort hotspotY, byte[] dib)
+        internal CursorInfo(CursorResource cursor, uint languageId, ushort hotspotX, ushort hotspotY, ushort width, ushort height, byte colors, byte[] dib)
         {
             Cursor = cursor;
             Language = languageId;
             Hotspot = new Point(hotspotX, hotspotY);
+            Size = new Size(width, height);
+            Colors = colors;
             DIB = dib;
         }
 
@@ -70,6 +72,18 @@ namespace Workshell.PE.Resources
             private set;
         }
 
+        public Size Size
+        {
+            get;
+            private set;
+        }
+
+        public byte Colors
+        {
+            get;
+            private set;
+        }
+
         public byte[] DIB
         {
             get;
@@ -85,7 +99,8 @@ namespace Workshell.PE.Resources
         Raw,
         Cursor,
         Icon,
-        Bitmap
+        Bitmap,
+        PNG
     }
 
     public class CursorResource : Resource
@@ -116,32 +131,30 @@ namespace Workshell.PE.Resources
         public CursorInfo GetInfo(uint languageId)
         {
             Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
-            CursorInfo result = new CursorInfo(this, languageId, tuple.Item1, tuple.Item2, tuple.Item3);
 
-            return result;
+            using (MemoryStream dib_mem = new MemoryStream(tuple.Item3))
+            {
+                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
+
+                ushort width = Convert.ToUInt16(header.biWidth);
+                ushort height = Convert.ToUInt16(header.biHeight / 2);
+                byte color_count = Convert.ToByte(header.biBitCount);
+                CursorInfo result = new CursorInfo(this, languageId, tuple.Item1, tuple.Item2, width, height, color_count, tuple.Item3);
+
+                return result;
+            }
         }
 
         public Icon ToIcon()
         {
-            return ToIcon(Color.Transparent);
-        }
-
-        public Icon ToIcon(Color backgroundColor)
-        {
-            return ToIcon(DEFAULT_LANGUAGE, Color.Transparent);
+            return ToIcon(DEFAULT_LANGUAGE);
         }
 
         public Icon ToIcon(uint languageId)
         {
-            return ToIcon(languageId, Color.Transparent);
-        }
-
-        public Icon ToIcon(uint languageId, Color backgroundColor)
-        {
             Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
-            MemoryStream dib_mem = new MemoryStream(tuple.Item3);
 
-            using (dib_mem)
+            using (MemoryStream dib_mem = new MemoryStream(tuple.Item3))
             {
                 BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
 
@@ -199,7 +212,7 @@ namespace Workshell.PE.Resources
 
         public Bitmap ToBitmap(uint languageId, Color backgroundColor)
         {
-            using (Icon icon = ToIcon(languageId, backgroundColor))
+            using (Icon icon = ToIcon(languageId))
             {
                 Rectangle rect = new Rectangle(0, 0, icon.Width, icon.Height);
                 Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
@@ -207,11 +220,12 @@ namespace Workshell.PE.Resources
                 using (Graphics graphics = Graphics.FromImage(bitmap))
                 {
                     using (SolidBrush brush = new SolidBrush(backgroundColor))
-                    {
                         graphics.FillRectangle(brush, rect);
-                        graphics.DrawIcon(icon, rect);
-                    }
+
+                    graphics.DrawIcon(icon, rect);
                 }
+
+                bitmap.MakeTransparent(backgroundColor);
 
                 return bitmap;
             }
@@ -247,6 +261,15 @@ namespace Workshell.PE.Resources
                         using (Bitmap bitmap = ToBitmap(languageId))
                         {
                             bitmap.Save(stream, ImageFormat.Bmp);
+                        }
+
+                        break;
+                    }
+                case CursorSaveFormat.PNG:
+                    {
+                        using (Bitmap bitmap = ToBitmap(languageId))
+                        {
+                            bitmap.Save(stream, ImageFormat.Png);
                         }
 
                         break;

@@ -47,9 +47,8 @@ namespace Workshell.PE.Resources
         {
             Icon = resource;
             Language = languageId;
-            Width = width;
-            Height = height;
-            ColorCount = colors;
+            Size = new Size(width, height);
+            Colors = colors;
             DIB = dib;
             IsPNG = isPNG;
         }
@@ -68,19 +67,13 @@ namespace Workshell.PE.Resources
             private set;
         }
 
-        public ushort Width
+        public Size Size
         {
             get;
             private set;
         }
 
-        public ushort Height
-        {
-            get;
-            private set;
-        }
-
-        public byte ColorCount
+        public byte Colors
         {
             get;
             private set;
@@ -106,7 +99,8 @@ namespace Workshell.PE.Resources
     {
         Raw,
         Icon,
-        Bitmap
+        Bitmap,
+        PNG
     }
 
     public class IconResource : Resource
@@ -144,61 +138,96 @@ namespace Workshell.PE.Resources
 
         public Icon ToIcon()
         {
-            return ToIcon(Color.Transparent);
-        }
-
-        public Icon ToIcon(Color backgroundColor)
-        {
-            return ToIcon(DEFAULT_LANGUAGE, Color.Transparent);
+            return ToIcon(DEFAULT_LANGUAGE);
         }
 
         public Icon ToIcon(uint languageId)
         {
-            return ToIcon(languageId, Color.Transparent);
-        }
-
-        public Icon ToIcon(uint languageId, Color backgroundColor)
-        {
             Tuple<ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
-            MemoryStream dib_mem = new MemoryStream(tuple.Item4);
 
-            using (dib_mem)
+            if (!tuple.Item5)
             {
-                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
-
-                ushort width = Convert.ToUInt16(header.biWidth);
-                ushort height = Convert.ToUInt16(header.biHeight / 2);
-                byte color_count = Convert.ToByte(header.biBitCount);
-
-                MemoryStream mem = new MemoryStream();
-
-                using (mem)
+                using (MemoryStream dib_mem = new MemoryStream(tuple.Item4))
                 {
-                    Utils.Write(Convert.ToUInt16(0), mem);
-                    Utils.Write(Convert.ToUInt16(1), mem);
-                    Utils.Write(Convert.ToUInt16(1), mem);
+                    BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
 
-                    uint colors = 0;
+                    ushort width = Convert.ToUInt16(header.biWidth);
+                    ushort height = Convert.ToUInt16(header.biHeight / 2);
+                    byte color_count = Convert.ToByte(header.biBitCount);
 
-                    if (color_count != 0 && color_count < 8)
-                        colors = Convert.ToUInt32(Math.Pow(2, color_count));
+                    MemoryStream mem = new MemoryStream();
 
-                    Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
-                    Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
-                    Utils.Write(Convert.ToByte(colors), mem);
-                    Utils.Write(Convert.ToByte(0), mem);
-                    Utils.Write(Convert.ToUInt16(1), mem);
-                    Utils.Write(Convert.ToUInt16(color_count), mem);
-                    Utils.Write(tuple.Item4.Length, mem);
-                    Utils.Write(22, mem);
+                    using (mem)
+                    {
+                        Utils.Write(Convert.ToUInt16(0), mem);
+                        Utils.Write(Convert.ToUInt16(1), mem);
+                        Utils.Write(Convert.ToUInt16(1), mem);
 
-                    Utils.Write(tuple.Item4, mem);
+                        uint colors = 0;
 
-                    mem.Seek(0, SeekOrigin.Begin);
+                        if (color_count != 0 && color_count < 8)
+                            colors = Convert.ToUInt32(Math.Pow(2, color_count));
 
-                    Icon icon = new Icon(mem);
+                        Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
+                        Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
+                        Utils.Write(Convert.ToByte(colors), mem);
+                        Utils.Write(Convert.ToByte(0), mem);
+                        Utils.Write(Convert.ToUInt16(1), mem);
+                        Utils.Write(Convert.ToUInt16(color_count), mem);
+                        Utils.Write(tuple.Item4.Length, mem);
+                        Utils.Write(22, mem);
 
-                    return icon;
+                        Utils.Write(tuple.Item4, mem);
+
+                        mem.Seek(0, SeekOrigin.Begin);
+
+                        Icon icon = new Icon(mem);
+
+                        return icon;
+                    }
+                }
+            }
+            else
+            {
+                using (MemoryStream dib_mem = new MemoryStream(tuple.Item4))
+                {
+                    using (Image png = Image.FromStream(dib_mem))
+                    {
+                        ushort width = Convert.ToUInt16(png.Width);
+                        ushort height = Convert.ToUInt16(png.Height);
+                        byte color_count = 32;
+
+                        MemoryStream mem = new MemoryStream();
+
+                        using (mem)
+                        {
+                            Utils.Write(Convert.ToUInt16(0), mem);
+                            Utils.Write(Convert.ToUInt16(1), mem);
+                            Utils.Write(Convert.ToUInt16(1), mem);
+
+                            uint colors = 0;
+
+                            if (color_count != 0 && color_count < 8)
+                                colors = Convert.ToUInt32(Math.Pow(2, color_count));
+
+                            Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
+                            Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
+                            Utils.Write(Convert.ToByte(colors), mem);
+                            Utils.Write(Convert.ToByte(0), mem);
+                            Utils.Write(Convert.ToUInt16(1), mem);
+                            Utils.Write(Convert.ToUInt16(color_count), mem);
+                            Utils.Write(tuple.Item4.Length, mem);
+                            Utils.Write(22, mem);
+
+                            Utils.Write(tuple.Item4, mem);
+
+                            mem.Seek(0, SeekOrigin.Begin);
+
+                            Icon icon = new Icon(mem);
+
+                            return icon;
+                        }
+                    }
                 }
             }
         }
@@ -220,21 +249,40 @@ namespace Workshell.PE.Resources
 
         public Bitmap ToBitmap(uint languageId, Color backgroundColor)
         {
-            using (Icon icon = ToIcon(languageId, backgroundColor))
-            {
-                Rectangle rect = new Rectangle(0, 0, icon.Width, icon.Height);
-                Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+            Tuple<ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
 
-                using (Graphics graphics = Graphics.FromImage(bitmap))
+            if (!tuple.Item5)
+            {
+                using (Icon icon = ToIcon(languageId))
                 {
-                    using (SolidBrush brush = new SolidBrush(backgroundColor))
+                    Rectangle rect = new Rectangle(0, 0, icon.Width, icon.Height);
+                    Bitmap bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
+
+                    using (Graphics graphics = Graphics.FromImage(bitmap))
                     {
-                        graphics.FillRectangle(brush, rect);
+
+                        using (SolidBrush brush = new SolidBrush(backgroundColor))
+                            graphics.FillRectangle(brush, rect);
+
                         graphics.DrawIcon(icon, rect);
                     }
-                }
 
-                return bitmap;
+                    bitmap.MakeTransparent(backgroundColor);
+
+                    return bitmap;
+                }
+            }
+            else
+            {
+                using (MemoryStream dib_mem = new MemoryStream(tuple.Item4))
+                {
+                    using (Image png = Image.FromStream(dib_mem))
+                    {
+                        Bitmap bitmap = new Bitmap(png);
+
+                        return bitmap;
+                    }
+                }
             }
         }
 
@@ -269,6 +317,24 @@ namespace Workshell.PE.Resources
                         using (Bitmap bitmap = ToBitmap(languageId))
                         {
                             bitmap.Save(stream, ImageFormat.Bmp);
+                        }
+
+                        break;
+                    }
+                case IconSaveFormat.PNG:
+                    {
+                        Tuple<ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
+
+                        if (!tuple.Item5)
+                        {
+                            using (Bitmap bitmap = ToBitmap(languageId))
+                            {
+                                bitmap.Save(stream, ImageFormat.Png);
+                            }
+                        }
+                        else
+                        {
+                            stream.Write(tuple.Item4, 0, tuple.Item4.Length);
                         }
 
                         break;
