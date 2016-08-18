@@ -218,7 +218,7 @@ namespace Workshell.PE.Resources
         {
             byte[] data = GetBytes(languageId);
 
-            using (MemoryStream mem = new MemoryStream())
+            using (MemoryStream mem = new MemoryStream(data))
             {
                 NEWHEADER header = Utils.Read<NEWHEADER>(mem);
 
@@ -241,7 +241,7 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public void Save(string fileName, uint languageId, IconSaveFormat format)
+        public void Save(string fileName, uint languageId, IconGroupSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -250,9 +250,9 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public void Save(Stream stream, uint languageId, IconSaveFormat format)
+        public void Save(Stream stream, uint languageId, IconGroupSaveFormat format)
         {
-            if (format == IconSaveFormat.Raw)
+            if (format == IconGroupSaveFormat.Raw)
             {
                 Save(stream, languageId);
             }
@@ -278,18 +278,17 @@ namespace Workshell.PE.Resources
                 {
                     IconGroupEntry entry = group[i];
 
+                    ulong color_count = Convert.ToUInt64(Math.Pow(2, entry.BitCount));
+
+                    if (color_count >= 256)
+                        color_count = 0;
+
                     Utils.Write(Convert.ToByte(entry.Width >= 256 ? 0 : entry.Width), stream);
                     Utils.Write(Convert.ToByte(entry.Height >= 256 ? 0 : entry.Height), stream);
-                    Utils.Write(Convert.ToByte(entry.ColorCount), stream);
+                    Utils.Write(Convert.ToByte(color_count), stream);
                     Utils.Write(Convert.ToByte(0), stream);
                     Utils.Write(Convert.ToUInt16(1), stream);
-
-                    ushort colors = Convert.ToUInt16(Math.Log(entry.ColorCount) / Math.Log(2));
-
-                    if (colors >= 256)
-                        colors = 0;
-
-                    Utils.Write(colors, stream);
+                    Utils.Write(entry.BitCount, stream);
                     Utils.Write(entry.BytesInRes, stream);
                     Utils.Write(offsets[i], stream);
                 }
