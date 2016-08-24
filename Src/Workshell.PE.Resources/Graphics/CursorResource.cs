@@ -42,7 +42,7 @@ namespace Workshell.PE.Resources
     public sealed class CursorInfo
     {
 
-        internal CursorInfo(CursorResource cursor, uint languageId, ushort hotspotX, ushort hotspotY, ushort width, ushort height, byte colors, byte[] dib)
+        internal CursorInfo(CursorResource cursor, uint languageId, ushort hotspotX, ushort hotspotY, ushort width, ushort height, byte colors, byte[] dib, bool isPNG)
         {
             Cursor = cursor;
             Language = languageId;
@@ -50,6 +50,7 @@ namespace Workshell.PE.Resources
             Size = new Size(width, height);
             Colors = colors;
             DIB = dib;
+            IsPNG = isPNG;
         }
 
         #region Properties
@@ -85,6 +86,12 @@ namespace Workshell.PE.Resources
         }
 
         public byte[] DIB
+        {
+            get;
+            private set;
+        }
+
+        public bool IsPNG
         {
             get;
             private set;
@@ -130,19 +137,10 @@ namespace Workshell.PE.Resources
 
         public CursorInfo GetInfo(uint languageId)
         {
-            Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
+            Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
+            CursorInfo result = new CursorInfo(this, languageId, tuple.Item1, tuple.Item2, tuple.Item3, tuple.Item4, tuple.Item5, tuple.Item6, tuple.Item7);
 
-            using (MemoryStream dib_mem = new MemoryStream(tuple.Item3))
-            {
-                BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
-
-                ushort width = Convert.ToUInt16(header.biWidth);
-                ushort height = Convert.ToUInt16(header.biHeight / 2);
-                byte color_count = Convert.ToByte(header.biBitCount);
-                CursorInfo result = new CursorInfo(this, languageId, tuple.Item1, tuple.Item2, width, height, color_count, tuple.Item3);
-
-                return result;
-            }
+            return result;
         }
 
         public Icon ToIcon()
@@ -152,7 +150,8 @@ namespace Workshell.PE.Resources
 
         public Icon ToIcon(uint languageId)
         {
-            Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
+            /*
+            Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
 
             using (MemoryStream dib_mem = new MemoryStream(tuple.Item3))
             {
@@ -191,6 +190,90 @@ namespace Workshell.PE.Resources
                     Icon icon = new Icon(mem);
 
                     return icon;
+                }
+            }
+            */
+
+            Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
+
+            if (!tuple.Item7)
+            {
+                using (MemoryStream dib_mem = new MemoryStream(tuple.Item6))
+                {
+                    BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
+
+                    ushort width = Convert.ToUInt16(header.biWidth);
+                    ushort height = Convert.ToUInt16(header.biHeight / 2);
+                    byte color_count = Convert.ToByte(header.biBitCount);
+
+                    MemoryStream mem = new MemoryStream();
+
+                    using (mem)
+                    {
+                        Utils.Write(Convert.ToUInt16(0), mem);
+                        Utils.Write(Convert.ToUInt16(1), mem);
+                        Utils.Write(Convert.ToUInt16(1), mem);
+
+                        ulong colors = Convert.ToUInt64(Math.Pow(2, color_count));
+
+                        if (colors >= 256)
+                            colors = 0;
+
+                        Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
+                        Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
+                        Utils.Write(Convert.ToByte(colors), mem);
+                        Utils.Write(Convert.ToByte(0), mem);
+                        Utils.Write(Convert.ToUInt16(1), mem);
+                        Utils.Write(Convert.ToUInt16(color_count), mem);
+                        Utils.Write(tuple.Item6.Length, mem);
+                        Utils.Write(22, mem);
+
+                        Utils.Write(tuple.Item6, mem);
+
+                        mem.Seek(0, SeekOrigin.Begin);
+
+                        Icon icon = new Icon(mem);
+
+                        return icon;
+                    }
+                }
+            }
+            else
+            {
+                using (MemoryStream dib_mem = new MemoryStream(tuple.Item6))
+                {
+                    using (Image png = Image.FromStream(dib_mem))
+                    {
+                        ushort width = Convert.ToUInt16(png.Width);
+                        ushort height = Convert.ToUInt16(png.Height);
+                        byte color_count = 32;
+
+                        MemoryStream mem = new MemoryStream();
+
+                        using (mem)
+                        {
+                            Utils.Write(Convert.ToUInt16(0), mem);
+                            Utils.Write(Convert.ToUInt16(1), mem);
+                            Utils.Write(Convert.ToUInt16(1), mem);
+
+                            Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
+                            Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
+                            Utils.Write(Convert.ToByte(0), mem); // 32-bit (16m colors) so 0
+                            Utils.Write(Convert.ToByte(0), mem);
+                            Utils.Write(Convert.ToUInt16(1), mem);
+                            Utils.Write(Convert.ToUInt16(color_count), mem);
+                            Utils.Write(tuple.Item6.Length, mem);
+                            Utils.Write(22, mem);
+
+                            Utils.Write(tuple.Item6, mem);
+
+                            mem.Seek(0, SeekOrigin.Begin);
+
+                            Icon icon = new Icon(mem);
+
+                            return icon;
+                        }
+                    }
                 }
             }
         }
@@ -267,9 +350,18 @@ namespace Workshell.PE.Resources
                     }
                 case CursorSaveFormat.PNG:
                     {
-                        using (Bitmap bitmap = ToBitmap(languageId))
+                        Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
+
+                        if (!tuple.Item7)
                         {
-                            bitmap.Save(stream, ImageFormat.Png);
+                            using (Bitmap bitmap = ToBitmap(languageId))
+                            {
+                                bitmap.Save(stream, ImageFormat.Png);
+                            }
+                        }
+                        else
+                        {
+                            stream.Write(tuple.Item6, 0, tuple.Item6.Length);
                         }
 
                         break;
@@ -277,8 +369,8 @@ namespace Workshell.PE.Resources
                 case CursorSaveFormat.Cursor:
                 default:
                     {
-                        Tuple<ushort, ushort, byte[]> tuple = Load(languageId);
-                        MemoryStream mem = new MemoryStream(tuple.Item3);
+                        Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> tuple = Load(languageId);
+                        MemoryStream mem = new MemoryStream(tuple.Item6);
 
                         using (mem)
                         {
@@ -294,10 +386,10 @@ namespace Workshell.PE.Resources
                             Utils.Write(Convert.ToByte(0), stream);
                             Utils.Write(tuple.Item1, stream);
                             Utils.Write(tuple.Item2, stream);
-                            Utils.Write(tuple.Item3.Length, stream);
+                            Utils.Write(tuple.Item6.Length, stream);
                             Utils.Write(22, stream);
 
-                            Utils.Write(tuple.Item3, stream);
+                            Utils.Write(tuple.Item6, stream);
                         }
 
                         break;
@@ -305,8 +397,9 @@ namespace Workshell.PE.Resources
             }
         }
 
-        private Tuple<ushort, ushort, byte[]> Load(uint languageId)
+        private Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> Load(uint languageId)
         {
+            /*
             byte[] data = GetBytes(languageId);
 
             using (MemoryStream mem = new MemoryStream(data))
@@ -326,6 +419,54 @@ namespace Workshell.PE.Resources
 
                 return tuple;
             }
+            */
+
+            byte[] data = GetBytes(languageId);
+            ushort hotspot_x;
+            ushort hotspot_y;
+            ushort width;
+            ushort height;
+            byte color_count;
+            byte[] dib;
+            bool is_png;
+
+            using (MemoryStream mem = new MemoryStream(data))
+            {
+                hotspot_x = Utils.ReadUInt16(mem);
+                hotspot_y = Utils.ReadUInt16(mem);
+
+                using (MemoryStream dib_mem = new MemoryStream(data.Length))
+                {
+                    mem.CopyTo(dib_mem, 4096);
+                    dib_mem.Seek(0, SeekOrigin.Begin);
+
+                    dib = dib_mem.ToArray();
+
+                    if (!GraphicResources.IsPNG(dib))
+                    {
+                        BITMAPINFOHEADER header = Utils.Read<BITMAPINFOHEADER>(dib_mem);
+
+                        width = Convert.ToUInt16(header.biWidth);
+                        height = Convert.ToUInt16(header.biHeight / 2);
+                        color_count = Convert.ToByte(header.biBitCount);
+                        is_png = false;
+                    }
+                    else
+                    {
+                        using (Image png = Image.FromStream(dib_mem))
+                        {
+                            width = Convert.ToUInt16(png.Width);
+                            height = Convert.ToUInt16(png.Height);
+                            color_count = 32;
+                            is_png = true;
+                        }
+                    }
+                }
+            }
+
+            Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool> tuple = new Tuple<ushort, ushort, ushort, ushort, byte, byte[], bool>(hotspot_x, hotspot_y, width, height, color_count, dib, is_png);
+
+            return tuple;
         }
 
         #endregion

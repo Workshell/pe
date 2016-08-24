@@ -163,10 +163,10 @@ namespace Workshell.PE.Resources
                         Utils.Write(Convert.ToUInt16(1), mem);
                         Utils.Write(Convert.ToUInt16(1), mem);
 
-                        uint colors = 0;
+                        ulong colors = Convert.ToUInt64(Math.Pow(2, color_count));
 
-                        if (color_count != 0 && color_count < 8)
-                            colors = Convert.ToUInt32(Math.Pow(2, color_count));
+                        if (colors >= 256)
+                            colors = 0;
 
                         Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
                         Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
@@ -205,14 +205,9 @@ namespace Workshell.PE.Resources
                             Utils.Write(Convert.ToUInt16(1), mem);
                             Utils.Write(Convert.ToUInt16(1), mem);
 
-                            uint colors = 0;
-
-                            if (color_count != 0 && color_count < 8)
-                                colors = Convert.ToUInt32(Math.Pow(2, color_count));
-
                             Utils.Write(Convert.ToByte(width >= 256 ? 0 : width), mem);
                             Utils.Write(Convert.ToByte(height >= 256 ? 0 : height), mem);
-                            Utils.Write(Convert.ToByte(colors), mem);
+                            Utils.Write(Convert.ToByte(0), mem); // 32-bit (16m colors) so 0
                             Utils.Write(Convert.ToByte(0), mem);
                             Utils.Write(Convert.ToUInt16(1), mem);
                             Utils.Write(Convert.ToUInt16(color_count), mem);
