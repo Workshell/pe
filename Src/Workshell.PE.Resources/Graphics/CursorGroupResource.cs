@@ -205,7 +205,7 @@ namespace Workshell.PE.Resources
         public CursorGroup ToGroup(uint languageId)
         {
             byte[] data = GetBytes(languageId);
-            MemoryStream mem = new MemoryStream();
+            MemoryStream mem = new MemoryStream(data);
 
             using (mem)
             {
@@ -230,7 +230,7 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public void Save(string fileName, uint languageId, CursorSaveFormat format)
+        public void Save(string fileName, uint languageId, CursorGroupSaveFormat format)
         {
             using (FileStream file = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
@@ -239,9 +239,9 @@ namespace Workshell.PE.Resources
             }
         }
 
-        public void Save(Stream stream, uint languageId, CursorSaveFormat format)
+        public void Save(Stream stream, uint languageId, CursorGroupSaveFormat format)
         {
-            if (format == CursorSaveFormat.Raw)
+            if (format == CursorGroupSaveFormat.Raw)
             {
                 Save(stream, languageId);
             }
