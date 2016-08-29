@@ -27,12 +27,12 @@ namespace Workshell.PE.Demo
             //string file_name = @"C:\Windows\System32\kernel32.dll";
             //string file_name = @"C:\Windows\SysWOW64\shell32.dll";
             //string file_name = @"C:\Windows\System32\shell32.dll";
-            string file_name = @"C:\Windows\System32\user32.dll";
+            //string file_name = @"C:\Windows\System32\user32.dll";
             //string file_name = @"C:\Windows\explorer.exe";
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
             //string file_name = @"C:\Program Files (x86)\Notepad++\notepad++.exe";
-            //string file_name = @"C:\Windows\WinSxS\x86_microsoft-windows-notepad.resources_31bf3856ad364e35_6.3.9600.16384_en-gb_aafce17aef6b0109\notepad.exe.mui";
+            string file_name = @"C:\Windows\System32\en-GB\shell32.dll.mui";
             string error_message;
 
             if (!ExecutableImage.IsValid(file_name,out error_message))
@@ -42,9 +42,16 @@ namespace Workshell.PE.Demo
                 return;
             }
 
+            MessageTableResource.Register();
+
             ExecutableImage image = ExecutableImage.FromFile(file_name);
-            RelocationTable relocations = RelocationTable.Get(image);
-            string section = relocations.Location.Section.Name;
+            LocationCalculator calc = image.GetCalculator();
+
+            ResourceCollection resources = ResourceCollection.Get(image);
+            ResourceType types = resources.FirstOrDefault(t => t.Id == ResourceType.RT_MESSAGETABLE);
+            Resource resource = types.FirstOrDefault(r => r.Id == 1);
+            MessageTableResource message_table_resource = resource as MessageTableResource;
+            MessageTable message_table = message_table_resource.ToTable(2057);
 
         }
 

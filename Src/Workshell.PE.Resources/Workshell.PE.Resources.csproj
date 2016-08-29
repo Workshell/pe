@@ -54,7 +54,9 @@
     <Compile Include="Dialogs\DialogEx.cs" />
     <Compile Include="Dialogs\DialogResource.cs" />
     <Compile Include="Native\ACCELTABLEENTRY.cs" />
+    <Compile Include="Native\MESSAGETABLE.cs" />
     <Compile Include="ResourceUtils.cs" />
+    <Compile Include="Strings\MessageTableResource.cs" />
     <Compile Include="Styles.cs" />
     <Compile Include="LanguageIdentifiers.cs" />
     <Compile Include="LocaleIdentifiers.cs" />

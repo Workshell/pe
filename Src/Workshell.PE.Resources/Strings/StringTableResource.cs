@@ -170,10 +170,6 @@ namespace Workshell.PE.Resources
     public sealed class StringTableResource : Resource
     {
 
-        private Resource resource;
-        private uint language_id;
-        private StringTableEntry[] strings;
-
         public StringTableResource(ResourceType owningType, ResourceDirectoryEntry directoryEntry) : base(owningType, directoryEntry)
         {
         }
@@ -229,7 +225,7 @@ namespace Workshell.PE.Resources
             }
 
             StringTableEntry[] strings = new StringTableEntry[list.Count];
-            ushort base_id = Convert.ToUInt16((resource.Id - 1) << 4);
+            ushort base_id = Convert.ToUInt16((Id - 1) << 4);
 
             for (var i = 0; i < list.Count; i++)
             {

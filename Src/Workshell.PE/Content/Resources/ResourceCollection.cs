@@ -189,6 +189,14 @@ namespace Workshell.PE.Resources
             }
         }
 
+        public ResourceDirectoryEntry DirectoryEntry
+        {
+            get
+            {
+                return directory_entry;
+            }
+        }
+
         public ResourceId Id
         {
             get
@@ -371,6 +379,14 @@ namespace Workshell.PE.Resources
             get
             {
                 return resources;
+            }
+        }
+
+        public ResourceDirectoryEntry DirectoryEntry
+        {
+            get
+            {
+                return directory_entry;
             }
         }
 
