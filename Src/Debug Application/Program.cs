@@ -32,7 +32,7 @@ namespace Workshell.PE.Demo
             //string file_name = @"C:\Windows\SysWOW64\xpsservices.dll";
             //string file_name = @"c:\windows\system32\advapi32.dll";
             //string file_name = @"C:\Program Files (x86)\Notepad++\notepad++.exe";
-            string file_name = @"C:\Windows\System32\en-GB\shell32.dll.mui";
+            string file_name = @"C:\Windows\System32\dsparse.dll";
             string error_message;
 
             if (!ExecutableImage.IsValid(file_name,out error_message))
@@ -44,14 +44,8 @@ namespace Workshell.PE.Demo
 
             MessageTableResource.Register();
 
-            ExecutableImage image = ExecutableImage.FromFile(file_name);
-            LocationCalculator calc = image.GetCalculator();
-
-            ResourceCollection resources = ResourceCollection.Get(image);
-            ResourceType types = resources.FirstOrDefault(t => t.Id == ResourceType.RT_MESSAGETABLE);
-            Resource resource = types.FirstOrDefault(r => r.Id == 1);
-            MessageTableResource message_table_resource = resource as MessageTableResource;
-            MessageTable message_table = message_table_resource.ToTable(2057);
+            var image = ExecutableImage.FromFile(file_name);
+            var delayedImports = DelayImportCollection.Get(image);
 
         }
 
