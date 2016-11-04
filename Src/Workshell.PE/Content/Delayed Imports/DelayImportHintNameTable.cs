@@ -195,17 +195,27 @@ namespace Workshell.PE.Imports
                 }
             }
 
-            var first_entry = entries.Values.MinBy(tuple => tuple.Item1);
-            var last_entry = entries.Values.MaxBy(tuple => tuple.Item1);
+            Location location;
 
-            ulong table_offset = first_entry.Item1;
-            uint table_size = ((last_entry.Item1 + last_entry.Item2) - table_offset).ToUInt32();
+            if (entries.Count > 0)
+            {
+                var first_entry = entries.Values.MinBy(tuple => tuple.Item1);
+                var last_entry = entries.Values.MaxBy(tuple => tuple.Item1);
 
-            uint table_rva = calc.OffsetToRVA(table_offset);
-            ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            ulong table_va = image_base + table_rva;
-            Section table_section = calc.RVAToSection(table_rva);
-            Location location = new Location(table_offset, table_rva, table_va, table_size, table_size, table_section);
+                ulong table_offset = first_entry.Item1;
+                uint table_size = ((last_entry.Item1 + last_entry.Item2) - table_offset).ToUInt32();
+
+                uint table_rva = calc.OffsetToRVA(table_offset);
+                ulong image_base = directory.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
+                ulong table_va = image_base + table_rva;
+                Section table_section = calc.RVAToSection(table_rva);
+
+                location = new Location(table_offset, table_rva, table_va, table_size, table_size, table_section);
+            }
+            else
+            {
+                location = new Location(0, 0, 0, 0, 0, null);
+            }
 
             DelayImportHintNameTable hint_name_table = new DelayImportHintNameTable(directory.DataDirectory, location, entries.Values.ToArray());
 
