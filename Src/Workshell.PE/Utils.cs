@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-
+using System.Threading.Tasks;
 using Workshell.PE.Extensions;
 
 namespace Workshell.PE
@@ -258,6 +258,26 @@ namespace Workshell.PE
             var result = (((ulong)ms) << 32) | ls;
 
             return result;
+        }
+
+        public static async Task<long> CopyStreamAsync(Stream from, Stream to, int bufferSize = 4096)
+        {
+            if (bufferSize < 1)
+                bufferSize = 4096;
+
+            var count = 0L;
+            var buffer = new byte[bufferSize];
+            var numRead = await from.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+
+            while (numRead > 0)
+            {
+                await to.WriteAsync(buffer, 0, numRead).ConfigureAwait(false);
+
+                count += numRead;
+                numRead = await from.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+            }
+
+            return count;
         }
 
         #endregion

@@ -2,36 +2,30 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-
 using Workshell.PE.Extensions;
 
 namespace Workshell.PE.Content
 {
-    public sealed class CLRMetaDataStream : ISupportsLocation, ISupportsBytes
+    public sealed class DebugData : ISupportsLocation, ISupportsBytes
     {
         private readonly PortableExecutableImage _image;
 
-        internal CLRMetaDataStream(PortableExecutableImage image, Location mdLocation, ulong imageBase, CLRMetaDataStreamTableEntry tableEntry)
+        internal DebugData(PortableExecutableImage image, Location location, DebugDirectoryEntry entry)
         {
             _image = image;
 
-            var calc = image.GetCalculator();
-            var offset = mdLocation.FileOffset + tableEntry.Offset;
-            var rva = calc.OffsetToRVA(offset);
-            var va = imageBase + rva;
-
-            Location = new Location(calc, offset, rva, va, tableEntry.Size, tableEntry.Size);
-            TableEntry = tableEntry;
-            Name = tableEntry.Name;
+            Location = location;
+            Entry = entry;
         }
 
         #region Methods
 
         public override string ToString()
         {
-            return Name;
+            var type = Entry.GetEntryType().ToString();
+
+            return $"Debug Type: {type}, File Offset: 0x{Location.FileOffset:X8}, Size: 0x{Location.FileSize:X8}";
         }
 
         public byte[] GetBytes()
@@ -78,9 +72,8 @@ namespace Workshell.PE.Content
 
         #region Properties
 
+        public DebugDirectoryEntry Entry { get; }
         public Location Location { get; }
-        public CLRMetaDataStreamTableEntry TableEntry { get; }
-        public string Name { get; }
 
         #endregion
     }
