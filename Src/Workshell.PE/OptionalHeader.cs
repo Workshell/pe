@@ -1,43 +1,15 @@
-﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
-
     public enum MagicType : int
     {
         [EnumAnnotation("IMAGE_NT_OPTIONAL_HDR32_MAGIC")]
@@ -107,22 +79,30 @@ namespace Workshell.PE
 
     public abstract class OptionalHeader : ISupportsLocation, ISupportsBytes
     {
+        private readonly PortableExecutableImage _image;
 
-        public static readonly int Size32 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
-        public static readonly int Size64 = Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>();
-
-        private ExecutableImage image;
-        private Location location;
-
-        internal OptionalHeader(ExecutableImage exeImage, ulong headerOffset, uint headerSize, ulong imageBase)
+        internal OptionalHeader(PortableExecutableImage image, ulong headerOffset, uint headerSize, ulong imageBase, ushort magic)
         {
-            image = exeImage;
-            location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,headerSize,headerSize);
+            _image = image;
+
+            Location = new Location(image.GetCalculator(), headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, headerSize, headerSize);
+            Magic = magic;
         }
 
         #region Methods
 
-        public abstract byte[] GetBytes();
+        public byte[] GetBytes()
+        {
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
+
+            return buffer;
+        }
 
         public MagicType GetMagic()
         {
@@ -161,742 +141,195 @@ namespace Workshell.PE
 
         #endregion
 
-        #region Properties
+        #region Static Properties
 
-        public ExecutableImage Image
-        {
-            get
-            {
-                return image;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
-
-        [FieldAnnotation("Magic")]
-        public abstract ushort Magic
-        {
-            get;
-        }
-
-        [FieldAnnotation("Major Linker Version")]
-        public abstract byte MajorLinkerVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Minor Linker Version")]
-        public abstract byte MinorLinkerVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Code")]
-        public abstract uint SizeOfCode
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Initialized Data")]
-        public abstract uint SizeOfInitializedData
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Uninitialized Data")]
-        public abstract uint SizeOfUninitializedData
-        {
-            get;
-        }
-
-        [FieldAnnotation("Address of Entry Point")]
-        public abstract uint AddressOfEntryPoint
-        {
-            get;
-        }
-
-        [FieldAnnotation("Base of Code")]
-        public abstract uint BaseOfCode
-        {
-            get;
-        }
-
-        [FieldAnnotation("Base of Data")]
-        public abstract uint BaseOfData
-        {
-            get;
-        }
-
-        [FieldAnnotation("Image Base")]
-        public abstract ulong ImageBase
-        {
-            get;
-        }
-
-        [FieldAnnotation("Section Alignment")]
-        public abstract uint SectionAlignment
-        {
-            get;
-        }
-
-        [FieldAnnotation("File Alignment")]
-        public abstract uint FileAlignment
-        {
-            get;
-        }
-
-        [FieldAnnotation("Major Operating System Version")]
-        public abstract ushort MajorOperatingSystemVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Minor Operating System Version")]
-        public abstract ushort MinorOperatingSystemVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Major Image Version")]
-        public abstract ushort MajorImageVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Minor Image Version")]
-        public abstract ushort MinorImageVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Major Sub-System Version")]
-        public abstract ushort MajorSubsystemVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Minor Sub-System Version")]
-        public abstract ushort MinorSubsystemVersion
-        {
-            get;
-        }
-
-        [FieldAnnotation("Win32 Version Value")]
-        public abstract uint Win32VersionValue
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Image")]
-        public abstract uint SizeOfImage
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Headers")]
-        public abstract uint SizeOfHeaders
-        {
-            get;
-        }
-
-        [FieldAnnotation("Checksum")]
-        public abstract uint CheckSum
-        {
-            get;
-        }
-
-        [FieldAnnotation("Sub-System",Flags = true,FlagType = typeof(SubSystemType))]
-        public abstract ushort Subsystem
-        {
-            get;
-        }
-
-        [FieldAnnotation("DLL Characteristics",Flags = true,FlagType = typeof(DllCharacteristicsType))]
-        public abstract ushort DllCharacteristics
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Stack Reserve")]
-        public abstract ulong SizeOfStackReserve
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Stack Commit")]
-        public abstract ulong SizeOfStackCommit
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Heap Reserve")]
-        public abstract ulong SizeOfHeapReserve
-        {
-            get;
-        }
-
-        [FieldAnnotation("Size of Heap Commit")]
-        public abstract ulong SizeOfHeapCommit
-        {
-            get;
-        }
-
-        [FieldAnnotation("Loader Flags")]
-        public abstract uint LoaderFlags
-        {
-            get;
-        }
-
-        [FieldAnnotation("Number of RVA and Sizes")]
-        public abstract uint NumberOfRvaAndSizes
-        {
-            get;
-        }
+        public static int Size32 { get; } = Marshal.SizeOf<IMAGE_OPTIONAL_HEADER32>();
+        public static int Size64 { get; } = Marshal.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 
         #endregion
 
+        #region Properties
+
+        public Location Location { get; }
+
+        [FieldAnnotation("Magic")]
+        public ushort Magic { get; }
+
+        [FieldAnnotation("Major Linker Version")]
+        public abstract byte MajorLinkerVersion { get; }
+
+        [FieldAnnotation("Minor Linker Version")]
+        public abstract byte MinorLinkerVersion { get; }
+
+        [FieldAnnotation("Size of Code")]
+        public abstract uint SizeOfCode { get; }
+
+        [FieldAnnotation("Size of Initialized Data")]
+        public abstract uint SizeOfInitializedData { get; }
+
+        [FieldAnnotation("Size of Uninitialized Data")]
+        public abstract uint SizeOfUninitializedData { get; }
+
+        [FieldAnnotation("Address of Entry Point")]
+        public abstract uint AddressOfEntryPoint { get; }
+
+        [FieldAnnotation("Base of Code")]
+        public abstract uint BaseOfCode { get; }
+
+        [FieldAnnotation("Base of Data")]
+        public abstract uint BaseOfData { get; }
+
+        [FieldAnnotation("Image Base")]
+        public abstract ulong ImageBase { get; }
+
+        [FieldAnnotation("Section Alignment")]
+        public abstract uint SectionAlignment { get; }
+
+        [FieldAnnotation("File Alignment")]
+        public abstract uint FileAlignment { get; }
+
+        [FieldAnnotation("Major Operating System Version")]
+        public abstract ushort MajorOperatingSystemVersion { get; }
+
+        [FieldAnnotation("Minor Operating System Version")]
+        public abstract ushort MinorOperatingSystemVersion { get; }
+
+        [FieldAnnotation("Major Image Version")]
+        public abstract ushort MajorImageVersion { get; }
+
+        [FieldAnnotation("Minor Image Version")]
+        public abstract ushort MinorImageVersion { get; }
+
+        [FieldAnnotation("Major Sub-System Version")]
+        public abstract ushort MajorSubsystemVersion { get; }
+
+        [FieldAnnotation("Minor Sub-System Version")]
+        public abstract ushort MinorSubsystemVersion { get; }
+
+        [FieldAnnotation("Win32 Version Value")]
+        public abstract uint Win32VersionValue { get; }
+
+        [FieldAnnotation("Size of Image")]
+        public abstract uint SizeOfImage { get; }
+
+        [FieldAnnotation("Size of Headers")]
+        public abstract uint SizeOfHeaders { get; }
+
+        [FieldAnnotation("Checksum")]
+        public abstract uint CheckSum { get; }
+
+        [FieldAnnotation("Sub-System",Flags = true,FlagType = typeof(SubSystemType))]
+        public abstract ushort Subsystem { get; }
+
+        [FieldAnnotation("DLL Characteristics",Flags = true,FlagType = typeof(DllCharacteristicsType))]
+        public abstract ushort DllCharacteristics { get; }
+
+        [FieldAnnotation("Size of Stack Reserve")]
+        public abstract ulong SizeOfStackReserve { get; }
+
+        [FieldAnnotation("Size of Stack Commit")]
+        public abstract ulong SizeOfStackCommit { get; }
+
+        [FieldAnnotation("Size of Heap Reserve")]
+        public abstract ulong SizeOfHeapReserve { get; }
+
+        [FieldAnnotation("Size of Heap Commit")]
+        public abstract ulong SizeOfHeapCommit { get; }
+
+        [FieldAnnotation("Loader Flags")]
+        public abstract uint LoaderFlags { get; }
+
+        [FieldAnnotation("Number of RVA and Sizes")]
+        public abstract uint NumberOfRvaAndSizes { get; }
+
+        #endregion
     }
 
     public sealed class OptionalHeader32 : OptionalHeader
     {
+        private readonly IMAGE_OPTIONAL_HEADER32 _header;
 
-        private IMAGE_OPTIONAL_HEADER32 header;
-
-        internal OptionalHeader32(ExecutableImage exeReader, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase) : base(exeReader,headerOffset,Convert.ToUInt32(OptionalHeader.Size32),imageBase)
+        internal OptionalHeader32(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size32.ToUInt32(), imageBase,magic)
         {
-            header = optHeader;
+            _header = optHeader;
         }
-
-        #region Methods
-
-        public override byte[] GetBytes()
-        {
-            Stream stream = Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,Location);
-
-            return buffer;
-        }
-
-        #endregion
 
         #region Properties
 
-        public override ushort Magic
-        {
-            get
-            {
-                return header.Magic;
-            }
-        }
-
-        public override byte MajorLinkerVersion
-        {
-            get
-            {
-                return header.MajorLinkerVersion;
-            }
-        }
-
-        public override byte MinorLinkerVersion
-        {
-            get
-            {
-                return header.MinorLinkerVersion;
-            }
-        }
-
-        public override uint SizeOfCode
-        {
-            get
-            {
-                return header.SizeOfCode;
-            }
-        }
-
-        public override uint SizeOfInitializedData
-        {
-            get
-            {
-                return header.SizeOfInitializedData;
-            }
-        }
-
-        public override uint SizeOfUninitializedData
-        {
-            get
-            {
-                return header.SizeOfUninitializedData;
-            }
-        }
-
-        public override uint AddressOfEntryPoint
-        {
-            get
-            {
-                return header.AddressOfEntryPoint;
-            }
-        }
-
-        public override uint BaseOfCode
-        {
-            get
-            {
-                return header.BaseOfCode;
-            }
-        }
-
-        public override uint BaseOfData
-        {
-            get
-            {
-                return header.BaseOfData;
-            }
-        }
-
-        public override ulong ImageBase
-        {
-            get
-            {
-                return header.ImageBase;
-            }
-        }
-
-        public override uint SectionAlignment
-        {
-            get
-            {
-                return header.SectionAlignment;
-            }
-        }
-
-        public override uint FileAlignment
-        {
-            get
-            {
-                return header.FileAlignment;
-            }
-        }
-
-        public override ushort MajorOperatingSystemVersion
-        {
-            get
-            {
-                return header.MajorOperatingSystemVersion;
-            }
-        }
-
-        public override ushort MinorOperatingSystemVersion
-        {
-            get
-            {
-                return header.MinorOperatingSystemVersion;
-            }
-        }
-
-        public override ushort MajorImageVersion
-        {
-            get
-            {
-                return header.MajorImageVersion;
-            }
-        }
-
-        public override ushort MinorImageVersion
-        {
-            get
-            {
-                return header.MinorImageVersion;
-            }
-        }
-
-        public override ushort MajorSubsystemVersion
-        {
-            get
-            {
-                return header.MajorSubsystemVersion;
-            }
-        }
-
-        public override ushort MinorSubsystemVersion
-        {
-            get
-            {
-                return header.MinorSubsystemVersion;
-            }
-        }
-
-        public override uint Win32VersionValue
-        {
-            get
-            {
-                return header.Win32VersionValue;
-            }
-        }
-
-        public override uint SizeOfImage
-        {
-            get
-            {
-                return header.SizeOfImage;
-            }
-        }
-
-        public override uint SizeOfHeaders
-        {
-            get
-            {
-                return header.SizeOfHeaders;
-            }
-        }
-
-        public override uint CheckSum
-        {
-            get
-            {
-                return header.CheckSum;
-            }
-        }
-
-        public override ushort Subsystem
-        {
-            get
-            {
-                return header.Subsystem;
-            }
-        }
-
-        public override ushort DllCharacteristics
-        {
-            get
-            {
-                return header.DllCharacteristics;
-            }
-        }
-
-        public override ulong SizeOfStackReserve
-        {
-            get
-            {
-                return header.SizeOfStackReserve;
-            }
-        }
-
-        public override ulong SizeOfStackCommit
-        {
-            get
-            {
-                return header.SizeOfStackCommit;
-            }
-        }
-
-        public override ulong SizeOfHeapReserve
-        {
-            get
-            {
-                return header.SizeOfHeapReserve;
-            }
-        }
-
-        public override ulong SizeOfHeapCommit
-        {
-            get
-            {
-                return header.SizeOfHeapCommit;
-            }
-        }
-
-        public override uint LoaderFlags
-        {
-            get
-            {
-                return header.LoaderFlags;
-            }
-        }
-
-        public override uint NumberOfRvaAndSizes
-        {
-            get
-            {
-                return header.NumberOfRvaAndSizes;
-            }
-        }
+        public override byte MajorLinkerVersion => _header.MajorLinkerVersion;
+        public override byte MinorLinkerVersion => _header.MinorLinkerVersion;
+        public override uint SizeOfCode => _header.SizeOfCode;
+        public override uint SizeOfInitializedData => _header.SizeOfInitializedData;
+        public override uint SizeOfUninitializedData => _header.SizeOfUninitializedData;
+        public override uint AddressOfEntryPoint => _header.AddressOfEntryPoint;
+        public override uint BaseOfCode => _header.BaseOfCode;
+        public override uint BaseOfData => _header.BaseOfData;
+        public override ulong ImageBase => _header.ImageBase;
+        public override uint SectionAlignment => _header.SectionAlignment;
+        public override uint FileAlignment => _header.FileAlignment;
+        public override ushort MajorOperatingSystemVersion => _header.MajorOperatingSystemVersion;
+        public override ushort MinorOperatingSystemVersion => _header.MinorOperatingSystemVersion;
+        public override ushort MajorImageVersion => _header.MajorImageVersion;
+        public override ushort MinorImageVersion => _header.MinorImageVersion;
+        public override ushort MajorSubsystemVersion => _header.MajorSubsystemVersion;
+        public override ushort MinorSubsystemVersion => _header.MinorSubsystemVersion;
+        public override uint Win32VersionValue => _header.Win32VersionValue;
+        public override uint SizeOfImage => _header.SizeOfImage;
+        public override uint SizeOfHeaders => _header.SizeOfHeaders;
+        public override uint CheckSum => _header.CheckSum;
+        public override ushort Subsystem => _header.Subsystem;
+        public override ushort DllCharacteristics => _header.DllCharacteristics;
+        public override ulong SizeOfStackReserve => _header.SizeOfStackReserve;
+        public override ulong SizeOfStackCommit => _header.SizeOfStackCommit;
+        public override ulong SizeOfHeapReserve => _header.SizeOfHeapReserve;
+        public override ulong SizeOfHeapCommit => _header.SizeOfHeapCommit;
+        public override uint LoaderFlags => _header.LoaderFlags;
+        public override uint NumberOfRvaAndSizes => _header.NumberOfRvaAndSizes;
 
         #endregion
-
     }
 
     public sealed class OptionalHeader64 : OptionalHeader
     {
+        private readonly IMAGE_OPTIONAL_HEADER64 _header;
 
-        private IMAGE_OPTIONAL_HEADER64 header;
-
-        internal OptionalHeader64(ExecutableImage exeImage, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase) : base(exeImage,headerOffset,Convert.ToUInt32(OptionalHeader.Size64),imageBase)
+        internal OptionalHeader64(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size64.ToUInt32(), imageBase, magic)
         {
-            header = optHeader;
+            _header = optHeader;
         }
-
-        #region Methods
-
-        public override byte[] GetBytes()
-        {
-            Stream stream = Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,Location);
-
-            return buffer;
-        }
-
-        #endregion
 
         #region Properties
 
-        public override ushort Magic
-        {
-            get
-            {
-                return header.Magic;
-            }
-        }
+        public override byte MajorLinkerVersion => _header.MajorLinkerVersion;
+        public override byte MinorLinkerVersion => _header.MinorLinkerVersion;
+        public override uint SizeOfCode => _header.SizeOfCode;
+        public override uint SizeOfInitializedData => _header.SizeOfInitializedData;
+        public override uint SizeOfUninitializedData => _header.SizeOfUninitializedData;
+        public override uint AddressOfEntryPoint => _header.AddressOfEntryPoint;
+        public override uint BaseOfCode => _header.BaseOfCode;
+        public override uint BaseOfData => 0;
+        public override ulong ImageBase => _header.ImageBase;
+        public override uint SectionAlignment => _header.SectionAlignment;
+        public override uint FileAlignment => _header.FileAlignment;
+        public override ushort MajorOperatingSystemVersion => _header.MajorOperatingSystemVersion;
+        public override ushort MinorOperatingSystemVersion => _header.MinorOperatingSystemVersion;
+        public override ushort MajorImageVersion => _header.MajorImageVersion;
+        public override ushort MinorImageVersion => _header.MinorImageVersion;
+        public override ushort MajorSubsystemVersion => _header.MajorSubsystemVersion;
+        public override ushort MinorSubsystemVersion => _header.MinorSubsystemVersion;
+        public override uint Win32VersionValue => _header.Win32VersionValue;
+        public override uint SizeOfImage => _header.SizeOfImage;
+        public override uint SizeOfHeaders => _header.SizeOfHeaders;
+        public override uint CheckSum => _header.CheckSum;
+        public override ushort Subsystem => _header.Subsystem;
+        public override ushort DllCharacteristics => _header.DllCharacteristics;
+        public override ulong SizeOfStackReserve => _header.SizeOfStackReserve;
+        public override ulong SizeOfStackCommit => _header.SizeOfStackCommit;
+        public override ulong SizeOfHeapReserve => _header.SizeOfHeapReserve;
+        public override ulong SizeOfHeapCommit => _header.SizeOfHeapCommit;
+        public override uint LoaderFlags => _header.LoaderFlags;
+        public override uint NumberOfRvaAndSizes => _header.NumberOfRvaAndSizes;
 
-        public override byte MajorLinkerVersion
-        {
-            get
-            {
-                return header.MajorLinkerVersion;
-            }
-        }
-
-        public override byte MinorLinkerVersion
-        {
-            get
-            {
-                return header.MinorLinkerVersion;
-            }
-        }
-
-        public override uint SizeOfCode
-        {
-            get
-            {
-                return header.SizeOfCode;
-            }
-        }
-
-        public override uint SizeOfInitializedData
-        {
-            get
-            {
-                return header.SizeOfInitializedData;
-            }
-        }
-
-        public override uint SizeOfUninitializedData
-        {
-            get
-            {
-                return header.SizeOfUninitializedData;
-            }
-        }
-
-        public override uint AddressOfEntryPoint
-        {
-            get
-            {
-                return header.AddressOfEntryPoint;
-            }
-        }
-
-        public override uint BaseOfCode
-        {
-            get
-            {
-                return header.BaseOfCode;
-            }
-        }
-
-        public override uint BaseOfData
-        {
-            get
-            {
-                return 0;
-            }
-        }
-
-        public override ulong ImageBase
-        {
-            get
-            {
-                return header.ImageBase;
-            }
-        }
-
-        public override uint SectionAlignment
-        {
-            get
-            {
-                return header.SectionAlignment;
-            }
-        }
-
-        public override uint FileAlignment
-        {
-            get
-            {
-                return header.FileAlignment;
-            }
-        }
-
-        public override ushort MajorOperatingSystemVersion
-        {
-            get
-            {
-                return header.MajorOperatingSystemVersion;
-            }
-        }
-
-        public override ushort MinorOperatingSystemVersion
-        {
-            get
-            {
-                return header.MinorOperatingSystemVersion;
-            }
-        }
-
-        public override ushort MajorImageVersion
-        {
-            get
-            {
-                return header.MajorImageVersion;
-            }
-        }
-
-        public override ushort MinorImageVersion
-        {
-            get
-            {
-                return header.MinorImageVersion;
-            }
-        }
-
-        public override ushort MajorSubsystemVersion
-        {
-            get
-            {
-                return header.MajorSubsystemVersion;
-            }
-        }
-
-        public override ushort MinorSubsystemVersion
-        {
-            get
-            {
-                return header.MinorSubsystemVersion;
-            }
-        }
-
-        public override uint Win32VersionValue
-        {
-            get
-            {
-                return header.Win32VersionValue;
-            }
-        }
-
-        public override uint SizeOfImage
-        {
-            get
-            {
-                return header.SizeOfImage;
-            }
-        }
-
-        public override uint SizeOfHeaders
-        {
-            get
-            {
-                return header.SizeOfHeaders;
-            }
-        }
-
-        public override uint CheckSum
-        {
-            get
-            {
-                return header.CheckSum;
-            }
-        }
-
-        public override ushort Subsystem
-        {
-            get
-            {
-                return header.Subsystem;
-            }
-        }
-
-        public override ushort DllCharacteristics
-        {
-            get
-            {
-                return header.DllCharacteristics;
-            }
-        }
-
-        public override ulong SizeOfStackReserve
-        {
-            get
-            {
-                return header.SizeOfStackReserve;
-            }
-        }
-
-        public override ulong SizeOfStackCommit
-        {
-            get
-            {
-                return header.SizeOfStackCommit;
-            }
-        }
-
-        public override ulong SizeOfHeapReserve
-        {
-            get
-            {
-                return header.SizeOfHeapReserve;
-            }
-        }
-
-        public override ulong SizeOfHeapCommit
-        {
-            get
-            {
-                return header.SizeOfHeapCommit;
-            }
-        }
-
-        public override uint LoaderFlags
-        {
-            get
-            {
-                return header.LoaderFlags;
-            }
-        }
-
-        public override uint NumberOfRvaAndSizes
-        {
-            get
-            {
-                return header.NumberOfRvaAndSizes;
-            }
-        }
-
-        #endregion
-    
+        #endregion   
     }
-
 }

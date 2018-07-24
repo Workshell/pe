@@ -1,29 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE
+namespace Workshell.PE.Content
 {
-    public sealed class DOSStub : ISupportsLocation, ISupportsBytes
+    public sealed class CLRMetaDataStreamTableEntry : ISupportsLocation, ISupportsBytes
     {
         private readonly PortableExecutableImage _image;
 
-        internal DOSStub(PortableExecutableImage image, ulong stubOffset, uint stubSize, ulong imageBase)
+        internal CLRMetaDataStreamTableEntry(PortableExecutableImage image, Location location, uint offset, uint size, string name)
         {
             _image = image;
 
-            Location = new Location(image.GetCalculator(), stubOffset, Convert.ToUInt32(stubOffset), imageBase + stubOffset, stubSize, stubSize);
+            Location = location;
+            Offset = offset;
+            Size = size;
+            Name = name;
         }
 
         #region Methods
 
         public override string ToString()
         {
-            return "MS-DOS Stub";
-        }
+            return $"Offset: 0x{Offset:X8}, Size: {Size}, Name: {Name}";
+        } 
 
         public byte[] GetBytes()
         {
@@ -39,10 +42,13 @@ namespace Workshell.PE
         }
 
         #endregion
-
+        
         #region Properties
 
         public Location Location { get; }
+        public uint Offset { get; }
+        public uint Size { get; }
+        public string Name { get; }
 
         #endregion
     }

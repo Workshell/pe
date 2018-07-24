@@ -1,2 +1,0 @@
-..\Tools\nuget pack ..\Src\Workshell.PE\Workshell.PE.csproj -Build -Prop Configuration=Release;
-..\Tools\nuget pack ..\Src\Workshell.PE.Resources\Workshell.PE.Resources.csproj -Build -Prop Configuration=Release;

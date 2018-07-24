@@ -1,200 +1,95 @@
-﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#endregion
-
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using Workshell.PE.Extensions;
 
-namespace Workshell.PE.CLR
+namespace Workshell.PE.Content
 {
-
-    public sealed class CLRMetaDataStreamTableEntry : ISupportsLocation, ISupportsBytes
-    {
-
-        internal CLRMetaDataStreamTableEntry(CLRMetaDataStreamTable streamTable, Location streamLocation, uint streamOffset, uint streamSize, string streamName)
-        {
-            Table = streamTable;
-            Location = streamLocation;
-            Offset = streamOffset;
-            Size = streamSize;
-            Name = streamName;
-        }
-
-        #region Methods
-
-        public override string ToString()
-        {
-            return String.Format("Offset: 0x{0:X8}, Size: {1}, Name: {2}",Offset,Size,Name);
-        } 
-
-        public byte[] GetBytes()
-        {
-            Stream stream = Table.MetaData.CLR.DataDirectory.Directories.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,Location);
-
-            return buffer;
-        }
-
-        #endregion
-
-        #region Properties
-
-        public CLRMetaDataStreamTable Table
-        {
-            get;
-            private set;
-        }
-
-        public Location Location
-        {
-            get;
-            private set;
-        }
-
-        public uint Offset
-        {
-            get;
-            private set;
-        }
-
-        public uint Size
-        {
-            get;
-            private set;
-        }
-
-        public string Name
-        {
-            get;
-            private set;
-        }
-
-        #endregion
-
-    }
-
     public sealed class CLRMetaDataStreamTable : IEnumerable<CLRMetaDataStreamTableEntry>, ISupportsLocation, ISupportsBytes
     {
+        private readonly PortableExecutableImage _image;
+        private readonly CLRMetaDataStreamTableEntry[] _entries;
 
-        private CLRMetaData meta_data;
-        private CLRMetaDataStreamTableEntry[] entries;
-        private Location location;
-
-        internal CLRMetaDataStreamTable(CLRMetaData metaData)
+        internal CLRMetaDataStreamTable(PortableExecutableImage image, Location location, CLRMetaDataStreamTableEntry[] entries)
         {
-            LocationCalculator calc = metaData.CLR.DataDirectory.Directories.Image.GetCalculator();
-            Stream stream = metaData.CLR.DataDirectory.Directories.Image.GetStream();
-            ulong image_base = metaData.CLR.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            ulong offset = metaData.Header.Location.FileOffset + metaData.Header.Location.FileSize;
+            _image = image;
+            _entries = entries;
 
-            meta_data = metaData;
-            entries = LoadTable(metaData,calc,stream,offset,image_base);
-
-            uint rva = calc.OffsetToRVA(offset);
-            ulong va = image_base + rva;
-            ulong size = 0;
-
-            foreach (var strm in entries)
-                size += strm.Location.FileSize;
-
-            Section section = calc.RVAToSection(rva);
-
-            location = new Location(offset,rva,va,size,size,section);
+            Location = location;
+            Count = _entries.Length;
         }
 
-        #region Methods
+        #region Static Methods
 
-        public IEnumerator<CLRMetaDataStreamTableEntry> GetEnumerator()
+        public static async Task<CLRMetaDataStreamTable> LoadAsync(PortableExecutableImage image, CLRMetaDataHeader header)
         {
-            for(var i = 0; i < entries.Length; i++)
+            try
             {
-                yield return entries[i];
+                var calc = image.GetCalculator();
+                var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
+                var offset = header.Location.FileOffset + header.Location.FileSize;
+                var rva = calc.OffsetToRVA(offset);
+                var va = imageBase + rva;
+                var entries = await LoadTableAsync(image, header, offset, imageBase).ConfigureAwait(false);
+                ulong size = 0;
+
+                foreach (var strm in entries)
+                    size += strm.Location.FileSize;
+
+                var section = calc.RVAToSection(rva);
+                var location = new Location(offset,rva,va,size,size,section);
+
+                return new CLRMetaDataStreamTable(image, location, entries);
+            }
+            catch (Exception ex)
+            {
+                throw new PortableExecutableImageException(image, "Could not read CLR meta-data streams table from stream.", ex);
             }
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        private static async Task<CLRMetaDataStreamTableEntry[]> LoadTableAsync(PortableExecutableImage image, CLRMetaDataHeader header, ulong baseOffset, ulong imageBase)
         {
-            return GetEnumerator();
-        }
+            var stream = image.GetStream();
 
-        public override string ToString()
-        {
-            return String.Format("Stream Entry Count: {0}",entries.Length);
-        }
-
-        public byte[] GetBytes()
-        {
-            Stream stream = meta_data.CLR.DataDirectory.Directories.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
-
-            return buffer;
-        }
-
-        private CLRMetaDataStreamTableEntry[] LoadTable(CLRMetaData metaData, LocationCalculator calc, Stream stream, ulong baseOffset, ulong imageBase)
-        {
             stream.Seek(baseOffset.ToInt64(),SeekOrigin.Begin);
 
-            List<CLRMetaDataStreamTableEntry> entries = new List<CLRMetaDataStreamTableEntry>();
-            ulong offset = baseOffset;
+            var entries = new List<CLRMetaDataStreamTableEntry>();
+            var offset = baseOffset;
 
-            for(int i = 0; i < metaData.Header.Streams; i++)
+            for(var i = 0; i < header.Streams; i++)
             {
-                uint size = 0;
-                uint stream_offset = Utils.ReadUInt32(stream);
+                var size = 0U;
+                var streamOffset = await stream.ReadUInt32Async().ConfigureAwait(false);
 
                 size += sizeof(uint);
 
-                uint stream_size = Utils.ReadUInt32(stream);
+                var streamSize = await stream.ReadUInt32Async().ConfigureAwait(false);
 
                 size += sizeof(uint);
 
-                StringBuilder stream_name = new StringBuilder(256);
+                var streamName = new StringBuilder(256);
 
                 while (true)
                 {
-                    int b = stream.ReadByte();
+                    var b = await stream.ReadByteAsync().ConfigureAwait(false);
+
                     size += 1;
 
                     if (b <= 0)
                         break;
 
-                    stream_name.Append((char)b);
+                    streamName.Append((char)b);
                 }
 
                 while (true)
                 {
                     if (stream.Position % 4 != 0)
                     {
-                        stream.ReadByte();
+                        await stream.ReadByteAsync().ConfigureAwait(false);
                         size += 1;
                     }
                     else
@@ -203,13 +98,15 @@ namespace Workshell.PE.CLR
                     }
                 }
 
-                uint rva = calc.OffsetToRVA(offset);
-                ulong va = imageBase + rva;
-                Section section = calc.RVAToSection(rva);
-                Location entry_location = new Location(offset,rva,va,size,size,section);
-                CLRMetaDataStreamTableEntry entry = new CLRMetaDataStreamTableEntry(this,entry_location,stream_offset,stream_size,stream_name.ToString());
+                var calc = image.GetCalculator();
+                var rva = calc.OffsetToRVA(offset);
+                var va = imageBase + rva;
+                var section = calc.RVAToSection(rva);
+                var location = new Location(offset, rva, va, size, size, section);
+                var entry = new CLRMetaDataStreamTableEntry(image, location, streamOffset, streamSize, streamName.ToString());
 
                 entries.Add(entry);
+
                 offset += size;
             }
 
@@ -218,52 +115,41 @@ namespace Workshell.PE.CLR
 
         #endregion
 
-        #region Properties
+        #region Methods
 
-        public CLRMetaData MetaData
+        public IEnumerator<CLRMetaDataStreamTableEntry> GetEnumerator()
         {
-            get
-            {
-                return meta_data;
-            }
+            foreach (var entry in _entries)
+                yield return entry;
         }
 
-        public Location Location
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            get
-            {
-                return location;
-            }
+            return GetEnumerator();
         }
 
-        public int Count
+        public byte[] GetBytes()
         {
-            get
-            {
-                return entries.Length;
-            }
+            return GetBytesAsync().GetAwaiter().GetResult();
         }
 
-        public CLRMetaDataStreamTableEntry this[int index]
+        public async Task<byte[]> GetBytesAsync()
         {
-            get
-            {
-                return entries[index];
-            }
-        }
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
-        public CLRMetaDataStreamTableEntry this[string name]
-        {
-            get
-            {
-                CLRMetaDataStreamTableEntry entry = entries.FirstOrDefault(stream => String.Compare(name,stream.Name,StringComparison.OrdinalIgnoreCase) == 0);
-
-                return entry;
-            }
+            return buffer;
         }
 
         #endregion
         
-    }
+        #region Properties
 
+        public Location Location { get; }
+        public int Count { get; }
+        public CLRMetaDataStreamTableEntry this[int index] => _entries[index];
+        public CLRMetaDataStreamTableEntry this[string name] => _entries.SingleOrDefault(entry => string.Compare(name, entry.Name, StringComparison.OrdinalIgnoreCase) == 0);
+
+        #endregion
+    }
 }
