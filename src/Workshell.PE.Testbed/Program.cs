@@ -14,9 +14,9 @@ namespace Workshell.PE.Testbed
 
         static async Task RunAsync(string[] args)
         {
-            //var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
-            var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
-            var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.Debug];
+            var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
+            //var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
+            var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.BaseRelocationTable];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
 
         }

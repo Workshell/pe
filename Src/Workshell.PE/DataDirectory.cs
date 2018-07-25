@@ -99,6 +99,8 @@ namespace Workshell.PE
                     return await CLR.LoadAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.Debug:
                     return await DebugDirectory.LoadAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.BaseRelocationTable:
+                    return await RelocationTable.LoadAsync(_image).ConfigureAwait(false);
                 default:
                 {
                     var calc = _image.GetCalculator();
