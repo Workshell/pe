@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 

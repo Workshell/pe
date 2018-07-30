@@ -305,7 +305,7 @@ namespace Workshell.PE
                 optionalHeader = new OptionalHeader64(this, optionalHeader64, fileHeader.Location.FileOffset + fileHeader.Location.FileSize, imageBase, magic);
             }
 
-            var dataDirectories = new DataDirectoryCollection(this, optionalHeader, dataDirs);
+            var dataDirectories = new DataDirectories(this, optionalHeader, dataDirs);
 
             NTHeaders = new NTHeaders(this, ntOffset.ToUInt64(), imageBase, fileHeader, optionalHeader, dataDirectories);
             SectionTable = new SectionTable(this, sectionTable, NTHeaders.Location.FileOffset + NTHeaders.Location.FileSize, imageBase);

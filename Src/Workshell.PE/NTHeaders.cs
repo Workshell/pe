@@ -12,7 +12,7 @@ namespace Workshell.PE
 
         private readonly PortableExecutableImage _image;
 
-        internal NTHeaders(PortableExecutableImage image, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectoryCollection dataDirs)
+        internal NTHeaders(PortableExecutableImage image, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectories dataDirs)
         {
             _image = image;
 
@@ -51,7 +51,7 @@ namespace Workshell.PE
         public Location Location { get; }
         public FileHeader FileHeader { get; }
         public OptionalHeader OptionalHeader { get; }
-        public DataDirectoryCollection DataDirectories { get; }
+        public DataDirectories DataDirectories { get; }
 
         #endregion
     }

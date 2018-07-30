@@ -9,12 +9,12 @@ using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
-    public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, ISupportsLocation, ISupportsBytes
+    public sealed class DataDirectories : IEnumerable<DataDirectory>, ISupportsLocation, ISupportsBytes
     {
         private readonly PortableExecutableImage _image;
         private readonly Dictionary<DataDirectoryType,DataDirectory> _directories;
 
-        internal DataDirectoryCollection(PortableExecutableImage image, OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
+        internal DataDirectories(PortableExecutableImage image, OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
         {
             _image = image;
 

@@ -40,7 +40,7 @@ namespace Workshell.PE
         private readonly Lazy<string> _sectionName;
         private readonly Lazy<Section> _section;
 
-        internal DataDirectory(PortableExecutableImage image, DataDirectoryCollection dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
+        internal DataDirectory(PortableExecutableImage image, DataDirectories dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
             _image = image;
             _type = dirType;
@@ -101,6 +101,8 @@ namespace Workshell.PE
                     return await DebugDirectory.LoadAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.BaseRelocationTable:
                     return await RelocationTable.LoadAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ExportTable:
+                    return await ExportDirectory.LoadAsync(_image).ConfigureAwait(false);
                 default:
                 {
                     var calc = _image.GetCalculator();
@@ -198,7 +200,7 @@ namespace Workshell.PE
 
         #region Properties
 
-        public DataDirectoryCollection Directories { get; }
+        public DataDirectories Directories { get; }
         public DataDirectoryType DirectoryType => _type;
         public uint VirtualAddress => _header.VirtualAddress;
         public uint Size => _header.Size;
