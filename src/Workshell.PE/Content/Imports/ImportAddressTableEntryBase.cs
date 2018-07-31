@@ -10,20 +10,20 @@ namespace Workshell.PE.Content
     {
         private readonly PortableExecutableImage _image;
 
-        protected ImportAddressTableEntryBase(PortableExecutableImage image, ulong offset, ulong value, uint address, ushort ordinal, 
-            bool isOrdinal, bool isDelayed)
+        protected internal ImportAddressTableEntryBase(PortableExecutableImage image, ulong entryOffset, ulong entryValue, uint entryAddress, ushort entryOrdinal, bool isOrdinal, bool isDelayed)
         {
             _image = image;
 
             var calc = image.GetCalculator();
-            var rva = calc.OffsetToRVA(offset);
-            var va = image.NTHeaders.OptionalHeader.ImageBase + rva;
+            var rva = calc.OffsetToRVA(entryOffset);
+            var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
+            var va = imageBase + rva;
             var size = (image.Is64Bit ? sizeof(ulong) : sizeof(uint)).ToUInt64();
 
-            Location = new Location(calc, offset, rva, va, size, size);
-            Value = value;
-            Address = address;
-            Ordinal = ordinal;
+            Location = new Location(calc, entryOffset, rva, va, size, size);
+            Value = entryValue;
+            Address = entryAddress;
+            Ordinal = entryOrdinal;
             IsOrdinal = isOrdinal;
             IsDelayed = isDelayed;
         }

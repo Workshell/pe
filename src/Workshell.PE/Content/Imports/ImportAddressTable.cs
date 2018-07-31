@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Content.Imports
 {
-    public sealed class ImportAddressTable : ImportAddressTableBase<ImportAddressTableEntry, ImportDirectoryEntry>
+    public sealed class ImportAddressTable : ImportAddressTableBase<ImportAddressTableEntry>
     {
-        internal ImportAddressTable(PortableExecutableImage image, ImportDirectoryEntry directoryEntry,  uint tableRVA, ulong[] tableEntries) : base(image, directoryEntry, tableRVA, tableEntries, false)
+        internal ImportAddressTable(PortableExecutableImage image, uint rva, ulong[] entries) : base(image, rva, entries, false)
         {
         }
     }

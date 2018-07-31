@@ -10,31 +10,41 @@ using Workshell.PE.Extensions;
 
 namespace Workshell.PE.Content
 {
-    public abstract class ImportAddressTableBase<TEntry, TDirectoryEntry> : ISupportsLocation, ISupportsBytes, IEnumerable<TEntry> 
+    public abstract class ImportAddressTableBase<TEntry> : IEnumerable<TEntry>, ISupportsLocation, ISupportsBytes
         where TEntry : ImportAddressTableEntryBase
-        where TDirectoryEntry : ImportDirectoryEntryBase
     {
         private readonly PortableExecutableImage _image;
         private readonly TEntry[] _entries;
 
-        protected internal ImportAddressTableBase(PortableExecutableImage image, TDirectoryEntry directoryEntry, uint rva, ulong[] entries, bool isDelayed)
+        protected internal ImportAddressTableBase(PortableExecutableImage image, uint rva, ulong[] entries, bool isDelayed)
         {
-            _image = image;
-            _entries = BuildEntries(image, rva, entries);
-
             var calc = image.GetCalculator();
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
             var offset = calc.RVAToOffset(rva);
             var size = (entries.Length * (image.Is64Bit ? sizeof(ulong) : sizeof(uint))).ToUInt64();
+            var section = calc.RVAToSection(rva);
 
-            DirectoryEntry = directoryEntry;
-            Location = new Location(calc, offset, rva, va, size, size);
+            _image = image;
+            _entries = BuildEntries(image, offset, entries);
+
+            Location = new Location(offset, rva, va, size, size, section);
             Count = _entries.Length;
             IsDelayed = isDelayed;
         }
 
         #region Methods
+
+        public IEnumerator<TEntry> GetEnumerator()
+        {
+            foreach (var entry in _entries)
+                yield return entry;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public byte[] GetBytes()
         {
@@ -49,28 +59,14 @@ namespace Workshell.PE.Content
             return buffer;
         }
 
-        public IEnumerator<TEntry> GetEnumerator()
-        {
-            foreach (var entry in _entries)
-                yield return entry;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        private TEntry[] BuildEntries(PortableExecutableImage image, uint rva, ulong[] entries)
+        private TEntry[] BuildEntries(PortableExecutableImage image, ulong tableOffset, ulong[] entries)
         {
             var results = new TEntry[entries.Length];
-            var calc = image.GetCalculator();
-            var offset = calc.RVAToOffset(rva);
+            var ctors = typeof(TEntry).GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var ctor = ctors.First();
+            var offset = tableOffset;
 
-            var entryType = typeof(TEntry);
-            var ctors = entryType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            var ctor = ctors.First(); // TODO: Should probably match it better somehow
-
-            for (var i = 0; i < entries.Length; i++)
+            for(var i = 0; i < entries.Length; i++)
             {
                 var addrOrOrd = entries[i];
                 ushort ordinal = 0;
@@ -84,7 +80,7 @@ namespace Workshell.PE.Content
                     {
                         value &= 0x7fffffff;
 
-                        ordinal = Convert.ToUInt16(value);
+                        ordinal = value.ToUInt16();
                         isOrdinal = true;
                     }
                 }
@@ -96,7 +92,7 @@ namespace Workshell.PE.Content
                     {
                         value &= 0x7fffffffffffffff;
 
-                        ordinal = Convert.ToUInt16(value);
+                        ordinal = value.ToUInt16();
                         isOrdinal = true;
                     }
                 }
@@ -123,7 +119,6 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        public TDirectoryEntry DirectoryEntry { get; }
         public Location Location { get; }
         public int Count { get; }
         public TEntry this[int index] => _entries[index];
