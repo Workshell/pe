@@ -20,7 +20,8 @@ namespace Workshell.PE.Testbed
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.DelayImportDescriptor];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
 
-            var x = await ImportAddressTables.GetLookupTableAsync(image).ConfigureAwait(false);
+            var table = await ImportHintNameTable.LoadAsync(image).ConfigureAwait(false);
+            var entries = table.ToArray();
         }
     }
 }
