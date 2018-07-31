@@ -22,7 +22,9 @@ namespace Workshell.PE
             {
                 Marshal.Copy(bytes,0,ptr,bytes.Length);
 
+                #pragma warning disable CS0618 // Type or member is obsolete
                 T result = (T)Marshal.PtrToStructure(ptr,typeof(T));
+                #pragma warning restore CS0618 // Type or member is obsolete
 
                 return result;
             }

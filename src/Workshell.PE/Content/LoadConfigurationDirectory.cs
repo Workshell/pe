@@ -99,7 +99,7 @@ namespace Workshell.PE.Content
                 }
                 catch (Exception ex)
                 {
-                    throw new PortableExecutableImageException(image, "Could not load Load Configration Directory from stream.");
+                    throw new PortableExecutableImageException(image, "Could not load Load Configration Directory from stream.", ex);
                 }
 
                 directory = new LoadConfigurationDirectory(image, dataDirectory, location, config);

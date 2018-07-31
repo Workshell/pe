@@ -17,10 +17,10 @@ namespace Workshell.PE.Testbed
         {
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
             var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
-            var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ExportTable];
+            var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.DelayImportDescriptor];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
 
-            var exports = await Exports.GetAsync(image).ConfigureAwait(false);
+            var x = await ImportAddressTables.GetLookupTableAsync(image).ConfigureAwait(false);
         }
     }
 }

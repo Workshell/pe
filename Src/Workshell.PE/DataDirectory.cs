@@ -103,6 +103,10 @@ namespace Workshell.PE
                     return await RelocationTable.LoadAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.ExportTable:
                     return await ExportDirectory.LoadAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ImportTable:
+                    return await ImportDirectory.LoadAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.DelayImportDescriptor:
+                    return await DelayedImportDirectory.LoadAsync(_image).ConfigureAwait(false);
                 default:
                 {
                     var calc = _image.GetCalculator();

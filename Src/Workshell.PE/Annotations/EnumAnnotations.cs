@@ -57,7 +57,9 @@ namespace Workshell.PE.Annotations
 
             var underlayingType = Enum.GetUnderlyingType(typeof(T));
 
+            #pragma warning disable CS0618 // Type or member is obsolete
             TypeSize = Marshal.SizeOf(underlayingType);
+            #pragma warning restore CS0618 // Type or member is obsolete
         }
 
         #region Methods

@@ -71,6 +71,7 @@ namespace Workshell.PE.Annotations
                     var type = prop.PropertyType;
                     var size = 0;
 
+                    #pragma warning disable CS0618 // Type or member is obsolete
                     if (type.IsArray)
                     {
                         size = Marshal.SizeOf(type.GetElementType());
@@ -79,6 +80,7 @@ namespace Workshell.PE.Annotations
                     {
                         size = Marshal.SizeOf(type);
                     }
+                    #pragma warning restore CS0618 // Type or member is obsolete
 
                     var value = prop.GetValue(annotatedObject,null);
                     var annotation = new FieldAnnotation(desc,attr.ArrayLength,attr.Flags,name,type,value,size);
