@@ -13,7 +13,7 @@ namespace Workshell.PE.Content
     {
         private readonly TTable[] _tables;
 
-        protected internal ImportAddressTablesBase(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<uint, ulong[]>[] tables, bool isDelayed) : base(image, directory, location)
+        protected internal ImportAddressTablesBase(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables, bool isDelayed) : base(image, directory, location)
         {
             _tables = new TTable[tables.Length];
 
@@ -24,7 +24,7 @@ namespace Workshell.PE.Content
             for (var i = 0; i < tables.Length; i++)
             {
                 var tuple = tables[i];
-                var table = (TTable)ctor.Invoke(new object[] { image, tuple.Item1, tuple.Item2 });
+                var table = (TTable)ctor.Invoke(new object[] { image, tuple.Item1, tuple.Item2, tuple.Item3 });
 
                 _tables[i] = table;
             }

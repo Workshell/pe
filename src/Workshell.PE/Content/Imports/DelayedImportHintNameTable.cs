@@ -8,21 +8,21 @@ using Workshell.PE.Extensions;
 
 namespace Workshell.PE.Content
 {
-    public sealed class ImportHintNameTable : ImportHintNameTableBase<ImportHintNameEntry>
+    public sealed class DelayedImportHintNameTable : ImportHintNameTableBase<DelayedImportHintNameEntry>
     {
-        internal ImportHintNameTable(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, directory, location, entries, false)
+        internal DelayedImportHintNameTable(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, directory, location, entries, true)
         {
         }
 
         #region Static Methods
 
-        public static async Task<ImportHintNameTable> GetAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        public static async Task<DelayedImportHintNameTable> GetAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
         {
             if (directory == null)
-                directory = await ImportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await DelayedImportDirectory.LoadAsync(image).ConfigureAwait(false);
 
             var entries = new Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>>();
-            var ilt = await ImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
+            var ilt = await DelayedImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
             var calc = image.GetCalculator();
             var stream = image.GetStream();
 
@@ -93,7 +93,7 @@ namespace Workshell.PE.Content
                 location = new Location(0, 0, 0, 0, 0, null);
             }
 
-            var result = new ImportHintNameTable(image, directory.Directory, location, entries.Values.ToArray());
+            var result = new DelayedImportHintNameTable(image, directory.Directory, location, entries.Values.ToArray());
 
             return result;
         }

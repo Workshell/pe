@@ -16,7 +16,7 @@ namespace Workshell.PE.Content
         private readonly PortableExecutableImage _image;
         private readonly TEntry[] _entries;
 
-        protected internal ImportAddressTableBase(PortableExecutableImage image, uint rva, ulong[] entries, bool isDelayed)
+        protected internal ImportAddressTableBase(PortableExecutableImage image, uint rva, ulong[] entries, ImportDirectoryEntryBase directoryEntry, bool isDelayed)
         {
             var calc = image.GetCalculator();
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
@@ -30,6 +30,7 @@ namespace Workshell.PE.Content
 
             Location = new Location(offset, rva, va, size, size, section);
             Count = _entries.Length;
+            DirectoryEntry = directoryEntry;
             IsDelayed = isDelayed;
         }
 
@@ -122,6 +123,7 @@ namespace Workshell.PE.Content
         public Location Location { get; }
         public int Count { get; }
         public TEntry this[int index] => _entries[index];
+        public ImportDirectoryEntryBase DirectoryEntry { get; }
         public bool IsDelayed { get; }
 
         #endregion

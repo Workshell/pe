@@ -29,7 +29,7 @@ namespace Workshell.PE.Content
 
         public override string ToString()
         {
-            return $"0x{hint:X4} {name}";
+            return $"0x{Hint:X4} {Name}";
         }
 
         public byte[] GetBytes()

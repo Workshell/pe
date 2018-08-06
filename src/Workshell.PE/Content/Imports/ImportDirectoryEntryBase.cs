@@ -40,6 +40,7 @@ namespace Workshell.PE.Content
 
         public Location Location { get; }
         public bool IsDelayed { get; }
+        public abstract uint Name { get; }
 
         #endregion
     }

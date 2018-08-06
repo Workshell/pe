@@ -47,7 +47,7 @@ namespace Workshell.PE.Content
         public uint ForwarderChain { get; }
 
         [FieldAnnotation("Name")]
-        public uint Name { get; }
+        public override uint Name { get; }
 
         [FieldAnnotation("First Thunk")]
         public uint FirstThunk { get; }

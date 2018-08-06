@@ -6,7 +6,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportAddressTable : ImportAddressTableBase<ImportAddressTableEntry>
     {
-        internal ImportAddressTable(PortableExecutableImage image, uint rva, ulong[] entries) : base(image, rva, entries, false)
+        internal ImportAddressTable(PortableExecutableImage image, uint rva, ulong[] entries, ImportDirectoryEntryBase directoryEntry) : base(image, rva, entries, directoryEntry, false)
         {
         }
     }

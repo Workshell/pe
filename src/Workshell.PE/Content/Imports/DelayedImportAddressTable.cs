@@ -6,7 +6,7 @@ namespace Workshell.PE.Content
 {
     public sealed class DelayedImportAddressTable : ImportAddressTableBase<DelayedImportAddressTableEntry>
     {
-        internal DelayedImportAddressTable(PortableExecutableImage image, uint rva, ulong[] entries) : base(image, rva, entries, true)
+        internal DelayedImportAddressTable(PortableExecutableImage image, uint rva, ulong[] entries, ImportDirectoryEntryBase directoryEntry) : base(image, rva, entries, directoryEntry, true)
         {
         }
     }

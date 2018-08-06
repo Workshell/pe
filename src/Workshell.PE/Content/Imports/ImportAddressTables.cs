@@ -10,7 +10,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportAddressTables: ImportAddressTablesBase<ImportAddressTable, ImportAddressTableEntry>
     {
-        internal ImportAddressTables(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<uint, ulong[]>[] tables) : base(image, directory, location, tables, false)
+        internal ImportAddressTables(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables) : base(image, directory, location, tables, false)
         {
         }
 
@@ -33,7 +33,7 @@ namespace Workshell.PE.Content
 
             var calc = image.GetCalculator();          
             var stream = image.GetStream();
-            var tables = new List<Tuple<uint, ulong[]>>();
+            var tables = new List<Tuple<uint, ulong[], ImportDirectoryEntryBase>>();
 
             foreach (var dirEntry in directory)
             {
@@ -57,7 +57,7 @@ namespace Workshell.PE.Content
                         break;
                 }
 
-                var table = new Tuple<uint, ulong[]>(thunk, entries.ToArray());
+                var table = new Tuple<uint, ulong[], ImportDirectoryEntryBase>(thunk, entries.ToArray(), dirEntry);
 
                 tables.Add(table);
             }

@@ -44,7 +44,7 @@ namespace Workshell.PE.Content
         public uint Attributes { get; }
 
         [FieldAnnotation("Name")]
-        public uint Name { get; }
+        public override uint Name { get; }
 
         [FieldAnnotation("Module Handle")]
         public uint ModuleHandle { get; }
