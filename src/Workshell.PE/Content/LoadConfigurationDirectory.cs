@@ -68,7 +68,7 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static async Task<LoadConfigurationDirectory> LoadAsync(PortableExecutableImage image)
+        public static async Task<LoadConfigurationDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.LoadConfigTable))
                 return null;

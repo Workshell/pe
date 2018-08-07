@@ -90,7 +90,7 @@ namespace Workshell.PE
             switch (DirectoryType)
             {
                 case DataDirectoryType.LoadConfigTable:
-                    return await LoadConfigurationDirectory.LoadAsync(_image).ConfigureAwait(false);
+                    return await LoadConfigurationDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.TLSTable:
                     return await TLSDirectory.LoadAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.CertificateTable:
