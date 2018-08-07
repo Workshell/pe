@@ -13,7 +13,7 @@ namespace Workshell.PE.Content
     {
         private readonly RelocationBlock[] _blocks;
 
-        internal RelocationTable(PortableExecutableImage image, DataDirectory directory, Location location, RelocationBlock[] blocks) : base(image, directory, location)
+        private RelocationTable(PortableExecutableImage image, DataDirectory directory, Location location, RelocationBlock[] blocks) : base(image, directory, location)
         {
             _blocks = blocks;
 
@@ -22,7 +22,12 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        internal static async Task<RelocationTable> LoadAsync(PortableExecutableImage image)
+        public static RelocationTable Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<RelocationTable> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.BaseRelocationTable))
                 return null;

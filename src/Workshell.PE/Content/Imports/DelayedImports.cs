@@ -19,7 +19,7 @@ namespace Workshell.PE.Content
 
         public static async Task<DelayedImports> GetAsync(PortableExecutableImage image)
         {
-            var directory = await DelayedImportDirectory.LoadAsync(image).ConfigureAwait(false);
+            var directory = await DelayedImportDirectory.GetAsync(image).ConfigureAwait(false);
 
             if (directory == null)
                 return null;

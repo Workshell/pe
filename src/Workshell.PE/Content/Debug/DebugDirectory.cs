@@ -15,7 +15,7 @@ namespace Workshell.PE.Content
     {
         private readonly DebugDirectoryEntry[] _entries;
 
-        internal DebugDirectory(PortableExecutableImage image, DataDirectory directory, Location location, DebugDirectoryEntry[] entries) : base(image, directory, location)
+        private DebugDirectory(PortableExecutableImage image, DataDirectory directory, Location location, DebugDirectoryEntry[] entries) : base(image, directory, location)
         {
             _entries = entries;
 
@@ -24,7 +24,12 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        internal static async Task<DebugDirectory> LoadAsync(PortableExecutableImage image)
+        public DebugDirectory Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<DebugDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.Debug))
                 return null;

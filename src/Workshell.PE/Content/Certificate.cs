@@ -20,7 +20,7 @@ namespace Workshell.PE.Content
 
     public sealed class Certificate : DataContent
     {
-        internal Certificate(PortableExecutableImage image, DataDirectory directory, Location location, WIN_CERTIFICATE cert) : base(image, directory, location)
+        private Certificate(PortableExecutableImage image, DataDirectory directory, Location location, WIN_CERTIFICATE cert) : base(image, directory, location)
         {
             Length = cert.dwLength;
             Revision = cert.wRevision;
@@ -29,7 +29,12 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static async Task<Certificate> LoadAsync(PortableExecutableImage image)
+        public static Certificate Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<Certificate> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.CertificateTable))
                 return null;

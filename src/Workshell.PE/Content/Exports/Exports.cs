@@ -25,7 +25,7 @@ namespace Workshell.PE.Content
 
         public static async Task<Exports> GetAsync(PortableExecutableImage image)
         {
-            var directory = await ExportDirectory.LoadAsync(image).ConfigureAwait(false);
+            var directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
 
             if (directory == null)
                 return null;

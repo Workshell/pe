@@ -19,7 +19,7 @@ namespace Workshell.PE.Content
         public static async Task<DelayedImportHintNameTable> GetAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
         {
             if (directory == null)
-                directory = await DelayedImportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await DelayedImportDirectory.GetAsync(image).ConfigureAwait(false);
 
             var entries = new Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>>();
             var ilt = await DelayedImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);

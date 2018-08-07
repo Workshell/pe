@@ -75,7 +75,7 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        internal static async Task<CLRHeader> LoadAsync(PortableExecutableImage image, Location clrLocation)
+        internal static async Task<CLRHeader> GetAsync(PortableExecutableImage image, Location clrLocation)
         {
             var size = Marshal.SizeOf<IMAGE_COR20_HEADER>();
             var location = new Location(clrLocation.FileOffset, clrLocation.RelativeVirtualAddress, clrLocation.VirtualAddress, size.ToUInt32(), size.ToUInt32(), clrLocation.Section);

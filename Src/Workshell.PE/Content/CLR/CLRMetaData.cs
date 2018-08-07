@@ -23,7 +23,7 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        internal static async Task<CLRMetaData> LoadAsync(PortableExecutableImage image, CLRHeader header)
+        internal static async Task<CLRMetaData> GetAsync(PortableExecutableImage image, CLRHeader header)
         {
             var calc = image.GetCalculator();
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;

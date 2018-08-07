@@ -12,13 +12,18 @@ namespace Workshell.PE.Content
 {
     public sealed class DelayedImportDirectory : ImportDirectoryBase<DelayedImportDirectoryEntry>
     {
-        internal DelayedImportDirectory(PortableExecutableImage image, DataDirectory directory, Location location, DelayedImportDirectoryEntry[] entries) : base(image, directory, location, entries)
+        private DelayedImportDirectory(PortableExecutableImage image, DataDirectory directory, Location location, DelayedImportDirectoryEntry[] entries) : base(image, directory, location, entries)
         {
         }
 
         #region Static Methods
 
-        internal static async Task<DelayedImportDirectory> LoadAsync(PortableExecutableImage image)
+        public static DelayedImportDirectory Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<DelayedImportDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.DelayImportDescriptor))
                 return null;

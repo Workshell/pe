@@ -92,21 +92,23 @@ namespace Workshell.PE
                 case DataDirectoryType.LoadConfigTable:
                     return await LoadConfigurationDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.TLSTable:
-                    return await TLSDirectory.LoadAsync(_image).ConfigureAwait(false);
+                    return await TLSDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.CertificateTable:
-                    return await Certificate.LoadAsync(_image).ConfigureAwait(false);
+                    return await Certificate.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.CLRRuntimeHeader:
-                    return await CLR.LoadAsync(_image).ConfigureAwait(false);
+                    return await CLR.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.Debug:
-                    return await DebugDirectory.LoadAsync(_image).ConfigureAwait(false);
+                    return await DebugDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.BaseRelocationTable:
-                    return await RelocationTable.LoadAsync(_image).ConfigureAwait(false);
+                    return await RelocationTable.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.ExportTable:
-                    return await ExportDirectory.LoadAsync(_image).ConfigureAwait(false);
+                    return await ExportDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.ImportTable:
-                    return await ImportDirectory.LoadAsync(_image).ConfigureAwait(false);
+                    return await ImportDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.DelayImportDescriptor:
-                    return await DelayedImportDirectory.LoadAsync(_image).ConfigureAwait(false);
+                    return await DelayedImportDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ExceptionTable:
+                    return await ExceptionTable.GetAsync(_image).ConfigureAwait(false);
                 default:
                 {
                     var calc = _image.GetCalculator();

@@ -19,7 +19,7 @@ namespace Workshell.PE.Content
         public static async Task<ExportTable<uint>> GetFunctionAddressTableAsync(PortableExecutableImage image, ExportDirectory directory = null)
         {
             if (directory == null)
-                directory = await ExportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(directory.AddressOfFunctions);
@@ -53,7 +53,7 @@ namespace Workshell.PE.Content
         public static async Task<ExportTable<uint>> GetNameAddressTableAsync(PortableExecutableImage image, ExportDirectory directory = null)
         {
             if (directory == null)
-                directory = await ExportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(directory.AddressOfNames);
@@ -87,7 +87,7 @@ namespace Workshell.PE.Content
         public static async Task<ExportTable<ushort>> GetOrdinalTableAsync(PortableExecutableImage image, ExportDirectory directory = null)
         {
             if (directory == null)
-                directory = await ExportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(directory.AddressOfNameOrdinals);

@@ -29,7 +29,7 @@ namespace Workshell.PE.Content
         private static async Task<DelayedImportAddressTables> GetTableAsync(PortableExecutableImage image, DelayedImportDirectory directory, Func<DelayedImportDirectoryEntry, uint> thunkHandler)
         {
             if (directory == null)
-                directory = await DelayedImportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await DelayedImportDirectory.GetAsync(image).ConfigureAwait(false);
 
             var calc = image.GetCalculator();          
             var stream = image.GetStream();

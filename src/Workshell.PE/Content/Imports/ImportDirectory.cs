@@ -12,13 +12,18 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportDirectory : ImportDirectoryBase<ImportDirectoryEntry>
     {
-        internal ImportDirectory(PortableExecutableImage image, DataDirectory directory, Location location, ImportDirectoryEntry[] entries) : base(image, directory, location, entries)
+        private ImportDirectory(PortableExecutableImage image, DataDirectory directory, Location location, ImportDirectoryEntry[] entries) : base(image, directory, location, entries)
         {
         }
 
         #region Static Methods
 
-        internal static async Task<ImportDirectory> LoadAsync(PortableExecutableImage image)
+        public static ImportDirectory Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<ImportDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ImportTable))
                 return null;

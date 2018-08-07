@@ -12,7 +12,7 @@ namespace Workshell.PE.Content
 {
     public sealed class LoadConfigurationDirectory : DataContent
     {
-        internal LoadConfigurationDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_LOAD_CONFIG_DIRECTORY32 directory) : base(image, dataDirectory, location)
+        private LoadConfigurationDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_LOAD_CONFIG_DIRECTORY32 directory) : base(image, dataDirectory, location)
         {
             Size = directory.Size;
             TimeDateStamp = directory.TimeDateStamp;
@@ -39,7 +39,7 @@ namespace Workshell.PE.Content
             GuardFlags = directory.GuardFlags;
         }
 
-        internal LoadConfigurationDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_LOAD_CONFIG_DIRECTORY64 directory) : base(image, dataDirectory, location)
+        private LoadConfigurationDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_LOAD_CONFIG_DIRECTORY64 directory) : base(image, dataDirectory, location)
         {
             Size = directory.Size;
             TimeDateStamp = directory.TimeDateStamp;
@@ -67,6 +67,11 @@ namespace Workshell.PE.Content
         }
 
         #region Static Methods
+
+        public static LoadConfigurationDirectory Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
 
         public static async Task<LoadConfigurationDirectory> GetAsync(PortableExecutableImage image)
         {

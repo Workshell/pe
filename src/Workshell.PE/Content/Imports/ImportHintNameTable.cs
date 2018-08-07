@@ -19,7 +19,7 @@ namespace Workshell.PE.Content
         public static async Task<ImportHintNameTable> GetAsync(PortableExecutableImage image, ImportDirectory directory = null)
         {
             if (directory == null)
-                directory = await ImportDirectory.LoadAsync(image).ConfigureAwait(false);
+                directory = await ImportDirectory.GetAsync(image).ConfigureAwait(false);
 
             var entries = new Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>>();
             var ilt = await ImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);

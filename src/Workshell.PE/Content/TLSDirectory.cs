@@ -11,7 +11,7 @@ namespace Workshell.PE.Content
 {
     public sealed class TLSDirectory : DataContent
     {
-        internal TLSDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_TLS_DIRECTORY32 directory) : base(image, dataDirectory, location)
+        private TLSDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_TLS_DIRECTORY32 directory) : base(image, dataDirectory, location)
         {
             StartAddress = directory.StartAddress;
             EndAddress = directory.EndAddress;
@@ -21,7 +21,7 @@ namespace Workshell.PE.Content
             Characteristics = directory.Characteristics;
         }
 
-        internal TLSDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_TLS_DIRECTORY64 directory) : base(image, dataDirectory, location)
+        private TLSDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IMAGE_TLS_DIRECTORY64 directory) : base(image, dataDirectory, location)
         {
             StartAddress = directory.StartAddress;
             EndAddress = directory.EndAddress;
@@ -33,7 +33,12 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static async Task<TLSDirectory> LoadAsync(PortableExecutableImage image)
+        public static TLSDirectory Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<TLSDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.TLSTable))
                 return null;

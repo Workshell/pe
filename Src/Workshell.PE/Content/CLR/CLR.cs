@@ -7,7 +7,7 @@ namespace Workshell.PE.Content
 {
     public sealed class CLR : DataContent
     {
-        internal CLR(PortableExecutableImage image, DataDirectory directory, Location location, CLRHeader header, CLRMetaData metaData) : base(image, directory, location)
+        private CLR(PortableExecutableImage image, DataDirectory directory, Location location, CLRHeader header, CLRMetaData metaData) : base(image, directory, location)
         {
             Header = header;
             MetaData = metaData;
@@ -15,7 +15,12 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        internal static async Task<CLR> LoadAsync(PortableExecutableImage image)
+        public static CLR Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static async Task<CLR> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.CLRRuntimeHeader))
                 return null;
@@ -30,8 +35,8 @@ namespace Workshell.PE.Content
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;         
             var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
-            var header = await CLRHeader.LoadAsync(image, location).ConfigureAwait(false);
-            var metaData = await CLRMetaData.LoadAsync(image, header).ConfigureAwait(false);
+            var header = await CLRHeader.GetAsync(image, location).ConfigureAwait(false);
+            var metaData = await CLRMetaData.GetAsync(image, header).ConfigureAwait(false);
 
             return new CLR(image, dataDirectory, location, header, metaData);
         }
