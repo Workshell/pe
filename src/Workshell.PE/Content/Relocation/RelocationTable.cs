@@ -13,7 +13,7 @@ namespace Workshell.PE.Content
     {
         private readonly RelocationBlock[] _blocks;
 
-        private RelocationTable(PortableExecutableImage image, DataDirectory directory, Location location, RelocationBlock[] blocks) : base(image, directory, location)
+        private RelocationTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location, RelocationBlock[] blocks) : base(image, dataDirectory, location)
         {
             _blocks = blocks;
 

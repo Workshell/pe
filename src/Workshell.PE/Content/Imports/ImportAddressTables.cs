@@ -10,7 +10,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportAddressTables: ImportAddressTablesBase<ImportAddressTable, ImportAddressTableEntry>
     {
-        internal ImportAddressTables(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables) : base(image, directory, location, tables, false)
+        internal ImportAddressTables(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables) : base(image, dataDirectory, location, tables, false)
         {
         }
 
@@ -81,7 +81,7 @@ namespace Workshell.PE.Content
 
             var section = calc.RVAToSection(rva);
             var location = new Location(fileOffset, rva, va, fileSize, fileSize, section);
-            var result = new ImportAddressTables(image, directory.Directory, location, tables.ToArray());
+            var result = new ImportAddressTables(image, directory.DataDirectory, location, tables.ToArray());
 
             return result;
         }

@@ -13,7 +13,7 @@ namespace Workshell.PE.Content
     {
         private readonly T[] _entries;
 
-        protected internal ImportDirectoryBase(PortableExecutableImage image, DataDirectory directory, Location location, T[] entries) : base(image, directory, location)
+        protected internal ImportDirectoryBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, T[] entries) : base(image, dataDirectory, location)
         {
             _entries = entries;
 

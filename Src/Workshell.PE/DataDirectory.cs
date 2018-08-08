@@ -109,6 +109,8 @@ namespace Workshell.PE
                     return await DelayedImportDirectory.GetAsync(_image).ConfigureAwait(false);
                 case DataDirectoryType.ExceptionTable:
                     return await ExceptionTable.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ResourceTable:
+                    return await ResourceDirectory.GetAsync(_image).ConfigureAwait(false);
                 default:
                 {
                     var calc = _image.GetCalculator();

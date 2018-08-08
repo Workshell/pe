@@ -11,7 +11,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ExceptionTable32 : ExceptionTable
     {
-        private ExceptionTable32(PortableExecutableImage image, DataDirectory directory, Location location, ExceptionTableEntry[] entries) : base(image, directory, location, entries)
+        private ExceptionTable32(PortableExecutableImage image, DataDirectory dataDirectory, Location location, ExceptionTableEntry[] entries) : base(image, dataDirectory, location, entries)
         {
         }
 

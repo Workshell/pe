@@ -11,7 +11,7 @@ namespace Workshell.PE.Content
     {
         private readonly TEntry[] _entries;
 
-        protected internal ImportHintNameTableBase(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<ulong,uint,ushort,string,bool>[] entries, bool isDelayed) : base(image, directory, location)
+        protected internal ImportHintNameTableBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<ulong,uint,ushort,string,bool>[] entries, bool isDelayed) : base(image, dataDirectory, location)
         {
             _entries = BuildTable(entries);
 

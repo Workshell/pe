@@ -12,7 +12,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportDirectory : ImportDirectoryBase<ImportDirectoryEntry>
     {
-        private ImportDirectory(PortableExecutableImage image, DataDirectory directory, Location location, ImportDirectoryEntry[] entries) : base(image, directory, location, entries)
+        private ImportDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, ImportDirectoryEntry[] entries) : base(image, dataDirectory, location, entries)
         {
         }
 

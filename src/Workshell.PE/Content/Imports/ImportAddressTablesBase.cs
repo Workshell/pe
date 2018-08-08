@@ -13,7 +13,7 @@ namespace Workshell.PE.Content
     {
         private readonly TTable[] _tables;
 
-        protected internal ImportAddressTablesBase(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables, bool isDelayed) : base(image, directory, location)
+        protected internal ImportAddressTablesBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables, bool isDelayed) : base(image, dataDirectory, location)
         {
             _tables = new TTable[tables.Length];
 

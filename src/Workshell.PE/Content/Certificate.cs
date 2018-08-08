@@ -20,7 +20,7 @@ namespace Workshell.PE.Content
 
     public sealed class Certificate : DataContent
     {
-        private Certificate(PortableExecutableImage image, DataDirectory directory, Location location, WIN_CERTIFICATE cert) : base(image, directory, location)
+        private Certificate(PortableExecutableImage image, DataDirectory dataDirectory, Location location, WIN_CERTIFICATE cert) : base(image, dataDirectory, location)
         {
             Length = cert.dwLength;
             Revision = cert.wRevision;

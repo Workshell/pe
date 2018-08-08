@@ -15,7 +15,7 @@ namespace Workshell.PE.Content
     {
         private readonly DebugDirectoryEntry[] _entries;
 
-        private DebugDirectory(PortableExecutableImage image, DataDirectory directory, Location location, DebugDirectoryEntry[] entries) : base(image, directory, location)
+        private DebugDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, DebugDirectoryEntry[] entries) : base(image, dataDirectory, location)
         {
             _entries = entries;
 

@@ -12,7 +12,7 @@ namespace Workshell.PE.Content
 {
     public sealed class DelayedImportDirectory : ImportDirectoryBase<DelayedImportDirectoryEntry>
     {
-        private DelayedImportDirectory(PortableExecutableImage image, DataDirectory directory, Location location, DelayedImportDirectoryEntry[] entries) : base(image, directory, location, entries)
+        private DelayedImportDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, DelayedImportDirectoryEntry[] entries) : base(image, dataDirectory, location, entries)
         {
         }
 

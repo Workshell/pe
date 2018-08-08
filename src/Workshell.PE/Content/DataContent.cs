@@ -8,9 +8,9 @@ namespace Workshell.PE.Content
 {
     public class DataContent : ISupportsLocation, ISupportsBytes
     {
-        public DataContent(PortableExecutableImage image, DataDirectory directory, Location location)
+        public DataContent(PortableExecutableImage image, DataDirectory dataDirectory, Location location)
         {
-            Directory = directory;
+            DataDirectory = dataDirectory;
             Location = location;
             Image = image;
         }
@@ -34,7 +34,7 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        public DataDirectory Directory { get; }
+        public DataDirectory DataDirectory { get; }
         public Location Location { get; }
         protected PortableExecutableImage Image { get; }
 

@@ -10,7 +10,7 @@ namespace Workshell.PE.Content
 {
     public abstract class ExportTable : DataContent
     {
-        protected ExportTable(PortableExecutableImage image, DataDirectory directory, Location location) : base(image, directory, location)
+        protected ExportTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location) : base(image, dataDirectory, location)
         {
         }
 

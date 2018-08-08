@@ -10,7 +10,7 @@ namespace Workshell.PE.Content
 {
     public sealed class DelayedImportHintNameTable : ImportHintNameTableBase<DelayedImportHintNameEntry>
     {
-        internal DelayedImportHintNameTable(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, directory, location, entries, true)
+        internal DelayedImportHintNameTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, dataDirectory, location, entries, true)
         {
         }
 
@@ -93,7 +93,7 @@ namespace Workshell.PE.Content
                 location = new Location(0, 0, 0, 0, 0, null);
             }
 
-            var result = new DelayedImportHintNameTable(image, directory.Directory, location, entries.Values.ToArray());
+            var result = new DelayedImportHintNameTable(image, directory.DataDirectory, location, entries.Values.ToArray());
 
             return result;
         }

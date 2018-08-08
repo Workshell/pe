@@ -10,7 +10,7 @@ namespace Workshell.PE.Content
     {
         private readonly ExceptionTableEntry[] _entries;
 
-        protected internal ExceptionTable(PortableExecutableImage image, DataDirectory directory, Location location, ExceptionTableEntry[] entries) : base(image, directory, location)
+        protected internal ExceptionTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location, ExceptionTableEntry[] entries) : base(image, dataDirectory, location)
         {
             _entries = entries;
 

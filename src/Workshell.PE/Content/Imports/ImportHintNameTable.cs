@@ -10,7 +10,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportHintNameTable : ImportHintNameTableBase<ImportHintNameEntry>
     {
-        internal ImportHintNameTable(PortableExecutableImage image, DataDirectory directory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, directory, location, entries, false)
+        internal ImportHintNameTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, dataDirectory, location, entries, false)
         {
         }
 
@@ -93,7 +93,7 @@ namespace Workshell.PE.Content
                 location = new Location(0, 0, 0, 0, 0, null);
             }
 
-            var result = new ImportHintNameTable(image, directory.Directory, location, entries.Values.ToArray());
+            var result = new ImportHintNameTable(image, directory.DataDirectory, location, entries.Values.ToArray());
 
             return result;
         }

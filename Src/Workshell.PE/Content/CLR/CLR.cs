@@ -7,7 +7,7 @@ namespace Workshell.PE.Content
 {
     public sealed class CLR : DataContent
     {
-        private CLR(PortableExecutableImage image, DataDirectory directory, Location location, CLRHeader header, CLRMetaData metaData) : base(image, directory, location)
+        private CLR(PortableExecutableImage image, DataDirectory dataDirectory, Location location, CLRHeader header, CLRMetaData metaData) : base(image, dataDirectory, location)
         {
             Header = header;
             MetaData = metaData;
