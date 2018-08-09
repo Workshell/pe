@@ -20,7 +20,7 @@ namespace Workshell.PE.Testbed
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
 
-            
+            var resources = await Resources.GetAsync(image);
         }
     }
 }
