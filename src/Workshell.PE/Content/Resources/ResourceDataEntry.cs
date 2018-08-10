@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Annotations;
+using Workshell.PE.Content;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Resources
 {
     public sealed class ResourceDataEntry : DataContent
     {

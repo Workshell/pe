@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Resources
 {
-    public sealed class Resources : IEnumerable<ResourceType>
+    public sealed class ResourceCollection : IEnumerable<ResourceType>
     {
         private ResourceType[] _types;
 
-        private Resources(PortableExecutableImage image)
+        private ResourceCollection(PortableExecutableImage image)
         {
             _types = new ResourceType[0];
 
@@ -19,19 +19,19 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static Resources Get(PortableExecutableImage image)
+        public static ResourceCollection Get(PortableExecutableImage image)
         {
             return GetAsync(image).GetAwaiter().GetResult();
         }
 
-        public static async Task<Resources> GetAsync(PortableExecutableImage image)
+        public static async Task<ResourceCollection> GetAsync(PortableExecutableImage image)
         {
             var rootDirectory = await ResourceDirectory.GetAsync(image).ConfigureAwait(false);
 
             if (rootDirectory == null)
                 return null;
 
-            var resources = new Resources(image);
+            var resources = new ResourceCollection(image);
 
             await resources.LoadAsync(image, rootDirectory).ConfigureAwait(false);
 

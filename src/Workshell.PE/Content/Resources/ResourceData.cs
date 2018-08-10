@@ -4,7 +4,9 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE.Content
+using Workshell.PE.Content;
+
+namespace Workshell.PE.Resources
 {
     public sealed class ResourceData : DataContent
     {

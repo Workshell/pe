@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Resources
 {
     public struct ResourceId : IEquatable<ResourceId>
     {

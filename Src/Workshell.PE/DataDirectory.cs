@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using Workshell.PE.Content;
 using Workshell.PE.Native;
+using Workshell.PE.Resources;
 
 namespace Workshell.PE
 {

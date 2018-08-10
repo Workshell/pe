@@ -6,24 +6,23 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Resources
 {
     public class Resource : ISupportsBytes
     {
         public const uint DefaultLanguage = 1033;
 
-        private readonly PortableExecutableImage _image;
         private readonly Dictionary<uint, ResourceDirectoryEntry> _languages;
 
         protected Resource(PortableExecutableImage image, ResourceType type, ResourceDirectoryEntry entry, ResourceId id)
         {
-            _image = image;
             _languages = BuildLanguages(entry);
 
             Type = type;
             Entry = entry;
             Id = id;
             Languages = _languages.Keys.OrderBy(k => k).ToArray();
+            Image = image;
         }
 
         #region Static Methods
@@ -95,12 +94,12 @@ namespace Workshell.PE.Content
         public async Task<byte[]> GetBytesAsync(uint language)
         {
             if (!_languages.ContainsKey(language))
-                throw new PortableExecutableImageException(_image, $"Cannot find specified language: {language}");
+                throw new PortableExecutableImageException(Image, $"Cannot find specified language: {language}");
 
             var data = await GetDataAsync(language).ConfigureAwait(false);
 
             if (data == null)
-                throw new PortableExecutableImageException(_image, $"Cannot find resource data for language: {language}");
+                throw new PortableExecutableImageException(Image, $"Cannot find resource data for language: {language}");
 
             return await data.GetBytesAsync().ConfigureAwait(false);
         }
@@ -136,6 +135,7 @@ namespace Workshell.PE.Content
         public ResourceDirectoryEntry Entry { get; }
         public ResourceId Id { get; }
         public uint[] Languages { get; }
+        protected PortableExecutableImage Image { get; }
 
         #endregion
     }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Resources
 {
     public sealed class ResourceType : IEnumerable<Resource>
     {
@@ -39,11 +39,11 @@ namespace Workshell.PE.Content
             _types = new Dictionary<ResourceId, Type>();
         }
 
-        private ResourceType(Resources parentResources, ResourceDirectoryEntry entry, ResourceId id)
+        private ResourceType(ResourceCollection resources, ResourceDirectoryEntry entry, ResourceId id)
         {
             _resources = new Resource[0];
 
-            Resources = parentResources;
+            Resources = resources;
             Entry = entry;
             Id = id;
             Count = 0;
@@ -51,7 +51,7 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        internal static async Task<ResourceType> CreateAsync(PortableExecutableImage image, Resources resources, ResourceDirectoryEntry entry)
+        internal static async Task<ResourceType> CreateAsync(PortableExecutableImage image, ResourceCollection resources, ResourceDirectoryEntry entry)
         {
             ResourceId id;
 
@@ -194,7 +194,7 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        public Resources Resources;
+        public ResourceCollection Resources;
         public ResourceDirectoryEntry Entry { get; }
         public ResourceId Id { get; }
         public int Count { get; private set; }
