@@ -4,21 +4,108 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Workshell.PE.Extensions;
 
 namespace Workshell.PE.Resources.Dialogs
 {
     public sealed class DialogItemEx
     {
-        internal DialogItemEx()
-        {
+        public const ushort Button = 0x0080;
+        public const ushort Edit = 0x0081;
+        public const ushort Static = 0x0082;
+        public const ushort ListBox = 0x0083;
+        public const ushort ScrollBar = 0x0084;
+        public const ushort ComboBox = 0x0085;
 
+        private DialogItemEx()
+        {
         }
 
         #region Static Methods
 
         internal static async Task<DialogItemEx> CreateAsync(Stream stream)
         {
-            return null;
+            var helpId = await stream.ReadUInt32Async().ConfigureAwait(false);
+            var exStyles = await stream.ReadUInt32Async().ConfigureAwait(false);
+            var styles = await stream.ReadUInt32Async().ConfigureAwait(false);
+            var x = await stream.ReadInt16Async().ConfigureAwait(false);
+            var y = await stream.ReadInt16Async().ConfigureAwait(false);
+            var position = new Point(x, y);
+            var cx = await stream.ReadInt16Async().ConfigureAwait(false);
+            var cy = await stream.ReadInt16Async().ConfigureAwait(false);
+            var size = new Size(cx, cy);
+            var id = await stream.ReadInt32Async().ConfigureAwait(false);
+            var classId = await ResourceUtils.OrdOrSzAsync(stream).ConfigureAwait(false);
+            var className = string.Empty;
+            ResourceId cls;
+
+            if (classId.Item1 > 0)
+            {
+                switch (classId.Item1)
+                {
+                    case Button:
+                        className = "BUTTON";
+                        break;
+                    case Edit:
+                        className = "EDIT";
+                        break;
+                    case Static:
+                        className = "STATIC";
+                        break;
+                    case ListBox:
+                        className = "LISTBOX";
+                        break;
+                    case ScrollBar:
+                        className = "SCROLLBAR";
+                        break;
+                    case ComboBox:
+                        className = "COMBOBOX";
+                        break;
+                }
+
+                cls = new ResourceId(classId.Item1, className);
+            }
+            else
+            {
+                cls = new ResourceId(classId.Item2);
+            }
+
+            var titleId = await ResourceUtils.OrdOrSzAsync(stream).ConfigureAwait(false);
+            ResourceId title;
+
+            if (titleId.Item1 > 0)
+            {
+                title = new ResourceId(titleId.Item1);
+            }
+            else
+            {
+                title = new ResourceId(titleId.Item2);
+            }
+
+            var extraCount = await stream.ReadUInt16Async().ConfigureAwait(false);
+
+            if (stream.Position % 2 != 0)
+                await stream.ReadByteAsync().ConfigureAwait(false);
+
+            var extraData = new byte[extraCount];
+
+            if (extraData.Length > 0)
+                extraData = await stream.ReadBytesAsync(extraCount).ConfigureAwait(false);       
+            
+            var result = new DialogItemEx()
+            {
+                HelpId = helpId,
+                ExtendedStyles = exStyles,
+                Styles = styles,
+                Position = position,
+                Size = size,
+                Id = id,
+                Class = cls,
+                Title = title,
+                ExtraData = extraData
+            };
+
+            return result;
         }
 
         #endregion

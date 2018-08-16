@@ -23,12 +23,12 @@ namespace Workshell.PE.Testbed
 
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
-            var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\igfxtray.exe");
+            var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\en-GB\notepad.exe.mui");
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
             var resources = await ResourceCollection.GetAsync(image);
             var dialogs = resources.FirstOrDefault(res => res.Id == ResourceType.Dialog);
-            var dialog = (DialogResource)dialogs.FirstOrDefault();
+            var dialog = (DialogResource) dialogs.ToArray()[1];
             var actualDialog = await dialog.GetDialogAsync();
         }
     }
