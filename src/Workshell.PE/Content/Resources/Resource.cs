@@ -10,9 +10,7 @@ namespace Workshell.PE.Resources
 {
     public class Resource : ISupportsBytes
     {
-        public const uint DefaultLanguage = 1033;
-
-        private readonly Dictionary<uint, ResourceDirectoryEntry> _languages;
+        private readonly Dictionary<ResourceLanguage, ResourceDirectoryEntry> _languages;
 
         protected Resource(PortableExecutableImage image, ResourceType type, ResourceDirectoryEntry entry, ResourceId id)
         {
@@ -59,12 +57,22 @@ namespace Workshell.PE.Resources
             return $"#{Id}";
         }
 
-        public ResourceData GetData(uint language = DefaultLanguage)
+        public ResourceData GetData()
+        {
+            return GetData(ResourceLanguage.English.UnitedStates);
+        }
+
+        public async Task<ResourceData> GetDataAsync()
+        {
+            return await GetDataAsync(ResourceLanguage.English.UnitedStates).ConfigureAwait(false);
+        }
+
+        public ResourceData GetData(ResourceLanguage language)
         {
             return GetDataAsync(language).GetAwaiter().GetResult();
         }
 
-        public async Task<ResourceData> GetDataAsync(uint language = DefaultLanguage)
+        public async Task<ResourceData> GetDataAsync(ResourceLanguage language)
         {
             if (!_languages.ContainsKey(language))
                 return null;
@@ -78,20 +86,20 @@ namespace Workshell.PE.Resources
 
         public byte[] GetBytes()
         {
-            return GetBytes(DefaultLanguage);
+            return GetBytes(ResourceLanguage.English.UnitedStates);
         }
 
         public async Task<byte[]> GetBytesAsync()
         {
-            return await GetBytesAsync(DefaultLanguage);
+            return await GetBytesAsync(ResourceLanguage.English.UnitedStates);
         }
 
-        public byte[] GetBytes(uint language)
+        public byte[] GetBytes(ResourceLanguage language)
         {
             return GetBytesAsync(language).GetAwaiter().GetResult();
         }
 
-        public async Task<byte[]> GetBytesAsync(uint language)
+        public async Task<byte[]> GetBytesAsync(ResourceLanguage language)
         {
             if (!_languages.ContainsKey(language))
                 throw new PortableExecutableImageException(Image, $"Cannot find specified language: {language}");
@@ -104,21 +112,31 @@ namespace Workshell.PE.Resources
             return await data.GetBytesAsync().ConfigureAwait(false);
         }
 
-        public void CopyTo(Stream stream, uint language = DefaultLanguage)
+        public void CopyTo(Stream stream)
+        {
+            CopyTo(stream, ResourceLanguage.English.UnitedStates);
+        }
+
+        public async Task CopyToAsync(Stream stream)
+        {
+            await CopyToAsync(stream, ResourceLanguage.English.UnitedStates).ConfigureAwait(false);
+        }
+
+        public void CopyTo(Stream stream, ResourceLanguage language)
         {
             CopyToAsync(stream, language).GetAwaiter().GetResult();
         }
 
-        public async Task CopyToAsync(Stream stream, uint language = DefaultLanguage)
+        public async Task CopyToAsync(Stream stream, ResourceLanguage language)
         {
             var data = await GetDataAsync(language).ConfigureAwait(false);
 
             await data.CopyToAsync(stream).ConfigureAwait(false);
         }
 
-        private Dictionary<uint, ResourceDirectoryEntry> BuildLanguages(ResourceDirectoryEntry parentEntry)
+        private Dictionary<ResourceLanguage, ResourceDirectoryEntry> BuildLanguages(ResourceDirectoryEntry parentEntry)
         {
-            var results = new Dictionary<uint, ResourceDirectoryEntry>();
+            var results = new Dictionary<ResourceLanguage, ResourceDirectoryEntry>();
             var directory = parentEntry.GetDirectory();
 
             foreach (var entry in directory)
@@ -134,7 +152,7 @@ namespace Workshell.PE.Resources
         public ResourceType Type { get; }
         public ResourceDirectoryEntry Entry { get; }
         public ResourceId Id { get; }
-        public uint[] Languages { get; }
+        public ResourceLanguage[] Languages { get; }
         protected PortableExecutableImage Image { get; }
 
         #endregion

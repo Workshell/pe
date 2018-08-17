@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Workshell.PE.Content;
 using Workshell.PE.Resources;
 using Workshell.PE.Resources.Dialogs;
 using Workshell.PE.Resources.Dialogs.Styles;
+using Workshell.PE.Resources.Menus;
 
 namespace Workshell.PE.Testbed
 {
@@ -19,7 +21,10 @@ namespace Workshell.PE.Testbed
 
         static async Task RunAsync(string[] args)
         {
+            var culture = CultureInfo.CurrentCulture;
+
             DialogResource.Register();
+            MenuResource.Register();
 
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
@@ -27,9 +32,9 @@ namespace Workshell.PE.Testbed
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
             var resources = await ResourceCollection.GetAsync(image);
-            var dialogs = resources.FirstOrDefault(res => res.Id == ResourceType.Dialog);
-            var dialog = (DialogResource) dialogs.ToArray()[1];
-            var actualDialog = await dialog.GetDialogAsync();
+            var menus = resources.FirstOrDefault(res => res.Id == ResourceType.Menu);
+            var menuResource = (MenuResource) menus.FirstOrDefault();
+            var menu = await menuResource.GetMenuAsync(ResourceLanguage.English.UnitedKingdom);
         }
     }
 }

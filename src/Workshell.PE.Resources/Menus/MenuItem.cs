@@ -24,13 +24,13 @@ namespace Workshell.PE.Resources.Menus
             if (IsSeperator)
                 return "-";
 
-            var result = text;
+            var result = Text;
 
             if (IsPopup)
                 result = "+" + result;
 
-            if (shortcut != string.Empty)
-                result += " | " + shortcut;
+            if (Shortcut != string.Empty)
+                result += " | " + Shortcut;
 
             return result;
         }

@@ -16,7 +16,7 @@ namespace Workshell.PE.Resources.Dialogs
         #region Properties
 
         public DialogResource Resource { get; }
-        public uint Language { get; }
+        public ResourceLanguage Language { get; }
         public bool IsExtended { get; }
 
         #endregion

@@ -28,12 +28,22 @@ namespace Workshell.PE.Resources.Dialogs
 
         #region Methods
 
-        public DialogBase GetDialog(uint language = DefaultLanguage)
+        public DialogBase GetDialog()
+        {
+            return GetDialog(ResourceLanguage.English.UnitedStates);
+        }
+
+        public async Task<DialogBase> GetDialogAsync()
+        {
+            return await GetDialogAsync(ResourceLanguage.English.UnitedStates).ConfigureAwait(false);
+        }
+
+        public DialogBase GetDialog(ResourceLanguage language)
         {
             return GetDialogAsync(language).GetAwaiter().GetResult();
         }
 
-        public async Task<DialogBase> GetDialogAsync(uint language = DefaultLanguage)
+        public async Task<DialogBase> GetDialogAsync(ResourceLanguage language)
         {
             var buffer = await GetBytesAsync(language).ConfigureAwait(false);
 

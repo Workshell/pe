@@ -30,12 +30,22 @@ namespace Workshell.PE.Resources.Accelerators
 
         #region Methods
 
-        public AcceleratorsTable Get(uint language = DefaultLanguage)
+        public AcceleratorsTable Get()
+        {
+            return Get(ResourceLanguage.English.UnitedStates);
+        }
+
+        public async Task<AcceleratorsTable> GetAsync()
+        {
+            return await GetAsync(ResourceLanguage.English.UnitedStates).ConfigureAwait(false);
+        }
+
+        public AcceleratorsTable Get(ResourceLanguage language)
         {
             return GetAsync(language).GetAwaiter().GetResult();
         }
 
-        public async Task<AcceleratorsTable> GetAsync(uint language = DefaultLanguage)
+        public async Task<AcceleratorsTable> GetAsync(ResourceLanguage language)
         {
             var stream = Image.GetStream();
             var data = await GetBytesAsync(language).ConfigureAwait(false);

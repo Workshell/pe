@@ -36,7 +36,7 @@ namespace Workshell.PE.Resources.Accelerators
         #region Properties
 
         public AcceleratorsResource Resource { get; }
-        public uint Language { get; }
+        public ResourceLanguage Language { get; }
         public int Count { get; }
         public AcceleratorEntry this[int index] => _entries[index];
 
