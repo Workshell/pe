@@ -64,7 +64,7 @@ namespace Workshell.PE.Resources.Menus
                 }
                 catch (Exception ex)
                 {
-                    throw new PortableExecutableImageException(Image, "Could not read dialog from stream.", ex);
+                    throw new PortableExecutableImageException(Image, "Could not read menu from stream.", ex);
                 }
             }
         }
