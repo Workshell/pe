@@ -11,6 +11,7 @@ using Workshell.PE.Resources.Dialogs.Styles;
 using Workshell.PE.Resources.Menus;
 using Workshell.PE.Resources.Messages;
 using Workshell.PE.Resources.Strings;
+using Workshell.PE.Resources.Version;
 
 namespace Workshell.PE.Testbed
 {
@@ -29,6 +30,7 @@ namespace Workshell.PE.Testbed
             MenuResource.Register();
             StringTableResource.Register();
             MessageTableResource.Register();
+            VersionResource.Register();
 
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
@@ -36,9 +38,9 @@ namespace Workshell.PE.Testbed
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
             var resources = await ResourceCollection.GetAsync(image);
-            var messageResources = resources.FirstOrDefault(res => res.Id == ResourceType.MessageTable);
-            var messageResource = (MessageTableResource)messageResources.FirstOrDefault();
-            var table = messageResource.GetTable(ResourceLanguage.English.UnitedKingdom);
+            var verResources = resources.FirstOrDefault(res => res.Id == ResourceType.Version);
+            var verResource = (VersionResource)verResources.FirstOrDefault();
+            var verInfo = verResource.GetInfo(ResourceLanguage.English.UnitedKingdom);
         }
     }
 }
