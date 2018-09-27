@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Workshell.PE.Resources.Version
 {
-    public sealed class VerVar
+    public sealed class VersionString
     {
-        internal VerVar(string key, uint value)
+        internal VersionString(string key, string value)
         {
             Key = key;
             Value = value;
@@ -16,7 +16,7 @@ namespace Workshell.PE.Resources.Version
 
         public override string ToString()
         {
-            return $"{Key} = 0x{Value:X8}";
+            return $"{Key} = {Value}";
         }
 
         #endregion
@@ -24,7 +24,7 @@ namespace Workshell.PE.Resources.Version
         #region Properties
 
         public string Key { get; }
-        public uint Value { get; }
+        public string Value { get; }
 
         #endregion
     }

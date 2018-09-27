@@ -209,6 +209,41 @@ namespace Workshell.PE.Extensions
             return await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
         }
 
+        public static async Task WriteBytesAsync(this Stream stream, byte[] bytes)
+        {
+            await stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+        }
+
+        public static async Task WriteStructAsync<T>(this Stream stream, T structure) where T : struct
+        {
+            var size = Marshal.SizeOf<T>();
+
+            await WriteStructAsync<T>(stream, structure, size).ConfigureAwait(false);
+        }
+
+        public static async Task WriteStructAsync<T>(this Stream stream, T structure, int size) where T : struct
+        {
+            var buffer = new byte[size];
+
+            WriteStruct<T>(structure,buffer,0,buffer.Length);
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
+        private static void WriteStruct<T>(T structure, byte[] buffer, int startIndex, int count) where T : struct
+        {
+            var ptr = Marshal.AllocHGlobal(count);
+
+            try
+            {
+                Marshal.StructureToPtr(structure,ptr,false);
+                Marshal.Copy(ptr,buffer,startIndex,count);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+        }
+
         #endregion
     }
 }

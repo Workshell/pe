@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Workshell.PE.Extensions;
-using Workshell.PE.Resources.Messages;
 using Workshell.PE.Resources.Native;
 
 namespace Workshell.PE.Resources.Version
@@ -23,6 +22,20 @@ namespace Workshell.PE.Resources.Version
             var type = new ResourceId(ResourceType.Version);
 
             return ResourceType.Register<VersionResource>(type);
+        }
+
+        internal static async Task<int> AlignWordBoundaryAsync(Stream stream)
+        {
+            var count = 0;
+
+            while (stream.Position % 4 != 0)
+            {
+                await stream.ReadUInt16Async().ConfigureAwait(false);
+
+                count += sizeof(ushort);
+            }
+
+            return count;
         }
 
         #endregion
@@ -50,26 +63,28 @@ namespace Workshell.PE.Resources.Version
 
             using (var mem = new MemoryStream(buffer))
             {
-                var len = await mem.ReadUInt16Async().ConfigureAwait(false);
-                var valLen = await mem.ReadUInt16Async().ConfigureAwait(false);
-                var type = await mem.ReadUInt16Async().ConfigureAwait(false);
+                var count = 3 * sizeof(ushort);
+
+                await mem.ReadBytesAsync(count).ConfigureAwait(false);
+
                 var key = await mem.ReadUnicodeStringAsync().ConfigureAwait(false);
 
-                if (mem.Position % 4 != 0)
-                    await mem.ReadUInt16Async().ConfigureAwait(false);
+                if (key != "VS_VERSION_INFO")
+                    throw new Exception("Invalid file version information.");
+
+                await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
 
                 var ffiData = await mem.ReadStructAsync<VS_FIXEDFILEINFO>().ConfigureAwait(false);
                 var fixedFileInfo = new FixedFileInfo(ffiData);
 
-                while (mem.Position % 4 != 0)
-                    await mem.ReadUInt16Async().ConfigureAwait(false);
+                await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
 
                 var stringFileInfo = await StringFileInfo.LoadAsync(mem).ConfigureAwait(false);
 
-                //if (mem.Position % 4 != 0)
-                //    await mem.ReadUInt16Async().ConfigureAwait(false);
+                await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
 
-                var info = new VersionInfo(this, language, fixedFileInfo, stringFileInfo, null);
+                var varFileInfo = await VarFileInfo.LoadAsync(mem).ConfigureAwait(false);
+                var info = new VersionInfo(this, language, fixedFileInfo, stringFileInfo, varFileInfo);
 
                 return info;
             }

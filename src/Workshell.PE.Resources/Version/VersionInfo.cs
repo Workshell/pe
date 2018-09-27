@@ -12,7 +12,7 @@ namespace Workshell.PE.Resources.Version
             Language = languageId;
             Fixed = fixedInfo;
             Strings = stringInfo;
-            Var = varInfo;
+            Variables = varInfo;
         }
 
         #region Properties
@@ -21,7 +21,7 @@ namespace Workshell.PE.Resources.Version
         public ResourceLanguage Language { get; }
         public FixedFileInfo Fixed { get; }
         public StringFileInfo Strings { get; }
-        public VarFileInfo Var { get; }
+        public VarFileInfo Variables { get; }
 
         #endregion
     }

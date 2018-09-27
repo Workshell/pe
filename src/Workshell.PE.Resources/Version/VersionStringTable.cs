@@ -6,11 +6,11 @@ using System.Text;
 
 namespace Workshell.PE.Resources.Version
 {
-    public sealed class VerStringTable : IEnumerable<VerString>
+    public sealed class VersionStringTable : IEnumerable<VersionString>
     {
-        private readonly VerString[] _strings;
+        private readonly VersionString[] _strings;
 
-        internal VerStringTable(string key, VerString[] strings)
+        internal VersionStringTable(string key, VersionString[] strings)
         {
             _strings = strings;
 
@@ -20,7 +20,12 @@ namespace Workshell.PE.Resources.Version
 
         #region Methods
 
-        public IEnumerator<VerString> GetEnumerator()
+        public override string ToString()
+        {
+            return $"Key: {Key}, Strings: {Count:n0}";
+        }
+
+        public IEnumerator<VersionString> GetEnumerator()
         {
             foreach (var str in _strings)
                 yield return str;
@@ -37,8 +42,8 @@ namespace Workshell.PE.Resources.Version
 
         public string Key { get; }
         public int Count { get; }
-        public VerString this[int index] => _strings[index];
-        public VerString this[string key] => _strings.FirstOrDefault(s => string.Compare(key, s.Key, StringComparison.OrdinalIgnoreCase) == 0);
+        public VersionString this[int index] => _strings[index];
+        public VersionString this[string key] => _strings.FirstOrDefault(s => string.Compare(key, s.Key, StringComparison.OrdinalIgnoreCase) == 0);
 
         #endregion
     }
