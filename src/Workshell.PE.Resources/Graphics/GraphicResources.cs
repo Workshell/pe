@@ -24,12 +24,21 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Workshell.PE.Content
+namespace Workshell.PE.Resources.Graphics
 {
-    public sealed class DelayedImportAddressTable : ImportAddressTableBase<DelayedImportAddressTableEntry>
+    public static class GraphicResources
     {
-        internal DelayedImportAddressTable(PortableExecutableImage image, uint rva, ulong[] entries, ImportDirectoryEntryBase directoryEntry) : base(image, rva, entries, directoryEntry, true)
+        #region Methods
+
+        public static void Register()
         {
+            BitmapResource.Register();
+            CursorGroupResource.Register();
+            CursorResource.Register();
+            IconGroupResource.Register();
+            IconResource.Register();
         }
+
+        #endregion
     }
 }
