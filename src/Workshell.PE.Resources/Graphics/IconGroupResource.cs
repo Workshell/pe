@@ -62,7 +62,7 @@ namespace Workshell.PE.Resources.Graphics
                     entries[i] = new IconGroupEntry(icon);
                 }
 
-                var group = new IconGroup(language, entries);
+                var group = new IconGroup(this, language, entries);
 
                 return group;
             }

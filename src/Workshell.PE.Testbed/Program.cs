@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -33,20 +34,22 @@ namespace Workshell.PE.Testbed
             MessageTableResource.Register();
             VersionResource.Register();
             BitmapResource.Register();
+            IconGroupResource.Register();
+            IconResource.Register();
+            CursorGroupResource.Register();
 
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Users\lkinsella\Downloads\IISCrypto.exe");
-            var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
+            //var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\shell32.dll");
+            var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\user32.dll");
             //var image = await PortableExecutableImage.FromFileAsync(@"C:\Windows\System32\en-GB\user32.dll.mui");
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ResourceTable];
             var content = await dataDirectory.GetContentAsync().ConfigureAwait(false);
             var resources = await ResourceCollection.GetAsync(image);
-            var bmpResources = resources.FirstOrDefault(res => res.Id == ResourceType.Bitmap);
-            var bmpResource = (BitmapResource) bmpResources.FirstOrDefault(r => r.Id == 0x0138);
-            //var verInfo = verResource.GetInfo(ResourceLanguage.English.UnitedKingdom);
+            var groupResources = resources.FirstOrDefault(res => res.Id == ResourceType.GroupCursor);
+            var groupResource = (CursorGroupResource)groupResources.FirstOrDefault(res => res.Id == 0x0069);
+            var group = await groupResource.GetGroupAsync();
 
-            var bitmap = await bmpResource.GetBitmapAsync();
-
-            bitmap.Save("C:\\Temp\\test.bmp");
+            await group.SaveAsync(@"C:\\Temp\\test.cur");
         }
     }
 }

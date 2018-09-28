@@ -214,6 +214,55 @@ namespace Workshell.PE.Extensions
             await stream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
         }
 
+        public static async Task WriteByteAsync(this Stream stream, byte value)
+        {
+            var buffer = new[] { value };
+            
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
+        public static async Task WriteInt16Async(this Stream stream, short value)
+        {
+            var buffer = BitConverter.GetBytes(value);
+            
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
+        public static async Task WriteInt32Async(this Stream stream, int value)
+        {
+            var buffer = BitConverter.GetBytes(value);
+
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
+        public static async Task WriteInt64Async(this Stream stream, long value)
+        {
+            var buffer = BitConverter.GetBytes(value);
+
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+      
+        public static async Task WriteUInt16Async(this Stream stream, ushort value)
+        {
+            var buffer = BitConverter.GetBytes(value);
+            
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
+        public static async Task WriteUInt32Async(this Stream stream, uint value)
+        {
+            var buffer = BitConverter.GetBytes(value);
+
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
+        public static async  Task WriteUInt64Async(this Stream stream, ulong value)
+        {
+            var buffer = BitConverter.GetBytes(value);
+            
+            await stream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+        }
+
         public static async Task WriteStructAsync<T>(this Stream stream, T structure) where T : struct
         {
             var size = Marshal.SizeOf<T>();
