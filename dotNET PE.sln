@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Workshell.PE", "src\Workshe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Workshell.PE.Testbed", "src\Workshell.PE.Testbed\Workshell.PE.Testbed.csproj", "{D73F5FEA-7576-4EF4-9DED-07D3F8607598}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Workshell.PE.Resources", "src\Workshell.PE.Resources\Workshell.PE.Resources.csproj", "{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Workshell.PE.Resources", "src\Workshell.PE.Resources\Workshell.PE.Resources.csproj", "{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
