@@ -240,7 +240,7 @@ namespace Workshell.PE.Resources.Graphics
             return result;
         }
 
-        private async Task<(ushort Width, ushort Height, byte ColorCount, byte[] DIB, bool IsPNG)> GetIconDataAsync(ResourceLanguage language)
+        private async Task<IconData> GetIconDataAsync(ResourceLanguage language)
         {
             var buffer = await GetBytesAsync(language).ConfigureAwait(false);
 
@@ -275,7 +275,16 @@ namespace Workshell.PE.Resources.Graphics
                 }
             }
 
-            return (width, height, colorCount, dib, isPNG);
+            var result = new IconData()
+            {
+                Width = width,
+                Height = height,
+                ColorCount = colorCount,
+                DIB = dib,
+                IsPNG = isPNG
+            };
+
+            return result;
         }
 
         #endregion

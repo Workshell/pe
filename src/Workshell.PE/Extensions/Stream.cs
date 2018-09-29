@@ -35,7 +35,7 @@ namespace Workshell.PE.Extensions
 
         public static async Task<T> ReadStructAsync<T>(this Stream stream) where T : struct
         {
-            var size = Marshal.SizeOf<T>();
+            var size = Utils.SizeOf<T>();
 
             return await ReadStructAsync<T>(stream, size).ConfigureAwait(false);
         }
@@ -287,7 +287,7 @@ namespace Workshell.PE.Extensions
 
         public static async Task WriteStructAsync<T>(this Stream stream, T structure) where T : struct
         {
-            var size = Marshal.SizeOf<T>();
+            var size = Utils.SizeOf<T>();
 
             await WriteStructAsync<T>(stream, structure, size).ConfigureAwait(false);
         }

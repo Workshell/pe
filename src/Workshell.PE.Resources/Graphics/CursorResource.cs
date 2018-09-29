@@ -27,6 +27,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+
 using Workshell.PE.Extensions;
 using Workshell.PE.Resources.Native;
 
@@ -230,7 +231,7 @@ namespace Workshell.PE.Resources.Graphics
             return result;
         }
 
-        private async Task<(ushort HotspotX, ushort HotspotY, ushort Width, ushort Height, byte ColorCount, byte[] DIB, bool IsPNG)> GetCursorDataAsync(ResourceLanguage language)
+        private async Task<CursorData> GetCursorDataAsync(ResourceLanguage language)
         {
             var buffer = await GetBytesAsync(language).ConfigureAwait(false);
             byte[] dib;
@@ -274,7 +275,18 @@ namespace Workshell.PE.Resources.Graphics
                 }
             }
 
-            return (hotspotX, hotspotY, width, height, colorCount, dib, isPNG);
+            var result = new CursorData()
+            {
+                HotspotX = hotspotX,
+                HotspotY = hotspotY,
+                Width = width,
+                Height = height,
+                ColorCount = colorCount,
+                DIB = dib,
+                IsPNG = isPNG
+            };
+
+            return result;
         }
 
         #endregion

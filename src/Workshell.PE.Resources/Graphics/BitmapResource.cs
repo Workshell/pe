@@ -35,8 +35,8 @@ namespace Workshell.PE.Resources.Graphics
 {
     public sealed class BitmapResource : Resource
     {
-        private static readonly int BitmapInfoHeaderSize = Marshal.SizeOf<BITMAPINFOHEADER>();
-        private static readonly int BitmapFileHeaderSize = Marshal.SizeOf<BITMAPFILEHEADER>();
+        private static readonly int BitmapInfoHeaderSize = Utils.SizeOf<BITMAPINFOHEADER>();
+        private static readonly int BitmapFileHeaderSize = Utils.SizeOf<BITMAPFILEHEADER>();
 
         public BitmapResource(PortableExecutableImage image, ResourceType type, ResourceDirectoryEntry entry, ResourceId id) : base(image, type, entry, id)
         {

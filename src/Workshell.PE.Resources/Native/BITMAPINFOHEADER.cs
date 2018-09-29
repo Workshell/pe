@@ -54,7 +54,7 @@ namespace Workshell.PE.Resources.Native
 
         public void Initialize()
         {
-            biSize = (uint)Marshal.SizeOf(this);
+            biSize = (uint)Utils.SizeOf<BITMAPINFOHEADER>();
         }
     }
 }

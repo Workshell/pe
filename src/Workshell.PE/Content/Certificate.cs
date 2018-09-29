@@ -104,7 +104,7 @@ namespace Workshell.PE.Content
 
         public async Task<byte[]> GetCertificateDataAsync()
         {
-            var offset = Location.FileOffset + Marshal.SizeOf<WIN_CERTIFICATE>().ToUInt32();
+            var offset = Location.FileOffset + Utils.SizeOf<WIN_CERTIFICATE>().ToUInt32();
             var stream = Image.GetStream();
 
             stream.Seek(offset.ToInt64(), SeekOrigin.Begin);

@@ -72,7 +72,7 @@ namespace Workshell.PE.Content
 
                 stream.Seek(fileOffset.ToInt32(), SeekOrigin.Begin);
 
-                var entrySize = Marshal.SizeOf<IMAGE_DEBUG_DIRECTORY>();
+                var entrySize = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>();
                 var entryCount = dataDirectory.Size / entrySize;
                 var entries = new Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[entryCount];
 

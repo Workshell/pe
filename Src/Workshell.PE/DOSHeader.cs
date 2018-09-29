@@ -71,7 +71,7 @@ namespace Workshell.PE
 
         #region Static Properties
 
-        public static int Size { get; } = Marshal.SizeOf<IMAGE_DOS_HEADER>();
+        public static int Size { get; } = Utils.SizeOf<IMAGE_DOS_HEADER>();
 
         #endregion
 

@@ -165,8 +165,8 @@ namespace Workshell.PE
 
         #region Static Properties
 
-        public static int Size32 { get; } = Marshal.SizeOf<IMAGE_OPTIONAL_HEADER32>();
-        public static int Size64 { get; } = Marshal.SizeOf<IMAGE_OPTIONAL_HEADER64>();
+        public static int Size32 { get; } = Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>();
+        public static int Size64 { get; } = Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>();
 
         #endregion
 

@@ -136,7 +136,7 @@ namespace Workshell.PE.Resources
 
         public override string ToString()
         {
-            return $"0x{LCID:X4} ({LCID}) | {Culture.EnglishName}";
+            return $"0x{LCID:X4} ({LCID})";
         }
 
         public override int GetHashCode()
@@ -172,7 +172,6 @@ namespace Workshell.PE.Resources
         #region Properties
 
         public int LCID { get; }
-        public CultureInfo Culture => CultureInfo.GetCultureInfo(LCID);
 
         #endregion
     }

@@ -40,7 +40,7 @@ namespace Workshell.PE
         {
             _image = image;
 
-            var size = (Marshal.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length).ToUInt32();
+            var size = (Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length).ToUInt32();
             var fileOffset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
             var rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize.ToUInt32();
             var va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;

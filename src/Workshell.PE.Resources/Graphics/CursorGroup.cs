@@ -123,7 +123,7 @@ namespace Workshell.PE.Resources.Graphics
             else
             {
                 var group = await _resource.GetGroupAsync(language).ConfigureAwait(false);
-                var cursorsInfo = new List<(ushort Id, ushort HotspotX, ushort HotspotY, byte[] DIB)>(group.Count);
+                var cursorsInfo = new List<Tuple<ushort, ushort, ushort, byte[]>>(group.Count);
 
                 for (var i = 0; i < group.Count; i++)
                 {
@@ -148,7 +148,7 @@ namespace Workshell.PE.Resources.Graphics
                         }
                     }
 
-                    cursorsInfo.Add((entry.CursorId, hotspotX, hotspotY, dib));
+                    cursorsInfo.Add(new Tuple<ushort, ushort, ushort, byte[]>(entry.CursorId, hotspotX, hotspotY, dib));
                 }
 
                 var offsets = new uint[group.Count];
@@ -159,7 +159,7 @@ namespace Workshell.PE.Resources.Graphics
                     var info = cursorsInfo[i];
 
                     offsets[i] = offset;
-                    offset += info.DIB.Length.ToUInt32();
+                    offset += info.Item4.Length.ToUInt32();
                 }
 
                 await stream.WriteUInt16Async(0).ConfigureAwait(false);
@@ -175,9 +175,9 @@ namespace Workshell.PE.Resources.Graphics
                     await stream.WriteByteAsync(Convert.ToByte(entry.Height)).ConfigureAwait(false);
                     await stream.WriteByteAsync(Convert.ToByte(entry.BitCount)).ConfigureAwait(false);
                     await stream.WriteByteAsync(0).ConfigureAwait(false);
-                    await stream.WriteUInt16Async(info.HotspotX).ConfigureAwait(false);
-                    await stream.WriteUInt16Async(info.HotspotY).ConfigureAwait(false);
-                    await stream.WriteInt32Async(info.DIB.Length).ConfigureAwait(false);
+                    await stream.WriteUInt16Async(info.Item2).ConfigureAwait(false);
+                    await stream.WriteUInt16Async(info.Item3).ConfigureAwait(false);
+                    await stream.WriteInt32Async(info.Item4.Length).ConfigureAwait(false);
                     await stream.WriteUInt32Async(offsets[i]).ConfigureAwait(false);
                 }
 
@@ -185,7 +185,7 @@ namespace Workshell.PE.Resources.Graphics
                 {
                     var info = cursorsInfo[i];
 
-                    await stream.WriteBytesAsync(info.DIB).ConfigureAwait(false);
+                    await stream.WriteBytesAsync(info.Item4).ConfigureAwait(false);
                 }
             }
         }

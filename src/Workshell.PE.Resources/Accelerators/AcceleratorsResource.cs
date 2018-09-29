@@ -74,7 +74,7 @@ namespace Workshell.PE.Resources.Accelerators
 
             using (var mem = new MemoryStream(data))
             {
-                var size = Marshal.SizeOf<ACCELTABLEENTRY>();
+                var size = Utils.SizeOf<ACCELTABLEENTRY>();
                 var count = mem.Length / size;
                 var accelerators = new AcceleratorEntry[count];
 

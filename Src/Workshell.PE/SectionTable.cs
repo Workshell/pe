@@ -124,7 +124,7 @@ namespace Workshell.PE
 
     public sealed class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation, ISupportsBytes
     {
-        private static readonly uint _headerSize = Marshal.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
+        private static readonly uint _headerSize = Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
 
         private readonly PortableExecutableImage _image;
         private readonly IMAGE_SECTION_HEADER _header;
@@ -280,7 +280,7 @@ namespace Workshell.PE
             _image = image;
             _table = new SectionTableEntry[sectionHeaders.Length];
 
-            var size = (Marshal.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
+            var size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
             Location = new Location(image.GetCalculator(), tableOffset, tableOffset.ToUInt32(), imageBase + tableOffset, size, size);
 
@@ -291,7 +291,7 @@ namespace Workshell.PE
                 var entry = new SectionTableEntry(_image,this,sectionHeaders[i],offset,imageBase);
 
                 _table[i] = entry;
-                offset += Marshal.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
+                offset += Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
             }
         }
 

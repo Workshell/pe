@@ -85,7 +85,7 @@ namespace Workshell.PE.Content
                 var va = imageBase + rva;
                 var section = calc.RVAToSection(rva);
                 var offset = calc.RVAToOffset(section, rva);
-                var size = Marshal.SizeOf<IMAGE_EXPORT_DIRECTORY>();
+                var size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
                 var location = new Location(offset, rva, va, size.ToUInt32(), size.ToUInt32(), section);
                 var stream = image.GetStream();
 

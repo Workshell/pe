@@ -230,7 +230,7 @@ namespace Workshell.PE
 
             try
             {
-                var optionalHeaderSize = (Is32Bit ? Marshal.SizeOf<IMAGE_OPTIONAL_HEADER32>() : Marshal.SizeOf<IMAGE_OPTIONAL_HEADER64>());
+                var optionalHeaderSize = (Is32Bit ? Utils.SizeOf<IMAGE_OPTIONAL_HEADER32>() : Utils.SizeOf<IMAGE_OPTIONAL_HEADER64>());
 
                 optionalHeaderBytes = await _stream.ReadBytesAsync(optionalHeaderSize).ConfigureAwait(false);
             }
@@ -257,7 +257,7 @@ namespace Workshell.PE
             }
 
             var dataDirs = new IMAGE_DATA_DIRECTORY[dirCount];
-            var dataDirSize = Marshal.SizeOf<IMAGE_DATA_DIRECTORY>();
+            var dataDirSize = Utils.SizeOf<IMAGE_DATA_DIRECTORY>();
 
             for (var i = 0; i < dirCount; i++)
             {
@@ -271,7 +271,7 @@ namespace Workshell.PE
                 }
             }
 
-            var sectionTableEntrySize = Marshal.SizeOf<IMAGE_SECTION_HEADER>();
+            var sectionTableEntrySize = Utils.SizeOf<IMAGE_SECTION_HEADER>();
             var sectionTable = new IMAGE_SECTION_HEADER[fileHdr.NumberOfSections];
 
             for (var i = 0; i < fileHdr.NumberOfSections; i++)

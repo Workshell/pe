@@ -131,7 +131,7 @@ namespace Workshell.PE.Resources
                 var rva = DataDirectory.VirtualAddress + offset;
                 var va = Image.NTHeaders.OptionalHeader.ImageBase + rva;
                 var fileOffset = calc.RVAToOffset(rva);
-                var size = Marshal.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
+                var size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
                 var section = calc.RVAToSection(rva);
                 var location = new Location(fileOffset, rva, va, size, size, section);
 
@@ -157,7 +157,7 @@ namespace Workshell.PE.Resources
                 var rva = DataDirectory.VirtualAddress + offset;
                 var va = Image.NTHeaders.OptionalHeader.ImageBase + rva;
                 var fileOffset = calc.RVAToOffset(rva);
-                var size = Marshal.SizeOf<IMAGE_RESOURCE_DATA_ENTRY>().ToUInt32();
+                var size = Utils.SizeOf<IMAGE_RESOURCE_DATA_ENTRY>().ToUInt32();
                 var section = calc.RVAToSection(rva);
                 var location = new Location(fileOffset, rva, va, size, size, section);
 

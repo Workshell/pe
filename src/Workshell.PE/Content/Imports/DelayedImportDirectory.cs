@@ -62,7 +62,7 @@ namespace Workshell.PE.Content
 
             stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
 
-            var size = Marshal.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
+            var size = Utils.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
             var descriptors = new List<Tuple<ulong, IMAGE_DELAY_IMPORT_DESCRIPTOR>>();
 
             try

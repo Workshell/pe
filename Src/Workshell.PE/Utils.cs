@@ -36,6 +36,13 @@ namespace Workshell.PE
 
         #region Methods
 
+        public static int SizeOf<T>() where T : struct
+        {
+            var result = Marshal.SizeOf(typeof(T));
+
+            return result;
+        }
+
         public static T Read<T>(byte[] bytes) where T : struct
         {
             var ptr = Marshal.AllocHGlobal(bytes.Length);
@@ -169,7 +176,7 @@ namespace Workshell.PE
 
         public static void Write<T>(T structure, Stream stream) where T : struct
         {
-            var size = Marshal.SizeOf<T>();
+            var size = Utils.SizeOf<T>();
             
             Write<T>(structure,stream,size);
         }

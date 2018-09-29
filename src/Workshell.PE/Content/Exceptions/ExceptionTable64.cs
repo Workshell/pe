@@ -48,7 +48,7 @@ namespace Workshell.PE.Content
 
             stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
 
-            var entrySize = Marshal.SizeOf<IMAGE_RUNTIME_FUNCTION_64>();
+            var entrySize = Utils.SizeOf<IMAGE_RUNTIME_FUNCTION_64>();
             var entries = new List<ExceptionTableEntry>();
 
             while (true)

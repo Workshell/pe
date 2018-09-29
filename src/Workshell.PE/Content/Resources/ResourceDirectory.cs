@@ -67,7 +67,7 @@ namespace Workshell.PE.Resources
             var rva = dataDirectory.VirtualAddress;
             var va = image.NTHeaders.OptionalHeader.ImageBase + rva;
             var offset = calc.RVAToOffset(rva);
-            var size = Marshal.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
+            var size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
             var section = calc.RVAToSection(rva);
             var location = new Location(offset, rva, va, size, size, section);
             var directory = new ResourceDirectory(image, dataDirectory, location, null);
@@ -110,7 +110,7 @@ namespace Workshell.PE.Resources
 
             stream.Seek(Location.FileOffset.ToInt64(),SeekOrigin.Begin);
 
-            var directorySize = Marshal.SizeOf<IMAGE_RESOURCE_DIRECTORY>();
+            var directorySize = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>();
             IMAGE_RESOURCE_DIRECTORY directory;
 
             try
@@ -125,7 +125,7 @@ namespace Workshell.PE.Resources
             var count = directory.NumberOfNamedEntries + directory.NumberOfIdEntries;
             var entries = new List<ResourceDirectoryEntry>(count);
             var offset = Location.FileOffset + directorySize.ToUInt32();
-            var entrySize = Marshal.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>();
+            var entrySize = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY_ENTRY>();
 
             for (int i = 0; i < count; i++)
             {

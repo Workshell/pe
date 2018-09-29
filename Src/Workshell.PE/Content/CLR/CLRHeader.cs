@@ -99,7 +99,7 @@ namespace Workshell.PE.Content
 
         internal static async Task<CLRHeader> GetAsync(PortableExecutableImage image, Location clrLocation)
         {
-            var size = Marshal.SizeOf<IMAGE_COR20_HEADER>();
+            var size = Utils.SizeOf<IMAGE_COR20_HEADER>();
             var location = new Location(clrLocation.FileOffset, clrLocation.RelativeVirtualAddress, clrLocation.VirtualAddress, size.ToUInt32(), size.ToUInt32(), clrLocation.Section);
             var stream = image.GetStream();
 
