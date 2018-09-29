@@ -1,60 +1,50 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
-
     public sealed class DOSHeader : ISupportsLocation, ISupportsBytes
     {
-
         public const ushort DOS_MAGIC_MZ = 23117;
 
-        private static readonly int size = Utils.SizeOf<IMAGE_DOS_HEADER>();
-
-        private ExecutableImage image;
-        private IMAGE_DOS_HEADER header;
-        private Location location;
-
-        internal DOSHeader(ExecutableImage exeImage, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
+        private readonly PortableExecutableImage _image;
+        private readonly IMAGE_DOS_HEADER _header;
+        
+        internal DOSHeader(PortableExecutableImage image, IMAGE_DOS_HEADER dosHeader, ulong imageBase)
         {
-            image = exeImage;
-            header = dosHeader;
-            location = new Location(0,0,imageBase,Convert.ToUInt32(DOSHeader.Size),Convert.ToUInt32(DOSHeader.Size));
+            _image = image;
+            _header = dosHeader;
+
+            Location = new Location(image.GetCalculator(), 0, 0, imageBase, Size.ToUInt32(), Size.ToUInt32());
         }
 
         #region Methods
@@ -66,8 +56,13 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
         }
@@ -76,207 +71,71 @@ namespace Workshell.PE
 
         #region Static Properties
 
-        public static int Size
-        {
-            get
-            {
-                return size;
-            }
-        }
+        public static int Size { get; } = Utils.SizeOf<IMAGE_DOS_HEADER>();
 
         #endregion
 
         #region Properties
 
-        public ExecutableImage Image
-        {
-            get
-            {
-                return image;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
+        public Location Location { get; }
 
         [FieldAnnotation("Signature")]
-        public ushort Magic
-        {
-            get
-            {
-                return header.e_magic;
-            }
-        }
+        public ushort Magic => _header.e_magic;
 
         [FieldAnnotation("Bytes on last page of file")]
-        public ushort BytesOnLastPage
-        {
-            get
-            {
-                return header.e_cblp;
-            }
-        }
+        public ushort BytesOnLastPage => _header.e_cblp;
 
         [FieldAnnotation("Pages in file")]
-        public ushort PagesInFile
-        {
-            get
-            {
-                return header.e_cp;
-            }
-        }
+        public ushort PagesInFile => _header.e_cp;
 
         [FieldAnnotation("Relocations")]
-        public ushort Relocations
-        {
-            get
-            {
-                return header.e_crlc;
-            }
-        }
+        public ushort Relocations => _header.e_crlc;
 
         [FieldAnnotation("Size of header in paragraphs")]
-        public ushort SizeHeaderParagraphs
-        {
-            get
-            {
-                return header.e_cparhdr;
-            }
-        }
+        public ushort SizeHeaderParagraphs => _header.e_cparhdr;
 
         [FieldAnnotation("Minimum extra paragraphs needed")]
-        public ushort MinExtraParagraphs
-        {
-            get
-            {
-                return header.e_minalloc;
-            }
-        }
+        public ushort MinExtraParagraphs => _header.e_minalloc;
 
         [FieldAnnotation("Maximum extra paragraphs needed")]
-        public ushort MaxExtraParagraphs
-        {
-            get
-            {
-                return header.e_maxalloc;
-            }
-        }
+        public ushort MaxExtraParagraphs => _header.e_maxalloc;
 
         [FieldAnnotation("Initial (relative) CS value")]
-        public ushort InitialSSValue
-        {
-            get
-            {
-                return header.e_ss;
-            }
-        }
+        public ushort InitialSSValue => _header.e_ss;
 
         [FieldAnnotation("Initial SP value")]
-        public ushort InitialSPValue
-        {
-            get
-            {
-                return header.e_sp;
-            }
-        }
+        public ushort InitialSPValue => _header.e_sp;
 
         [FieldAnnotation("Checksum")]
-        public ushort Checksum
-        {
-            get
-            {
-                return header.e_csum;
-            }
-        }
+        public ushort Checksum => _header.e_csum;
 
         [FieldAnnotation("Initial SP value")]
-        public ushort InitialIPValue
-        {
-            get
-            {
-                return header.e_ip;
-            }
-        }
+        public ushort InitialIPValue => _header.e_ip;
 
         [FieldAnnotation("Initial (relative) CS value")]
-        public ushort InitialCSValue
-        {
-            get
-            {
-                return header.e_cs;
-            }
-        }
+        public ushort InitialCSValue => _header.e_cs;
 
         [FieldAnnotation("File address of relocation table")]
-        public ushort FileAddressRelocationTable
-        {
-            get
-            {
-                return header.e_lfarlc;
-            }
-        }
+        public ushort FileAddressRelocationTable => _header.e_lfarlc;
 
         [FieldAnnotation("Overlay number")]
-        public ushort OverlayNumber
-        {
-            get
-            {
-                return header.e_ovno;
-            }
-        }
+        public ushort OverlayNumber => _header.e_ovno;
 
         [FieldAnnotation("Reserved",ArrayLength = 4)]
-        public ushort[] Reserved1
-        {
-            get
-            {
-                return header.e_res_1;
-            }
-        }
+        public ushort[] Reserved1 => _header.e_res_1;
 
         [FieldAnnotation("OEM identifier")]
-        public ushort OEMIdentifier
-        {
-            get
-            {
-                return header.e_oemid;
-            }
-        }
+        public ushort OEMIdentifier => _header.e_oemid;
 
         [FieldAnnotation("OEM information")]
-        public ushort OEMInformation
-        {
-            get
-            {
-                return header.e_oeminfo;
-            }
-        }
+        public ushort OEMInformation => _header.e_oeminfo;
 
         [FieldAnnotation("Reserved",ArrayLength = 10)]
-        public ushort[] Reserved2
-        {
-            get
-            {
-                return header.e_res_2;
-            }
-        }
+        public ushort[] Reserved2 => _header.e_res_2;
 
         [FieldAnnotation("File address of new header")]
-        public int FileAddressNewHeader
-        {
-            get
-            {
-                return header.e_lfanew;
-            }
-        }
+        public int FileAddressNewHeader => _header.e_lfanew;
 
         #endregion
-
     }
-
 }

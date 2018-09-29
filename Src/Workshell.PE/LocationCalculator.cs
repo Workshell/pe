@@ -1,47 +1,39 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Workshell.PE
 {
-
-    public class LocationCalculator
+    public sealed class LocationCalculator
     {
+        private PortableExecutableImage _image;
 
-        private ExecutableImage reader;
-
-        internal LocationCalculator(ExecutableImage imageReader)
+        internal LocationCalculator(PortableExecutableImage image)
         {
-            reader = imageReader;
+            _image = image;
         }
 
         #region Methods
@@ -50,24 +42,24 @@ namespace Workshell.PE
 
         public Section VAToSection(ulong va)
         {
-            ulong image_base = reader.NTHeaders.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
+            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+            var rva = Convert.ToUInt32(va - imageBase);
 
             return RVAToSection(rva);
         }
 
         public SectionTableEntry VAToSectionTableEntry(ulong va)
         {
-            ulong image_base = reader.NTHeaders.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
+            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+            var rva = Convert.ToUInt32(va - imageBase);
 
             return RVAToSectionTableEntry(rva);
         }
 
         public ulong VAToOffset(ulong va)
         {
-            ulong image_base = reader.NTHeaders.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
+            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+            var rva = Convert.ToUInt32(va - imageBase);
 
             return RVAToOffset(rva);
         }
@@ -79,15 +71,15 @@ namespace Workshell.PE
 
         public ulong VAToOffset(SectionTableEntry section, ulong va)
         {
-            ulong image_base = reader.NTHeaders.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32(va - image_base);
+            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+            var rva = Convert.ToUInt32(va - imageBase);
 
             return RVAToOffset(section,rva);
         }
 
         public ulong OffsetToVA(ulong offset)
         {
-            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.PointerToRawData).ToArray();
+            var entries = _image.SectionTable.OrderBy(e => e.PointerToRawData).ToArray();
             SectionTableEntry entry = null;
 
             for(var i = 0; i < entries.Length; i++)
@@ -97,13 +89,9 @@ namespace Workshell.PE
             }
 
             if (entry != null)
-            {
                 return OffsetToVA(entry, offset);
-            }
-            else
-            {
-                return 0;
-            }
+            
+            return 0;
         }
 
         public ulong OffsetToVA(Section section, ulong offset)
@@ -113,37 +101,37 @@ namespace Workshell.PE
 
         public ulong OffsetToVA(SectionTableEntry section, ulong offset)
         {
-            ulong image_base = reader.NTHeaders.OptionalHeader.ImageBase;
-            uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
+            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+            var rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
 
-            return image_base + rva;
+            return imageBase + rva;
         }
 
         /* RVA */
 
         public Section RVAToSection(uint rva)
         {
-            SectionTableEntry entry = RVAToSectionTableEntry(rva);
+            var entry = RVAToSectionTableEntry(rva);
 
             if (entry == null)
                 return null;
 
-            return reader.Sections[entry];
+            return _image.Sections[entry];
         }
 
         public SectionTableEntry RVAToSectionTableEntry(uint rva)
         {
-            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
+            var entries = _image.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
             SectionTableEntry entry = null;
 
             for (var i = 0; i < entries.Length; i++)
             {
-                uint max_rva = entries[i].VirtualAddress + entries[i].SizeOfRawData;
+                var maxRVA = entries[i].VirtualAddress + entries[i].SizeOfRawData;
 
                 if (i != (entries.Length - 1))
-                    max_rva = entries[i + 1].VirtualAddress;
+                    maxRVA = entries[i + 1].VirtualAddress;
 
-                if (rva >= entries[i].VirtualAddress && rva < max_rva)
+                if (rva >= entries[i].VirtualAddress && rva < maxRVA)
                     entry = entries[i];
             }
 
@@ -152,7 +140,7 @@ namespace Workshell.PE
 
         public ulong RVAToOffset(uint rva)
         {
-            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
+            var entries = _image.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
             SectionTableEntry entry = null;
 
             for (var i = 0; i < entries.Length; i++)
@@ -162,13 +150,9 @@ namespace Workshell.PE
             }
 
             if (entry != null)
-            {
                 return RVAToOffset(entry, rva);
-            }
-            else
-            {
-                return 0;
-            }
+
+            return 0;
         }
 
         public ulong RVAToOffset(Section section, uint rva)
@@ -178,14 +162,14 @@ namespace Workshell.PE
 
         public ulong RVAToOffset(SectionTableEntry section, uint rva)
         {
-            ulong offset = (rva - section.VirtualAddress) + section.PointerToRawData;
+            var offset = (rva - section.VirtualAddress) + section.PointerToRawData;
 
             return offset;
         }
 
         public uint OffsetToRVA(ulong offset)
         {
-            SectionTableEntry[] entries = reader.SectionTable.OrderBy(e => e.PointerToRawData).ToArray();
+            var entries = _image.SectionTable.OrderBy(e => e.PointerToRawData).ToArray();
             SectionTableEntry entry = null;
 
             for (var i = 0; i < entries.Length; i++)
@@ -195,13 +179,9 @@ namespace Workshell.PE
             }
 
             if (entry != null)
-            {
                 return OffsetToRVA(entry, offset);
-            }
-            else
-            {
-                return 0;
-            }
+
+            return 0;
         }
 
         public uint OffsetToRVA(Section section, ulong offset)
@@ -211,13 +191,11 @@ namespace Workshell.PE
 
         public uint OffsetToRVA(SectionTableEntry section, ulong offset)
         {
-            uint rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
+            var rva = Convert.ToUInt32((offset + section.VirtualAddress) - section.PointerToRawData);
 
             return rva;
         }
 
         #endregion
-
     }
-
 }

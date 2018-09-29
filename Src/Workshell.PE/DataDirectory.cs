@@ -1,43 +1,39 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using Workshell.PE.Extensions;
+using Workshell.PE.Content;
 using Workshell.PE.Native;
+using Workshell.PE.Resources;
 
 namespace Workshell.PE
 {
-
     public enum DataDirectoryType : int
     {
         Unknown = -1,
@@ -60,22 +56,23 @@ namespace Workshell.PE
 
     public sealed class DataDirectory
     {
+        private readonly PortableExecutableImage _image;
+        private readonly DataDirectoryType _type;
+        private readonly IMAGE_DATA_DIRECTORY _header;
+        private readonly ulong _imageBase;
+        private readonly Lazy<string> _sectionName;
+        private readonly Lazy<Section> _section;
 
-        private DataDirectoryCollection dirs;
-        private DataDirectoryType dir_type;
-        private IMAGE_DATA_DIRECTORY data_dir;
-        private ulong image_base;
-        private Lazy<string> section_name;
-        private Lazy<Section> section;
-
-        internal DataDirectory(DataDirectoryCollection dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
+        internal DataDirectory(PortableExecutableImage image, DataDirectories dataDirs, DataDirectoryType dirType, IMAGE_DATA_DIRECTORY dataDirectory, ulong imageBase)
         {
-            dirs = dataDirs;
-            dir_type = dirType;
-            data_dir = dataDirectory;
-            image_base = imageBase;
-            section_name = new Lazy<string>(DoGetSectionName);
-            section = new Lazy<Section>(DoGetSection);
+            _image = image;
+            _type = dirType;
+            _header = dataDirectory;
+            _imageBase = imageBase;
+            _sectionName = new Lazy<string>(DoGetSectionName);
+            _section = new Lazy<Section>(DoGetSection);
+
+            Directories = dataDirs;
         }
 
         #region Static Methods
@@ -100,18 +97,53 @@ namespace Workshell.PE
 
         public override string ToString()
         {
-            if (dir_type != DataDirectoryType.Unknown)
-            {
-                return dir_type.ToString();
-            }
-            else
-            {
-                return String.Format("0x{0:X8}:{1}",data_dir.VirtualAddress,data_dir.Size);
-            }
+            return (_type != DataDirectoryType.Unknown ? _type.ToString() : $"0x{_header.VirtualAddress:X8}:{_header.Size}");
         }
 
-        public ExecutableImageContent GetContent()
+        public DataContent GetContent()
         {
+            return GetContentAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<DataContent> GetContentAsync()
+        {
+            if (VirtualAddress == 0)
+                return null;
+
+            switch (DirectoryType)
+            {
+                case DataDirectoryType.LoadConfigTable:
+                    return await LoadConfigurationDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.TLSTable:
+                    return await TLSDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.CertificateTable:
+                    return await Certificate.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.CLRRuntimeHeader:
+                    return await CLR.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.Debug:
+                    return await DebugDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.BaseRelocationTable:
+                    return await RelocationTable.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ExportTable:
+                    return await ExportDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ImportTable:
+                    return await ImportDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.DelayImportDescriptor:
+                    return await DelayedImportDirectory.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ExceptionTable:
+                    return await ExceptionTable.GetAsync(_image).ConfigureAwait(false);
+                case DataDirectoryType.ResourceTable:
+                    return await ResourceDirectory.GetAsync(_image).ConfigureAwait(false);
+                default:
+                {
+                    var calc = _image.GetCalculator();
+                    var fileOffset = calc.VAToOffset(VirtualAddress);
+                    var location = new Location(calc, fileOffset, calc.OffsetToRVA(fileOffset), VirtualAddress, Size, Size);
+
+                    return new DataContent(_image, this, location);
+                }
+            }
+
             /*
             if (data_dir.VirtualAddress == 0) // No content so no point...
                 return null;
@@ -155,42 +187,40 @@ namespace Workshell.PE
 
             return dir_content;
             */
-
-            return null;
         }
 
         public string GetSectionName()
         {
-            return section_name.Value;
+            return _sectionName.Value;
         }
 
         public Section GetSection()
         {
-            return section.Value;
+            return _section.Value;
         }
 
         private string DoGetSectionName()
         {
-            if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
-                return String.Empty;
+            if (_header.VirtualAddress == 0 || _type == DataDirectoryType.CertificateTable)
+                return string.Empty;
 
-            foreach (SectionTableEntry entry in dirs.Image.SectionTable)
+            foreach (var entry in _image.SectionTable)
             {
-                if (data_dir.VirtualAddress >= entry.VirtualAddress && data_dir.VirtualAddress < (entry.VirtualAddress + entry.SizeOfRawData))
+                if (_header.VirtualAddress >= entry.VirtualAddress && _header.VirtualAddress < (entry.VirtualAddress + entry.SizeOfRawData))
                     return entry.Name;
             }
 
-            return String.Empty;
+            return string.Empty;
         }
 
         private Section DoGetSection()
         {
-            if (data_dir.VirtualAddress == 0 || dir_type == DataDirectoryType.CertificateTable)
+            if (_header.VirtualAddress == 0 || _type == DataDirectoryType.CertificateTable)
                 return null;
 
-            foreach (Section section in dirs.Image.Sections)
+            foreach (var section in _image.Sections)
             {
-                if (data_dir.VirtualAddress >= section.TableEntry.VirtualAddress && data_dir.VirtualAddress < (section.TableEntry.VirtualAddress + section.TableEntry.SizeOfRawData))
+                if (_header.VirtualAddress >= section.TableEntry.VirtualAddress && _header.VirtualAddress < (section.TableEntry.VirtualAddress + section.TableEntry.SizeOfRawData))
                     return section;
             }
 
@@ -201,169 +231,12 @@ namespace Workshell.PE
 
         #region Properties
 
-        public DataDirectoryCollection Directories
-        {
-            get
-            {
-                return dirs;
-            }
-        }
-
-        public DataDirectoryType DirectoryType
-        {
-            get
-            {
-                return dir_type;
-            }
-        }
-
-        public uint VirtualAddress
-        {
-            get
-            {
-                return data_dir.VirtualAddress;
-            }
-        }
-
-        public uint Size
-        {
-            get
-            {
-                return data_dir.Size;
-            }
-        }
-
-        public bool IsEmpty
-        {
-            get
-            {
-                return (data_dir.Size == 0);
-            }
-        }
+        public DataDirectories Directories { get; }
+        public DataDirectoryType DirectoryType => _type;
+        public uint VirtualAddress => _header.VirtualAddress;
+        public uint Size => _header.Size;
+        public bool IsEmpty => (_header.Size == 0);
 
         #endregion
-
     }
-
-    public sealed class DataDirectoryCollection : IEnumerable<DataDirectory>, ISupportsLocation, ISupportsBytes
-    {
-
-        private ExecutableImage image;
-        private Location location;
-        private Dictionary<DataDirectoryType,DataDirectory> dirs;
-
-        internal DataDirectoryCollection(ExecutableImage exeImage, OptionalHeader optHeader, IMAGE_DATA_DIRECTORY[] dataDirs)
-        {
-            uint size = (Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length).ToUInt32();
-            ulong file_offset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
-            uint rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize.ToUInt32();
-            ulong va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
-
-            image = exeImage;
-            location = new Location(file_offset,rva,va,size,size);
-            dirs = new Dictionary<DataDirectoryType,DataDirectory>();
-
-            for(int i = 0; i < dataDirs.Length; i++)
-            {
-                DataDirectoryType type = DataDirectoryType.Unknown;
-
-                if (i >= 0 && i <= 14)
-                    type = (DataDirectoryType)i;
-
-                DataDirectory dir = new DataDirectory(this,type,dataDirs[i],optHeader.ImageBase);
-
-                dirs.Add(type,dir);
-            }
-        }
-
-        #region Methods
-
-        public IEnumerator<DataDirectory> GetEnumerator()
-        {
-            foreach(KeyValuePair<DataDirectoryType,DataDirectory> kvp in dirs)
-            {
-                yield return kvp.Value;
-            }
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public byte[] GetBytes()
-        {
-            Stream stream = image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
-
-            return buffer;
-        }
-
-        public bool Exists(DataDirectoryType directoryType)
-        {
-            return dirs.ContainsKey(directoryType);
-        }
-
-        public bool Exists(int directoryType)
-        {
-            return Exists((DataDirectoryType)directoryType);
-        }
-
-        #endregion
-
-        #region Properties
-
-        public ExecutableImage Image
-        {
-            get
-            {
-                return image;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return dirs.Count;
-            }
-        }
-
-        public DataDirectory this[DataDirectoryType directoryType]
-        {
-            get
-            {
-                if (dirs.ContainsKey(directoryType))
-                {
-                    return dirs[directoryType];
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        public DataDirectory this[int directoryType]
-        {
-            get
-            {
-                DataDirectoryType dir_type = (DataDirectoryType)directoryType;
-
-                return this[dir_type];
-            }
-        }
-
-        #endregion
-   
-    }
-
 }

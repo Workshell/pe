@@ -1,71 +1,65 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Workshell.PE
 {
-
     public sealed class Location : IEquatable<Location>
     {
-
-        private ulong _file_offset;
-        private uint _rva;
-        private ulong _va;
-        private ulong _file_size;
-        private ulong _virtual_size;
+        private readonly LocationCalculator _calc;
         private Section _section;
 
-        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) : this(fileOffset,rva,va,fileSize,virtualSize,null)
+        internal Location(LocationCalculator calc, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) : this(calc, fileOffset, rva, va, fileSize, virtualSize, null)
         {
         }
 
-        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section)
+        internal Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section) : this(null, fileOffset, rva, va, fileSize, virtualSize, section)
         {
-            _file_offset = fileOffset;
-            _file_size = fileSize;
-            _rva = rva;
-            _va = va;
-            _virtual_size = virtualSize;
-            _section = section;
         }
+
+        private Location(LocationCalculator calc, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section)
+        {
+            _calc = calc;
+            _section = section;
+
+            FileOffset = fileOffset;
+            FileSize = fileSize;
+            RelativeVirtualAddress = rva;
+            VirtualAddress = va;
+            VirtualSize = virtualSize;
+        }
+
 
         #region Methods
 
         public override string ToString()
         {
-            string result = String.Format("File Offset: 0x{0:X16}, File Size: 0x{1:X8}, RVA: 0x{2:X8}, Virtual Address: 0x{3:X16}, Virtual Size: 0x{4:X8}", FileOffset, FileSize, RelativeVirtualAddress, VirtualAddress, VirtualSize);
+            var result = $"File Offset: 0x{FileOffset:X16}, File Size: 0x{FileSize:X8} ({FileSize}), RVA: 0x{RelativeVirtualAddress:X8}, Virtual Address: 0x{VirtualAddress:X16}, Virtual Size: 0x{VirtualSize:X8} ({VirtualSize})";
 
-            if (_section != null)
-                result += String.Format(", Section: {0}",_section.Name);
+            if (Section != null)
+                result += $", Section: {Section.Name}";
 
             return result;
         }
@@ -80,22 +74,19 @@ namespace Workshell.PE
             if (other == null)
                 return false;
 
-            if (_file_offset != other.FileOffset)
+            if (FileOffset != other.FileOffset)
                 return false;
 
-            if (_file_size != other.FileSize)
+            if (FileSize != other.FileSize)
                 return false;
 
-            if (_rva != other.RelativeVirtualAddress)
+            if (RelativeVirtualAddress != other.RelativeVirtualAddress)
                 return false;
 
-            if (_va != other.VirtualAddress)
+            if (VirtualAddress != other.VirtualAddress)
                 return false;
 
-            if (_virtual_size != other.VirtualSize)
-                return false;
-
-            if (_section != other.Section)
+            if (VirtualSize != other.VirtualSize)
                 return false;
 
             return true;
@@ -103,16 +94,13 @@ namespace Workshell.PE
 
         public override int GetHashCode()
         {
-            int hash = 13;
+            var hash = 13;
 
-            hash = (hash * 7) + _file_offset.GetHashCode();
-            hash = (hash * 7) + _file_size.GetHashCode();
-            hash = (hash * 7) + _rva.GetHashCode();
-            hash = (hash * 7) + _va.GetHashCode();
-            hash = (hash * 7) + _virtual_size.GetHashCode();
-
-            if (_section != null)
-                hash = (hash * 7) + _section.GetHashCode();
+            hash = (hash * 7) + FileOffset.GetHashCode();
+            hash = (hash * 7) + FileSize.GetHashCode();
+            hash = (hash * 7) + RelativeVirtualAddress.GetHashCode();
+            hash = (hash * 7) + VirtualAddress.GetHashCode();
+            hash = (hash * 7) + VirtualSize.GetHashCode();
 
             return hash;
         }
@@ -121,56 +109,27 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ulong FileOffset
-        {
-            get
-            {
-                return _file_offset;
-            }
-        }
+        public ulong FileOffset { get; }
 
-        public ulong FileSize
-        {
-            get
-            {
-                return _file_size;
-            }
-        }
+        public ulong FileSize { get; }
 
-        public uint RelativeVirtualAddress
-        {
-            get
-            {
-                return _rva;
-            }
-        }
+        public uint RelativeVirtualAddress { get; }
 
-        public ulong VirtualAddress
-        {
-            get
-            {
-                return _va;
-            }
-        }
+        public ulong VirtualAddress { get; }
 
-        public ulong VirtualSize
-        {
-            get
-            {
-                return _virtual_size;
-            }
-        }
+        public ulong VirtualSize { get; }
 
         public Section Section
         {
             get
             {
+                if (_section == null)
+                    _section = _calc.VAToSection(VirtualAddress);
+
                 return _section;
             }
         }
 
         #endregion
-
     }
-
 }

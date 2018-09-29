@@ -1,44 +1,37 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Workshell.PE.Annotations;
+using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
-
     public enum MachineType : int
     {
         Native = 0,
@@ -89,21 +82,15 @@ namespace Workshell.PE
 
     public sealed class FileHeader : ISupportsLocation, ISupportsBytes
     {
+        private readonly PortableExecutableImage _image;
+        private readonly IMAGE_FILE_HEADER _header;
 
-        internal static readonly int Size = Utils.SizeOf<IMAGE_FILE_HEADER>();
-
-        private ExecutableImage image;
-        private IMAGE_FILE_HEADER header;
-        private Location location;
-
-        internal FileHeader(ExecutableImage exeImage, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
+        internal FileHeader(PortableExecutableImage image, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
         {
-            image = exeImage;
-            header = fileHeader;
+            _image = image;
+            _header = fileHeader;
 
-            uint size = Convert.ToUInt32(Utils.SizeOf<IMAGE_FILE_HEADER>());
-
-            location = new Location(headerOffset,Convert.ToUInt32(headerOffset),imageBase + headerOffset,size,size);
+            Location = new Location(image.GetCalculator(), headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, Size.ToUInt32(), Size.ToUInt32());
         }
 
         #region Methods
@@ -115,112 +102,66 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
         }
 
         public MachineType GetMachineType()
         {
-            return (MachineType)header.Machine;
+            return (MachineType)_header.Machine;
         }
 
         public DateTime GetTimeDateStamp()
         {
-            return Utils.ConvertTimeDateStamp(header.TimeDateStamp);
+            return Utils.ConvertTimeDateStamp(_header.TimeDateStamp);
         }
 
         public CharacteristicsType GetCharacteristics()
         {
-            return (CharacteristicsType)header.Characteristics;
+            return (CharacteristicsType)_header.Characteristics;
         }
+
+        #endregion
+
+
+        #region Static Properties
+
+        public static int Size { get; } = Utils.SizeOf<IMAGE_FILE_HEADER>();
 
         #endregion
 
         #region Properties
 
-        public ExecutableImage Image
-        {
-            get
-            {
-                return image;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
+        public Location Location { get; }
 
         [FieldAnnotation("Machine Type",Flags = true,FlagType = typeof(MachineType))]
-        public ushort Machine
-        {
-            get
-            {
-                return header.Machine;
-            }
-        }
+        public ushort Machine => _header.Machine;
 
         [FieldAnnotation("Number of Sections")]
-        public ushort NumberOfSections
-        {
-            get
-            {
-                return header.NumberOfSections;
-            }
-        }
+        public ushort NumberOfSections => _header.NumberOfSections;
 
         [FieldAnnotation("Date/Time Stamp")]
-        public uint TimeDateStamp
-        {
-            get
-            {
-                return header.TimeDateStamp;
-            }
-        }
+        public uint TimeDateStamp => _header.TimeDateStamp;
 
         [FieldAnnotation("Pointer to Symbol Table")]
-        public uint PointerToSymbolTable
-        {
-            get
-            {
-                return header.PointerToSymbolTable;
-            }
-        }
+        public uint PointerToSymbolTable => _header.PointerToSymbolTable;
 
         [FieldAnnotation("Number of Symbols")]
-        public uint NumberOfSymbols
-        {
-            get
-            {
-                return header.NumberOfSymbols;
-            }
-        }
+        public uint NumberOfSymbols => _header.NumberOfSymbols;
 
         [FieldAnnotation("Size of Optional Header")]
-        public ushort SizeOfOptionalHeader
-        {
-            get
-            {
-                return header.SizeOfOptionalHeader;
-            }
-        }
+        public ushort SizeOfOptionalHeader => _header.SizeOfOptionalHeader;
 
         [FieldAnnotation("Characteristics",Flags = true,FlagType = typeof(CharacteristicsType))]
-        public ushort Characteristics
-        {
-            get
-            {
-                return header.Characteristics;
-            }
-        }
+        public ushort Characteristics => _header.Characteristics;
 
         #endregion
-
     }
-
 }
