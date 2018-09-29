@@ -1,68 +1,66 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Workshell.PE.Extensions;
 
 namespace Workshell.PE
 {
-
     public sealed class Section : ISupportsLocation, ISupportsBytes
     {
+        private readonly PortableExecutableImage _image;
 
-        private Sections _sections;
-        private SectionTableEntry _table_entry;
-        private Location _location;
-
-        internal Section(Sections sections, SectionTableEntry tableEntry)
+        internal Section(PortableExecutableImage image, Sections sections, SectionTableEntry tableEntry)
         {
-            ulong image_base = tableEntry.Table.Image.NTHeaders.OptionalHeader.ImageBase;
+            _image = image;
 
-            _sections = sections;
-            _table_entry = tableEntry;
-            _location = new Location(tableEntry.PointerToRawData,tableEntry.VirtualAddress,image_base + tableEntry.VirtualAddress,tableEntry.SizeOfRawData,tableEntry.VirtualSizeOrPhysicalAddress);
+            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+
+            Sections = sections;
+            TableEntry = tableEntry;
+            Location = new Location(image.GetCalculator(), tableEntry.PointerToRawData, tableEntry.VirtualAddress, imageBase + tableEntry.VirtualAddress, tableEntry.SizeOfRawData, tableEntry.VirtualSizeOrPhysicalAddress);
         }
 
         #region Methods
 
         public override string ToString()
         {
-            return _table_entry.Name;
+            return TableEntry.Name;
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = _table_entry.Table.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,_location);
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
         }
@@ -71,61 +69,34 @@ namespace Workshell.PE
 
         #region Properties
 
-        public Sections Sections
-        {
-            get
-            {
-                return _sections;
-            }
-        }
-
-        public SectionTableEntry TableEntry
-        {
-            get
-            {
-                return _table_entry;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return _location;
-            }
-        }
-
-        public string Name
-        {
-            get
-            {
-                return _table_entry.Name;
-            }
-        }
+        public Sections Sections { get; }
+        public SectionTableEntry TableEntry { get; }
+        public Location Location { get; }
+        public string Name => TableEntry.Name;
 
         #endregion
-
     }
 
     public sealed class Sections : IEnumerable<Section>
     {
+        private readonly PortableExecutableImage _image;
+        private readonly Dictionary<SectionTableEntry,Section> _sections;
 
-        private SectionTable table;
-        private Dictionary<SectionTableEntry,Section> sections;
-
-        internal Sections(SectionTable sectionTable)
+        internal Sections(PortableExecutableImage image, SectionTable sectionTable)
         {
-            table = sectionTable;
-            sections = new Dictionary<SectionTableEntry, Section>();
+            _image = image;
+            _sections = new Dictionary<SectionTableEntry, Section>(sectionTable.Count);
+
+            Table = sectionTable;
         }
 
         #region Methods
 
         public IEnumerator<Section> GetEnumerator()
         {
-            for(var i = 0; i < table.Count; i++)
+            foreach (var entry in Table)
             {
-                Section section = GetSection(table[i]);
+                var section = GetSection(entry);
 
                 yield return section;
             }
@@ -138,41 +109,28 @@ namespace Workshell.PE
 
         private Section GetSection(SectionTableEntry tableEntry)
         {
-            if (!sections.ContainsKey(tableEntry))
+            if (!_sections.ContainsKey(tableEntry))
             {
-                Section section = new Section(this, tableEntry);
+                var section = new Section(_image, this, tableEntry);
 
-                sections[tableEntry] = section;
+                _sections[tableEntry] = section;
             }
 
-            return sections[tableEntry];
+            return _sections[tableEntry];
         }
 
         #endregion
 
         #region Properties
 
-        public SectionTable Table
-        {
-            get
-            {
-                return table;
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return table.Count;
-            }
-        }
+        public SectionTable Table { get; }
+        public int Count => Table.Count;
 
         public Section this[int index]
         {
             get
             {
-                SectionTableEntry entry = table[index];
+                var entry = Table[index];
 
                 return this[entry];
             }
@@ -182,22 +140,14 @@ namespace Workshell.PE
         {
             get
             {
-                SectionTableEntry entry = table.FirstOrDefault(e => String.Compare(sectionName,e.Name,StringComparison.OrdinalIgnoreCase) == 0);
+                var entry = Table.FirstOrDefault(e => String.Compare(sectionName,e.Name,StringComparison.OrdinalIgnoreCase) == 0);
 
                 return this[entry];
             }
         }
         
-        public Section this[SectionTableEntry tableEntry]
-        {
-            get
-            {
-                return GetSection(tableEntry);
-            }
-        }
+        public Section this[SectionTableEntry tableEntry] => GetSection(tableEntry);
 
         #endregion
-
     }
-
 }

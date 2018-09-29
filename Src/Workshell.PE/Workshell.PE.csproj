@@ -1,141 +1,42 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2E173D25-1C2E-4A7B-8B37-D231324D372D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Workshell.PE</RootNamespace>
-    <AssemblyName>pe</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\Bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;SIGNED</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\Bin\Release\</OutputPath>
-    <DefineConstants>TRACE;SIGNED</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
+    <TargetFrameworks>netstandard1.6;net45</TargetFrameworks>
+
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\bin\debug</OutputPath>
+    <DefineConstants>TRACE;SIGNED</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\bin\release</OutputPath>
+    <DefineConstants>TRACE;SIGNED</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Annotations\EnumAnnotations.cs" />
-    <Compile Include="Annotations\FieldAnnotation.cs" />
-    <Compile Include="Annotations\EnumAnnotationAttribute.cs" />
-    <Compile Include="Annotations\FieldAnnotationAttribute.cs" />
-    <Compile Include="Content\Certificates\Certificate.cs" />
-    <Compile Include="Content\CLR\CLR.cs" />
-    <Compile Include="Content\CLR\CLRDataDirectory.cs" />
-    <Compile Include="Content\CLR\CLRHeader.cs" />
-    <Compile Include="Content\CLR\CLRMetaData.cs" />
-    <Compile Include="Content\CLR\CLRMetaDataHeader.cs" />
-    <Compile Include="Content\CLR\CLRMetaDataStream.cs" />
-    <Compile Include="Content\CLR\CLRMetaDataStreamTable.cs" />
-    <Compile Include="Content\Delayed Imports\DelayImportDirectory.cs" />
-    <Compile Include="Content\Delayed Imports\DelayImportAddressTable.cs" />
-    <Compile Include="Content\Delayed Imports\DelayImportHintNameTable.cs" />
-    <Compile Include="Content\Delayed Imports\DelayImportFunction.cs" />
-    <Compile Include="Content\Delayed Imports\DelayImportLibrary.cs" />
-    <Compile Include="Content\Delayed Imports\DelayImports.cs" />
-    <Compile Include="Content\ExecutableImageContent.cs" />
-    <Compile Include="Content\Debug\DebugData.cs" />
-    <Compile Include="Content\Debug\DebugDirectory.cs" />
-    <Compile Include="Content\Exports\Exports.cs" />
-    <Compile Include="Content\Exports\ExportDirectory.cs" />
-    <Compile Include="Content\Exports\ExportTable.cs" />
-    <Compile Include="Content\Imports\ImportAddressTable.cs" />
-    <Compile Include="Content\Imports\ImportDirectory.cs" />
-    <Compile Include="Content\Imports\ImportFunction.cs" />
-    <Compile Include="Content\Imports\ImportHintNameTable.cs" />
-    <Compile Include="Content\Imports\ImportLibrary.cs" />
-    <Compile Include="Content\Imports\Imports.cs" />
-    <Compile Include="Content\LoadConfig\LoadConfigDirectory.cs" />
-    <Compile Include="Content\Relocation\Relocation.cs" />
-    <Compile Include="Content\Relocation\RelocationBlock.cs" />
-    <Compile Include="Content\Relocation\RelocationTable.cs" />
-    <Compile Include="Content\Resources\ResourceData.cs" />
-    <Compile Include="Content\Resources\ResourceDataEntry.cs" />
-    <Compile Include="Content\Resources\ResourceDirectory.cs" />
-    <Compile Include="Content\Resources\ResourceDirectoryEntry.cs" />
-    <Compile Include="Content\Resources\ResourceId.cs" />
-    <Compile Include="Content\Resources\ResourceCollection.cs" />
-    <Compile Include="Content\TLS\TLSDirectory.cs" />
-    <Compile Include="DataDirectory.cs" />
-    <Compile Include="DOSHeader.cs" />
-    <Compile Include="DOSStub.cs" />
-    <Compile Include="Exceptions.cs" />
-    <Compile Include="Extensions\Conversion.cs" />
-    <Compile Include="Extensions\Attributes.cs" />
-    <Compile Include="FileHeader.cs" />
-    <Compile Include="GenericLocatable.cs" />
-    <Compile Include="Location.cs" />
-    <Compile Include="LocationCalculator.cs" />
-    <Compile Include="MoreLinq\DistinctBy.cs" />
-    <Compile Include="MoreLinq\MaxBy.cs" />
-    <Compile Include="MoreLinq\MinBy.cs" />
-    <Compile Include="MoreLinq\MoreEnumerable.cs" />
-    <Compile Include="Native\IMAGE_DELAY_IMPORT_DESCRIPTOR.cs" />
-    <Compile Include="Native\WIN_CERTIFICATE.cs" />
-    <Compile Include="Native\IMAGE_RESOURCE_DATA_ENTRY.cs" />
-    <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY_ENTRY.cs" />
-    <Compile Include="Native\IMAGE_RESOURCE_DIRECTORY.cs" />
-    <Compile Include="Native\IMAGE_DEBUG_DIRECTORY.cs" />
-    <Compile Include="Native\IMAGE_IMPORT_DESCRIPTOR.cs" />
-    <Compile Include="Native\IMAGE_LOAD_CONFIG_DIRECTORY.cs" />
-    <Compile Include="Native\IMAGE_TLS_DIRECTORY.cs" />
-    <Compile Include="Supports.cs" />
-    <Compile Include="Native\IMAGE_BASE_RELOCATION.cs" />
-    <Compile Include="Native\IMAGE_COR20_HEADER.cs" />
-    <Compile Include="Native\IMAGE_DATA_DIRECTORY.cs" />
-    <Compile Include="Native\IMAGE_DOS_HEADER.cs" />
-    <Compile Include="Native\IMAGE_EXPORT_DIRECTORY.cs" />
-    <Compile Include="Native\IMAGE_FILE_HEADER.cs" />
-    <Compile Include="Native\IMAGE_OPTIONAL_HEADER.cs" />
-    <Compile Include="Native\IMAGE_SECTION_HEADER.cs" />
-    <Compile Include="NTHeaders.cs" />
-    <Compile Include="OptionalHeader.cs" />
-    <Compile Include="ExecutableImage.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Section.cs" />
-    <Compile Include="SectionTable.cs" />
-    <Compile Include="Utils.cs" />
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Extensions" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Workshell.PE.snk" />
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <PackageReference Include="System.Net.Http" Version="4.3.3" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

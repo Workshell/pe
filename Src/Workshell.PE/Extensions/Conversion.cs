@@ -1,41 +1,78 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Workshell.PE.Extensions
 {
-
     internal static class ConversionExtensions
     {
+        #region int16
+
+        public static short ToInt16(this int value)
+        {
+            return Convert.ToInt16(value);
+        }
+
+        public static short ToInt16(this long value)
+        {
+            return Convert.ToInt16(value);
+        }
+
+        public static short ToInt16(this ushort value)
+        {
+            return Convert.ToInt16(value);
+        }
+
+        public static short ToInt16(this uint value)
+        {
+            return Convert.ToInt16(value);
+        }
+
+        public static short ToInt16(this ulong value)
+        {
+            return Convert.ToInt16(value);
+        }
+
+        #endregion
+
+        #region int32
+
+        public static int ToInt32(this short value)
+        {
+            return value;
+        }
+
+        public static int ToInt32(this long value)
+        {
+            return Convert.ToInt32(value);
+        }
+
+        public static int ToInt32(this ushort value)
+        {
+            return Convert.ToInt32(value);
+        }
 
         public static int ToInt32(this uint value)
         {
@@ -47,6 +84,25 @@ namespace Workshell.PE.Extensions
             return Convert.ToInt32(value);
         }
 
+        #endregion
+
+        #region int64
+
+        public static long ToInt64(this short value)
+        {
+            return value;
+        }
+
+        public static long ToInt64(this int value)
+        {
+            return value;
+        }
+
+        public static long ToInt64(this ushort value)
+        {
+            return Convert.ToInt64(value);
+        }
+
         public static long ToInt64(this uint value)
         {
             return Convert.ToInt64(value);
@@ -54,7 +110,45 @@ namespace Workshell.PE.Extensions
 
         public static long ToInt64(this ulong value)
         {
-            return Convert.ToInt64(value);
+            return Convert.ToInt32(value);
+        }
+
+        #endregion
+
+        #region uint16
+
+        public static ushort ToUInt16(this short value)
+        {
+            return Convert.ToUInt16(value);
+        }
+
+        public static ushort ToUInt16(this int value)
+        {
+            return Convert.ToUInt16(value);
+        }
+
+        public static ushort ToUInt16(this long value)
+        {
+            return Convert.ToUInt16(value);
+        }
+
+        public static ushort ToUInt16(this uint value)
+        {
+            return Convert.ToUInt16(value);
+        }
+
+        public static ushort ToUInt16(this ulong value)
+        {
+            return Convert.ToUInt16(value);
+        }
+
+        #endregion
+
+        #region uint32
+
+        public static uint ToUInt32(this short value)
+        {
+            return Convert.ToUInt32(value);
         }
 
         public static uint ToUInt32(this int value)
@@ -62,21 +156,50 @@ namespace Workshell.PE.Extensions
             return Convert.ToUInt32(value);
         }
 
+        public static uint ToUInt32(this long value)
+        {
+            return Convert.ToUInt32(value);
+        }
+
+        public static uint ToUInt32(this ushort value)
+        {
+            return value;
+        }
+
         public static uint ToUInt32(this ulong value)
         {
             return Convert.ToUInt32(value);
         }
 
+        #endregion
+
+        #region uint64
+
+        public static ulong ToUInt64(this short value)
+        {
+            return Convert.ToUInt64(value);
+        }
+
         public static ulong ToUInt64(this int value)
         {
-            return Convert.ToUInt32(value);
+            return Convert.ToUInt64(value);
         }
 
         public static ulong ToUInt64(this long value)
         {
-            return Convert.ToUInt32(value);
+            return Convert.ToUInt64(value);
         }
 
-    }
+        public static ulong ToUInt64(this ushort value)
+        {
+            return value;
+        }
 
+        public static ulong ToUInt64(this uint value)
+        {
+            return value;
+        }
+
+        #endregion
+    }
 }

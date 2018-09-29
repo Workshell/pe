@@ -1,44 +1,38 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
 using Workshell.PE.Annotations;
 using Workshell.PE.Extensions;
 using Workshell.PE.Native;
 
 namespace Workshell.PE
 {
-
     [Flags]
     public enum SectionCharacteristicsType : uint 
     {
@@ -128,36 +122,28 @@ namespace Workshell.PE
         MemoryWrite = 0x80000000
     }
 
-    public sealed class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation
+    public sealed class SectionTableEntry : IEquatable<SectionTableEntry>, ISupportsLocation, ISupportsBytes
     {
+        private static readonly uint _headerSize = Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
 
-        private static readonly uint size = Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
+        private readonly PortableExecutableImage _image;
+        private readonly IMAGE_SECTION_HEADER _header;
 
-        private SectionTable table;
-        private IMAGE_SECTION_HEADER header;
-        private Location location;
-        private string name;
-
-        internal SectionTableEntry(SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, ulong entryOffset, ulong imageBase)
+        internal SectionTableEntry(PortableExecutableImage image, SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, ulong entryOffset, ulong imageBase)
         {
-            table = sectionTable;
-            header = entryHeader;
-            location = new Location(entryOffset,Convert.ToUInt32(entryOffset),imageBase + entryOffset,size,size);
-            name = GetName();
+            _image = image;
+            _header = entryHeader;
+
+            Table = sectionTable;
+            Location = new Location(image.GetCalculator(), entryOffset, entryOffset.ToUInt32(), imageBase + entryOffset, _headerSize, _headerSize);
+            Name = GetName();
         }
 
         #region Methods
 
         public override string ToString()
         {
-            if (!String.IsNullOrWhiteSpace(name))
-            {
-                return name;
-            }
-            else
-            {
-                return base.ToString();
-            }
+            return !string.IsNullOrWhiteSpace(Name) ? Name : base.ToString();
         }
 
         public override bool Equals(object other)
@@ -211,46 +197,51 @@ namespace Workshell.PE
 
         public override int GetHashCode()
         {
-            int prime = 397;
-            int result = 0;
+            var prime = 397;
+            var result = 0;
 
-            result = (result * prime) ^ location.GetHashCode();
-            result = (result * prime) ^ name.GetHashCode();
-            result = (result * prime) ^ header.VirtualSize.GetHashCode();
-            result = (result * prime) ^ header.SizeOfRawData.GetHashCode();
-            result = (result * prime) ^ header.PointerToRawData.GetHashCode();
-            result = (result * prime) ^ header.PointerToRelocations.GetHashCode();
-            result = (result * prime) ^ header.PointerToLineNumbers.GetHashCode();
-            result = (result * prime) ^ header.NumberOfRelocations.GetHashCode();
-            result = (result * prime) ^ header.NumberOfLineNumbers.GetHashCode();
-            result = (result * prime) ^ header.Characteristics.GetHashCode();
+            result = (result * prime) ^ Location.GetHashCode();
+            result = (result * prime) ^ Name.GetHashCode();
+            result = (result * prime) ^ _header.VirtualSize.GetHashCode();
+            result = (result * prime) ^ _header.SizeOfRawData.GetHashCode();
+            result = (result * prime) ^ _header.PointerToRawData.GetHashCode();
+            result = (result * prime) ^ _header.PointerToRelocations.GetHashCode();
+            result = (result * prime) ^ _header.PointerToLineNumbers.GetHashCode();
+            result = (result * prime) ^ _header.NumberOfRelocations.GetHashCode();
+            result = (result * prime) ^ _header.NumberOfLineNumbers.GetHashCode();
+            result = (result * prime) ^ _header.Characteristics.GetHashCode();
 
             return result;
         }
 
         public byte[] GetBytes()
         {
-            Stream stream = table.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream, location);
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
         }
 
         public SectionCharacteristicsType GetCharacteristics()
         {
-            return (SectionCharacteristicsType)header.Characteristics;
+            return (SectionCharacteristicsType)_header.Characteristics;
         }
 
         private string GetName()
         {
-            StringBuilder builder = new StringBuilder(16);
+            var builder = new StringBuilder(16);
 
-            for(var i = 0; i < header.Name.Length; i++)
+            foreach (var c in _header.Name)
             {
-                if (header.Name[i] == '\0')
+                if (c == '\0')
                     break;
 
-                builder.Append(header.Name[i]);
+                builder.Append(c);
             }
 
             return builder.ToString();
@@ -260,128 +251,46 @@ namespace Workshell.PE
 
         #region Properties
 
-        public SectionTable Table
-        {
-            get
-            {
-                return table;
-            }
-        }
+        public SectionTable Table { get; }
 
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
+        public Location Location { get; }
 
-        public string Name
-        {
-            get
-            {
-                return name;
-            }
-        }
+        public string Name { get; }
 
-        public uint VirtualSizeOrPhysicalAddress
-        {
-            get
-            {
-                return header.VirtualSize;
-            }
-        }
-
-        public uint VirtualAddress
-        {
-            get
-            {
-                return header.VirtualAddress;
-            }
-        }
-
-        public uint SizeOfRawData
-        {
-            get
-            {
-                return header.SizeOfRawData;
-            }
-        }
-
-        public uint PointerToRawData
-        {
-            get
-            {
-                return header.PointerToRawData;
-            }
-        }
-
-        public uint PointerToRelocations
-        {
-            get
-            {
-                return header.PointerToRelocations;
-            }
-        }
-
-        public uint PointerToLineNumbers
-        {
-            get
-            {
-                return header.PointerToLineNumbers;
-            }
-        }
-
-        public ushort NumberOfRelocations
-        {
-            get
-            {
-                return header.NumberOfRelocations;
-            }
-        }
-
-        public ushort NumberOfLineNumbers
-        {
-            get
-            {
-                return header.NumberOfLineNumbers;
-            }
-        }
-
-        public uint Characteristics
-        {
-            get
-            {
-                return header.Characteristics;
-            }
-        }
+        public uint VirtualSizeOrPhysicalAddress => _header.VirtualSize;
+        public uint VirtualAddress => _header.VirtualAddress;
+        public uint SizeOfRawData => _header.SizeOfRawData;
+        public uint PointerToRawData => _header.PointerToRawData;
+        public uint PointerToRelocations => _header.PointerToRelocations;
+        public uint PointerToLineNumbers => _header.PointerToLineNumbers;
+        public ushort NumberOfRelocations => _header.NumberOfRelocations;
+        public ushort NumberOfLineNumbers => _header.NumberOfLineNumbers;
+        public uint Characteristics => _header.Characteristics;
 
         #endregion
-
     }
 
-    public sealed class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation
+    public sealed class SectionTable : IEnumerable<SectionTableEntry>, ISupportsLocation, ISupportsBytes
     {
+        private readonly PortableExecutableImage _image;
+        private readonly SectionTableEntry[] _table;
 
-        private ExecutableImage image;
-        private Location location;
-        private SectionTableEntry[] table;
-
-        internal SectionTable(ExecutableImage exeImage, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
+        internal SectionTable(PortableExecutableImage image, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
         {
-            uint size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
+            _image = image;
+            _table = new SectionTableEntry[sectionHeaders.Length];
 
-            image = exeImage;
-            location = new Location(tableOffset,Convert.ToUInt32(tableOffset),imageBase + tableOffset,size,size);
-            table = new SectionTableEntry[sectionHeaders.Length];
+            var size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
-            ulong offset = tableOffset;
+            Location = new Location(image.GetCalculator(), tableOffset, tableOffset.ToUInt32(), imageBase + tableOffset, size, size);
+
+            var offset = tableOffset;
 
             for(var i = 0; i < sectionHeaders.Length; i++)
             {
-                SectionTableEntry entry = new SectionTableEntry(this, sectionHeaders[i], offset, imageBase);
+                var entry = new SectionTableEntry(_image,this,sectionHeaders[i],offset,imageBase);
 
-                table[i] = entry;
+                _table[i] = entry;
                 offset += Utils.SizeOf<IMAGE_SECTION_HEADER>().ToUInt32();
             }
         }
@@ -390,17 +299,22 @@ namespace Workshell.PE
 
         public byte[] GetBytes()
         {
-            Stream stream = image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,location);
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
         }
 
         public IEnumerator<SectionTableEntry> GetEnumerator()
         {
-            for(var i = 0; i < table.Length; i++)
+            foreach (var entry in _table)
             {
-                yield return table[i];
+                yield return entry;
             }
         }
 
@@ -413,48 +327,18 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ExecutableImage Image
-        {
-            get
-            {
-                return image;
-            }
-        }
-
-        public Location Location
-        {
-            get
-            {
-                return location;
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                return table.Length;
-            }
-        }
-
-        public SectionTableEntry this[int index]
-        {
-            get
-            {
-                return table[index];
-            }
-        }
+        public Location Location { get; }
+        public int Count => _table.Length;
+        public SectionTableEntry this[int index] => _table[index];
 
         public SectionTableEntry this[string name]
         {
             get
             {
-                return table.FirstOrDefault(entry => String.Compare(name,entry.Name,StringComparison.OrdinalIgnoreCase) == 0);
+                return _table.FirstOrDefault(entry => string.Compare(name,entry.Name,StringComparison.OrdinalIgnoreCase) == 0);
             }
         }
 
         #endregion
-
     }
-
 }

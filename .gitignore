@@ -2,6 +2,11 @@
 [Bb]in/
 [Oo]bj/
 
+# Others
+.vs/
+[Pp]ackages/
+[Tt]ools/
+
 # mstest test results
 TestResults
 

@@ -1,67 +1,66 @@
 ﻿#region License
-//  Copyright(c) 2016, Workshell Ltd
-//  All rights reserved.
-//  
-//  Redistribution and use in source and binary forms, with or without
-//  modification, are permitted provided that the following conditions are met:
-//     * Redistributions of source code must retain the above copyright
-//       notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above copyright
-//       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
-//     * Neither the name of Workshell Ltd nor the names of its contributors
-//  may be used to endorse or promote products
-//  derived from this software without specific prior written permission.
-//  
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-//  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-//  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//  DISCLAIMED.IN NO EVENT SHALL WORKSHELL BE LIABLE FOR ANY
-//  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-//  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-//  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-//  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//  Copyright(c) Workshell Ltd
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//  SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Workshell.PE.Extensions;
 
-namespace Workshell.PE.CLR
+namespace Workshell.PE.Content
 {
-
     public sealed class CLRMetaData : ISupportsLocation, ISupportsBytes
     {
+        private readonly PortableExecutableImage _image;
 
-        internal CLRMetaData(CLRContent clr, Location location, CLRHeader header)
+        internal CLRMetaData(PortableExecutableImage image, Location location, CLRMetaDataHeader header, CLRMetaDataStreamTable streamTable,
+            CLRMetaDataStreams streams)
         {
-            CLR = clr;
+            _image = image;
+
             Location = location;
-            Header = new CLRMetaDataHeader(this);
-            StreamTable = new CLRMetaDataStreamTable(this);
-            Streams = new CLRMetaDataStreams(this);
+            Header = header;
+            StreamTable = streamTable;
+            Streams = streams;
         }
 
         #region Static Methods
 
-        public static CLRMetaData Get(CLRHeader header)
+        internal static async Task<CLRMetaData> GetAsync(PortableExecutableImage image, CLRHeader header)
         {
-            LocationCalculator calc = header.CLR.DataDirectory.Directories.Image.GetCalculator();
-            ulong image_base = header.CLR.DataDirectory.Directories.Image.NTHeaders.OptionalHeader.ImageBase;
-            uint rva = header.MetaDataAddress;
-            ulong va = image_base + rva;
-            ulong offset = calc.RVAToOffset(rva);
-            uint size = header.MetaDataSize;
-            Section section = calc.RVAToSection(rva);
-            Location location = new Location(offset, rva, va, size, size, section);
-            CLRMetaData meta_data = new CLRMetaData(header.CLR, location, header);
+            var calc = image.GetCalculator();
+            var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
+            var rva = header.MetaDataAddress;
+            var va = imageBase + rva;
+            var offset = calc.RVAToOffset(rva);
+            var size = header.MetaDataSize;
+            var section = calc.RVAToSection(rva);
+            var location = new Location(offset, rva, va, size, size, section);
+            var metaDataHeader = await CLRMetaDataHeader.LoadAsync(image, location).ConfigureAwait(false);
+            var metaDataStreamTable = await CLRMetaDataStreamTable.LoadAsync(image, metaDataHeader).ConfigureAwait(false);
+            var metaDataStreams = await CLRMetaDataStreams.LoadAsync(image, location, metaDataStreamTable).ConfigureAwait(false);
+            var metaData = new CLRMetaData(image, location, metaDataHeader, metaDataStreamTable, metaDataStreams);
 
-            return meta_data;
+            return metaData;
         }
 
         #endregion
@@ -70,8 +69,13 @@ namespace Workshell.PE.CLR
 
         public byte[] GetBytes()
         {
-            Stream stream = CLR.DataDirectory.Directories.Image.GetStream();
-            byte[] buffer = Utils.ReadBytes(stream,Location);
+            return GetBytesAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<byte[]> GetBytesAsync()
+        {
+            var stream = _image.GetStream();
+            var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
         }
@@ -80,38 +84,11 @@ namespace Workshell.PE.CLR
 
         #region Properties
 
-        public CLRContent CLR
-        {
-            get;
-            private set;
-        }
-
-        public Location Location
-        {
-            get;
-            private set;
-        }
-
-        public CLRMetaDataHeader Header
-        {
-            get;
-            private set;
-        }
-
-        public CLRMetaDataStreamTable StreamTable
-        {
-            get;
-            private set;
-        }
-
-        public CLRMetaDataStreams Streams
-        {
-            get;
-            private set;
-        }
+        public Location Location { get; }
+        public CLRMetaDataHeader Header { get; }
+        public CLRMetaDataStreamTable StreamTable { get; }
+        public CLRMetaDataStreams Streams { get; }
 
         #endregion
-
     }
-
 }
