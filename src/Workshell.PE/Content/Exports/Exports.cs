@@ -34,38 +34,80 @@ namespace Workshell.PE.Content
 {
     public sealed class Exports : IEnumerable<Export>
     {
+        private sealed class ExportInfo
+        {
+            #if DEBUG
+            public override string ToString()
+            {
+                return $"Address: 0x{Address:X8}, Ordinal: 0x{Ordinal:X4}, Name Address: 0x{NameAddress:X8}, Name: {Name}, Forward Name: {ForwardName}";
+            }
+            #endif
+
+            #region Properties
+
+            public uint Address { get; set; }
+            public uint Ordinal { get; set; }
+            public uint NameAddress { get; set; }
+            public string Name { get; set; }
+            public string ForwardName { get; set; }
+
+            #endregion
+        }
+
         private readonly Export[] _exports;
 
-        internal Exports(Export[] exports)
+        internal Exports(IEnumerable<Export> exports, ExportDirectory directory, ExportTable<uint> functionAddresses, ExportTable<uint> nameAddresses, ExportTable<ushort> ordinals)
         {
-            _exports = exports;
+            _exports = exports.ToArray();
 
-            Count = exports.Length;
+            Directory = directory;
+            FunctionAddressTable = functionAddresses;
+            NameAddressTable = nameAddresses;
+            NameOrdinalsTable = ordinals;
+            Count = _exports.Length;
         }
 
         #region Static Methods
+
+        public static Exports Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static Exports Get(PortableExecutableImage image, ExportDirectory directory, ExportTable<uint> functionAddresses, ExportTable<uint> nameAddresses, ExportTable<ushort> ordinals)
+        {
+            return GetAsync(image, directory, functionAddresses, nameAddresses, ordinals).GetAwaiter().GetResult();
+        }
 
         public static async Task<Exports> GetAsync(PortableExecutableImage image)
         {
             var directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
 
             if (directory == null)
+            {
                 return null;
+            }
 
             var functionAddresses = await ExportTable.GetFunctionAddressTableAsync(image, directory).ConfigureAwait(false);
 
             if (functionAddresses == null)
+            {
                 return null;
+            }
 
             var nameAddresses = await ExportTable.GetNameAddressTableAsync(image, directory).ConfigureAwait(false);
 
             if (nameAddresses == null)
+            {
                 return null;
+            }
 
             var ordinals = await ExportTable.GetOrdinalTableAsync(image, directory).ConfigureAwait(false);
 
             if (ordinals == null)
+            {
                 return null;
+            }
 
             return await GetAsync(image, directory, functionAddresses, nameAddresses, ordinals).ConfigureAwait(false);
         }
@@ -75,51 +117,50 @@ namespace Workshell.PE.Content
             var calc = image.GetCalculator();
             var stream = image.GetStream();
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ExportTable];
-            var fullNameAddresses = new List<Tuple<int, uint, uint, ushort, string, string>>();
+            var infos = new List<ExportInfo>();
+            var currentOrdinal = directory.Base;
 
-            for(var i = 0; i < nameAddresses.Count; i++)
+            foreach (var address in functionAddresses)
+            {
+                var info = new ExportInfo()
+                {
+                    Address = address,
+                    Ordinal = currentOrdinal
+                };
+
+                if (address >= dataDirectory.VirtualAddress && address <= (dataDirectory.VirtualAddress + dataDirectory.Size))
+                {
+                    var offset = calc.RVAToOffset(address).ToInt64();
+
+                    info.ForwardName = await GetStringAsync(stream, offset).ConfigureAwait(false);
+                }
+
+                infos.Add(info);
+
+                currentOrdinal++;
+            }
+
+            for (var i = 0; i < nameAddresses.Count; i++)
             {
                 var nameAddress = nameAddresses[i];
                 var ordinal = ordinals[i];
-                var functionAddress = functionAddresses[ordinal];
                 var offset = calc.RVAToOffset(nameAddress).ToInt64();
-                var name = await GetStringAsync(stream, offset).ConfigureAwait(false);
-                var fwdName = string.Empty;
+                var info = infos[ordinal];
 
-                if (functionAddress >= dataDirectory.VirtualAddress && functionAddress <= (dataDirectory.VirtualAddress + dataDirectory.Size))
-                {
-                    offset = calc.RVAToOffset(functionAddress).ToInt64();
-                    fwdName = await GetStringAsync(stream, offset).ConfigureAwait(false);
-                }
-
-                var tuple = new Tuple<int, uint, uint, ushort, string, string>(i, functionAddress, nameAddress, ordinal, name, fwdName);
-
-                fullNameAddresses.Add(tuple);
+                info.NameAddress = nameAddress;
+                info.Name = await GetStringAsync(stream, offset);
             }
 
-            var exports = new List<Export>();
+            var exports = new List<Export>(infos.Count);
 
-            for(var i = 0; i < functionAddresses.Count; i++)
+            foreach (var info in infos)
             {
-                var functionAddress = functionAddresses[i];
-                var isOrdinal = fullNameAddresses.All(t => t.Item2 != functionAddress);
+                var export = new Export(info.Address, info.Name, info.Ordinal, info.ForwardName);
 
-                if (!isOrdinal)
-                {
-                    var tuple = fullNameAddresses.First(t => t.Item2 == functionAddress);
-                    var export = new Export(functionAddress, tuple.Item5, directory.Base + tuple.Item4, tuple.Item6);
-
-                    exports.Add(export);
-                }
-                else
-                {
-                    var export = new Export(functionAddress, string.Empty, (directory.Base + i).ToUInt32(), string.Empty);
-
-                    exports.Add(export);
-                }
+                exports.Add(export);
             }
 
-            var result = new Exports(exports.OrderBy(e => e.Ordinal).ToArray());
+            var result = new Exports(exports.OrderBy(e => e.Ordinal), directory, functionAddresses, nameAddresses, ordinals);
 
             return result;
         }
@@ -138,7 +179,9 @@ namespace Workshell.PE.Content
         public IEnumerator<Export> GetEnumerator()
         {
             foreach (var export in _exports)
+            {
                 yield return export;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -149,6 +192,11 @@ namespace Workshell.PE.Content
         #endregion
 
         #region Properties
+
+        public ExportDirectory Directory { get; }
+        public ExportTable<uint> FunctionAddressTable { get; }
+        public ExportTable<uint> NameAddressTable { get; }
+        public ExportTable<ushort> NameOrdinalsTable { get; }
 
         public int Count { get; }
         public Export this[int index] => _exports[index];

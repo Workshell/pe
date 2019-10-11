@@ -55,7 +55,7 @@ namespace Workshell.PE.Content
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;           
-            var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
+            var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
             ExceptionTable table;
 
             if (image.Is64Bit)

@@ -133,7 +133,7 @@ namespace Workshell.PE.Resources
                 var fileOffset = calc.RVAToOffset(rva);
                 var size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
                 var section = calc.RVAToSection(rva);
-                var location = new Location(fileOffset, rva, va, size, size, section);
+                var location = new Location(Image, fileOffset, rva, va, size, size, section);
 
                 _directory = new ResourceDirectory(Image, DataDirectory, location, this);
 
@@ -159,7 +159,7 @@ namespace Workshell.PE.Resources
                 var fileOffset = calc.RVAToOffset(rva);
                 var size = Utils.SizeOf<IMAGE_RESOURCE_DATA_ENTRY>().ToUInt32();
                 var section = calc.RVAToSection(rva);
-                var location = new Location(fileOffset, rva, va, size, size, section);
+                var location = new Location(Image, fileOffset, rva, va, size, size, section);
 
                 _data = new ResourceDataEntry(Image, DataDirectory, location, this);
 
@@ -177,10 +177,10 @@ namespace Workshell.PE.Resources
         public NameType NameType { get; }
         public OffsetType OffsetType { get; }
 
-        [FieldAnnotation("Name")]
+        [FieldAnnotation("Name", Order = 1)]
         public uint Name { get; }
 
-        [FieldAnnotation("Offset to Data")]
+        [FieldAnnotation("Offset to Data", Order = 2)]
         public uint OffsetToData { get; }
 
         #endregion

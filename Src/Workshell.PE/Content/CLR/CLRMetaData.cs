@@ -54,7 +54,7 @@ namespace Workshell.PE.Content
             var offset = calc.RVAToOffset(rva);
             var size = header.MetaDataSize;
             var section = calc.RVAToSection(rva);
-            var location = new Location(offset, rva, va, size, size, section);
+            var location = new Location(image, offset, rva, va, size, size, section);
             var metaDataHeader = await CLRMetaDataHeader.LoadAsync(image, location).ConfigureAwait(false);
             var metaDataStreamTable = await CLRMetaDataStreamTable.LoadAsync(image, metaDataHeader).ConfigureAwait(false);
             var metaDataStreams = await CLRMetaDataStreams.LoadAsync(image, location, metaDataStreamTable).ConfigureAwait(false);

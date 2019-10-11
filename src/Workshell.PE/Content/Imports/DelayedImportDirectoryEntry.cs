@@ -62,28 +62,28 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        [FieldAnnotation("Attributes")]
+        [FieldAnnotation("Attributes", Order = 1)]
         public uint Attributes { get; }
 
-        [FieldAnnotation("Name")]
+        [FieldAnnotation("Name", Order = 2)]
         public override uint Name { get; }
 
-        [FieldAnnotation("Module Handle")]
+        [FieldAnnotation("Module Handle", Order = 3)]
         public uint ModuleHandle { get; }
 
-        [FieldAnnotation("Delay Import Address Table")]
+        [FieldAnnotation("Delay Import Address Table", Order = 4)]
         public uint DelayAddressTable { get; }
 
-        [FieldAnnotation("Delay Import Hint/Name Table")]
+        [FieldAnnotation("Delay Import Hint/Name Table", Order = 5)]
         public uint DelayNameTable { get; }
 
-        [FieldAnnotation("Bound Delay Import Address Table")]
+        [FieldAnnotation("Bound Delay Import Address Table", Order = 6)]
         public uint BoundDelayIAT { get; }
 
-        [FieldAnnotation("Unload Delay Import Address Table")]
+        [FieldAnnotation("Unload Delay Import Address Table", Order = 7)]
         public uint UnloadDelayIAT { get; }
 
-        [FieldAnnotation("Date/Time Stamp")]
+        [FieldAnnotation("Date/Time Stamp", Order = 8)]
         public uint TimeDateStamp { get; }
 
         #endregion

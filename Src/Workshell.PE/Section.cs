@@ -42,7 +42,7 @@ namespace Workshell.PE
 
             Sections = sections;
             TableEntry = tableEntry;
-            Location = new Location(image.GetCalculator(), tableEntry.PointerToRawData, tableEntry.VirtualAddress, imageBase + tableEntry.VirtualAddress, tableEntry.SizeOfRawData, tableEntry.VirtualSizeOrPhysicalAddress);
+            Location = new Location(image, tableEntry.PointerToRawData, tableEntry.VirtualAddress, imageBase + tableEntry.VirtualAddress, tableEntry.SizeOfRawData, tableEntry.VirtualSizeOrPhysicalAddress);
         }
 
         #region Methods

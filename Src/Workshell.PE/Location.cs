@@ -28,20 +28,29 @@ namespace Workshell.PE
 {
     public sealed class Location : IEquatable<Location>
     {
-        private readonly LocationCalculator _calc;
+        private readonly PortableExecutableImage _image;
         private Section _section;
 
-        internal Location(LocationCalculator calc, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) : this(calc, fileOffset, rva, va, fileSize, virtualSize, null)
+        internal Location(PortableExecutableImage image, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) 
+            : this(image, fileOffset, rva, va, fileSize, virtualSize, null)
         {
         }
 
-        internal Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section) : this(null, fileOffset, rva, va, fileSize, virtualSize, section)
+        /*
+        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) 
+            : this(null, fileOffset, rva, va, fileSize, virtualSize, ?)
         {
         }
 
-        private Location(LocationCalculator calc, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section)
+        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section) 
+            : this(null, fileOffset, rva, va, fileSize, virtualSize, section)
         {
-            _calc = calc;
+        }
+        */
+
+        internal Location(PortableExecutableImage image, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section)
+        {
+            _image = image;
             _section = section;
 
             FileOffset = fileOffset;
@@ -59,7 +68,9 @@ namespace Workshell.PE
             var result = $"File Offset: 0x{FileOffset:X16}, File Size: 0x{FileSize:X8} ({FileSize}), RVA: 0x{RelativeVirtualAddress:X8}, Virtual Address: 0x{VirtualAddress:X16}, Virtual Size: 0x{VirtualSize:X8} ({VirtualSize})";
 
             if (Section != null)
+            {
                 result += $", Section: {Section.Name}";
+            }
 
             return result;
         }
@@ -72,22 +83,34 @@ namespace Workshell.PE
         public bool Equals(Location other)
         {
             if (other == null)
+            {
                 return false;
+            }
 
             if (FileOffset != other.FileOffset)
+            {
                 return false;
+            }
 
             if (FileSize != other.FileSize)
+            {
                 return false;
+            }
 
             if (RelativeVirtualAddress != other.RelativeVirtualAddress)
+            {
                 return false;
+            }
 
             if (VirtualAddress != other.VirtualAddress)
+            {
                 return false;
+            }
 
             if (VirtualSize != other.VirtualSize)
+            {
                 return false;
+            }
 
             return true;
         }
@@ -110,13 +133,9 @@ namespace Workshell.PE
         #region Properties
 
         public ulong FileOffset { get; }
-
         public ulong FileSize { get; }
-
         public uint RelativeVirtualAddress { get; }
-
         public ulong VirtualAddress { get; }
-
         public ulong VirtualSize { get; }
 
         public Section Section
@@ -124,7 +143,9 @@ namespace Workshell.PE
             get
             {
                 if (_section == null)
-                    _section = _calc.VAToSection(VirtualAddress);
+                {
+                    _section = _image.GetCalculator().RVAToSection(RelativeVirtualAddress);
+                }
 
                 return _section;
             }

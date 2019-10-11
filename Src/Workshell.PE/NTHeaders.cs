@@ -40,7 +40,7 @@ namespace Workshell.PE
 
             var size = (4U + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize).ToUInt32();
 
-            Location = new Location(image.GetCalculator(), headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, size, size);
+            Location = new Location(image, headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, size, size);
             FileHeader = fileHeader;
             OptionalHeader = optHeader;
             DataDirectories = dataDirs;

@@ -40,7 +40,7 @@ namespace Workshell.PE.Content
             var rva = calc.OffsetToRVA(offset);
             var va = image.NTHeaders.OptionalHeader.ImageBase + rva;
 
-            Location = new Location(calc, offset, rva, va, size, size);
+            Location = new Location(image, offset, rva, va, size, size);
             Hint = entryHint;
             Name = entryName;
             IsPadded = isPadded;

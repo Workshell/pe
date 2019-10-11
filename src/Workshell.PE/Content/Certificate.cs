@@ -73,7 +73,7 @@ namespace Workshell.PE.Content
             stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
-            var location = new Location(image.GetCalculator(), dataDirectory.VirtualAddress, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size);
+            var location = new Location(image, dataDirectory.VirtualAddress, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size);
             WIN_CERTIFICATE cert;
 
             try

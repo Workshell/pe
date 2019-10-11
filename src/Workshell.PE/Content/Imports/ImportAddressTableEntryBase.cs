@@ -42,7 +42,7 @@ namespace Workshell.PE.Content
             var va = imageBase + rva;
             var size = (image.Is64Bit ? sizeof(ulong) : sizeof(uint)).ToUInt64();
 
-            Location = new Location(calc, entryOffset, rva, va, size, size);
+            Location = new Location(image, entryOffset, rva, va, size, size);
             Value = entryValue;
             Address = entryAddress;
             Ordinal = entryOrdinal;

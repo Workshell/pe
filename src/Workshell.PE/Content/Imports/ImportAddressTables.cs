@@ -102,7 +102,7 @@ namespace Workshell.PE.Content
             }
 
             var section = calc.RVAToSection(rva);
-            var location = new Location(fileOffset, rva, va, fileSize, fileSize, section);
+            var location = new Location(image, fileOffset, rva, va, fileSize, fileSize, section);
             var result = new ImportAddressTables(image, directory.DataDirectory, location, tables.ToArray());
 
             return result;

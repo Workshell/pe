@@ -45,16 +45,33 @@ namespace Workshell.PE.Native
         public uint ProcessHeapFlags;
         public uint ProcessAffinityMask;
         public ushort CSDVersion;
-        public ushort Reserved1;
+        public ushort DependentLoadFlags;
         public uint EditList;
         public uint SecurityCookie;
         public uint SEHandlerTable;
         public uint SEHandlerCount;
         public uint GuardCFCheckFunctionPointer;
-        public uint Reserved2;
+        public uint GuardCFDispatchFunctionPointer;
         public uint GuardCFFunctionTable;
         public uint GuardCFFunctionCount;
         public uint GuardFlags;
+        public IMAGE_LOAD_CONFIG_CODE_INTEGRITY CodeIntegrity;
+        public uint GuardAddressTakenIatEntryTable;
+        public uint GuardAddressTakenIatEntryCount;
+        public uint GuardLongJumpTargetTable;
+        public uint GuardLongJumpTargetCount;
+        public uint DynamicValueRelocTable;
+        public uint CHPEMetadataPointer;
+        public uint GuardRFFailureRoutine;
+        public uint GuardRFFailureRoutineFunctionPointer;
+        public uint DynamicValueRelocTableOffset;
+        public ushort DynamicValueRelocTableSection;
+        public ushort Reserved2;
+        public uint GuardRFVerifyStackPointerFunctionPointer;
+        public uint HotPatchTableOffset;
+        public uint Reserved3;
+        public uint EnclaveConfigurationPointer;
+        public uint VolatileMetadataPointer;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -75,15 +92,41 @@ namespace Workshell.PE.Native
         public ulong ProcessAffinityMask;
         public uint ProcessHeapFlags;
         public ushort CSDVersion;
-        public ushort Reserved1;
+        public ushort DependentLoadFlags;
         public ulong EditList;
         public ulong SecurityCookie;
         public ulong SEHandlerTable;
         public ulong SEHandlerCount;
         public ulong GuardCFCheckFunctionPointer;
-        public ulong Reserved2;
+        public ulong GuardCFDispatchFunctionPointer;
         public ulong GuardCFFunctionTable;
         public ulong GuardCFFunctionCount;
         public uint GuardFlags;
+        public IMAGE_LOAD_CONFIG_CODE_INTEGRITY CodeIntegrity;
+        public ulong GuardAddressTakenIatEntryTable;
+        public ulong GuardAddressTakenIatEntryCount;
+        public ulong GuardLongJumpTargetTable;
+        public ulong GuardLongJumpTargetCount;
+        public ulong DynamicValueRelocTable;
+        public ulong CHPEMetadataPointer;
+        public ulong GuardRFFailureRoutine;
+        public ulong GuardRFFailureRoutineFunctionPointer;
+        public uint DynamicValueRelocTableOffset;
+        public ushort DynamicValueRelocTableSection;
+        public ushort Reserved2;
+        public ulong GuardRFVerifyStackPointerFunctionPointer;
+        public uint HotPatchTableOffset;
+        public uint Reserved3;
+        public ulong EnclaveConfigurationPointer;
+        public ulong VolatileMetadataPointer;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    internal struct IMAGE_LOAD_CONFIG_CODE_INTEGRITY
+    {
+        public ushort Flags;
+        public ushort Catalog;
+        public ulong CatalogOffset;
+        public ulong Reserved;
     }
 }

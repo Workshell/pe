@@ -37,7 +37,7 @@ namespace Workshell.PE
         {
             _image = image;
 
-            Location = new Location(image.GetCalculator(), stubOffset, Convert.ToUInt32(stubOffset), imageBase + stubOffset, stubSize, stubSize);
+            Location = new Location(image, stubOffset, Convert.ToUInt32(stubOffset), imageBase + stubOffset, stubSize, stubSize);
         }
 
         #region Methods

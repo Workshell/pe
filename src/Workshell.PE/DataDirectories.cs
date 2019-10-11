@@ -41,11 +41,12 @@ namespace Workshell.PE
             _image = image;
 
             var size = (Utils.SizeOf<IMAGE_DATA_DIRECTORY>() * dataDirs.Length).ToUInt32();
-            var fileOffset = optHeader.Location.FileOffset + optHeader.Location.FileSize;
+            var fileSize = optHeader.Location.FileSize;
+            var fileOffset = optHeader.Location.FileOffset + fileSize;
             var rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize.ToUInt32();
             var va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
 
-            Location = new Location(image.GetCalculator(), fileOffset, rva, va, size, size);
+            Location = new Location(image, fileOffset, rva, va, size, size);
 
             _directories = new Dictionary<DataDirectoryType,DataDirectory>();
 
@@ -98,6 +99,28 @@ namespace Workshell.PE
         public bool Exists(int directoryType)
         {
             return Exists((DataDirectoryType)directoryType);
+        }
+
+        public bool ExistsAndNotEmpty(DataDirectoryType directoryType)
+        {
+            if (!_directories.ContainsKey(directoryType))
+            {
+                return false;
+            }
+
+            var dataDirectory = _directories[directoryType];
+
+            if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool ExistsAndNotEmpty(int directoryType)
+        {
+            return ExistsAndNotEmpty((DataDirectoryType)directoryType);
         }
 
         #endregion

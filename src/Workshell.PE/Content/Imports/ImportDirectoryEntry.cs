@@ -59,19 +59,19 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        [FieldAnnotation("Original First Thunk")]
+        [FieldAnnotation("Original First Thunk", Order = 1)]
         public uint OriginalFirstThunk { get; }
 
-        [FieldAnnotation("Date/Time Stamp")]
+        [FieldAnnotation("Date/Time Stamp", Order = 2)]
         public uint TimeDateStamp { get; }
 
-        [FieldAnnotation("Forwarder Chain")]
+        [FieldAnnotation("Forwarder Chain", Order = 3)]
         public uint ForwarderChain { get; }
 
-        [FieldAnnotation("Name")]
+        [FieldAnnotation("Name", Order = 4)]
         public override uint Name { get; }
 
-        [FieldAnnotation("First Thunk")]
+        [FieldAnnotation("First Thunk", Order = 5)]
         public uint FirstThunk { get; }
 
         #endregion

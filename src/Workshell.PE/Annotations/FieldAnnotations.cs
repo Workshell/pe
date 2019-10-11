@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -30,7 +31,7 @@ namespace Workshell.PE.Annotations
 {
     public sealed class FieldAnnotation
     {
-        internal FieldAnnotation(string desc, int arrayLen, bool flags, string name, Type type, object value, int size)
+        internal FieldAnnotation(string desc, int arrayLen, bool flags, string name, Type type, object value, int size, int? order)
         {
             Description = desc;
             ArrayLength = arrayLen;
@@ -39,6 +40,7 @@ namespace Workshell.PE.Annotations
             Type = type;
             Value = value;
             Size = size;
+            Order = order;
         }
 
         #region Methods
@@ -65,28 +67,32 @@ namespace Workshell.PE.Annotations
         public int Size { get; }
         public bool IsArray => Type.IsArray;
         public int ArraySize => (IsArray ? ArrayLength * Size : 0);
+        public int? Order { get; }
 
         #endregion
     }
 
     public sealed class FieldAnnotations : IEnumerable<FieldAnnotation>
     {
-        private List<FieldAnnotation> _list;
+        private readonly List<FieldAnnotation> _list;
 
         internal FieldAnnotations(object annotatedObject)
         {
-            _list = new List<FieldAnnotation>();
-
             if (annotatedObject != null)
             {
+                var list = new List<FieldAnnotation>();
                 var offset = 0;
+                var props = annotatedObject.GetType().GetProperties();
+                var hasOrder = false;
 
-                foreach(var prop in annotatedObject.GetType().GetProperties())
+                foreach(var prop in props)
                 {
                     var attr = prop.GetCustomAttribute<FieldAnnotationAttribute>();
 
                     if (attr == null)
+                    {
                         continue;
+                    }
 
                     var desc = attr.Description;
                     var name = prop.Name;
@@ -105,11 +111,26 @@ namespace Workshell.PE.Annotations
                     #pragma warning restore CS0618 // Type or member is obsolete
 
                     var value = prop.GetValue(annotatedObject,null);
-                    var annotation = new FieldAnnotation(desc,attr.ArrayLength,attr.Flags,name,type,value,size);
 
-                    _list.Add(annotation);
+                    if (!hasOrder && attr.Order != int.MinValue)
+                    {
+                        hasOrder = true;
+                    }
+
+                    var annotation = new FieldAnnotation(desc, attr.ArrayLength, attr.Flags, name, type, value, size, attr.Order);
+
+                    list.Add(annotation);
 
                     offset += size;
+                }
+
+                if (hasOrder)
+                {
+                    _list = new List<FieldAnnotation>(list.OrderBy(a => a.Order));
+                }
+                else
+                {
+                    _list = list;
                 }
             }
         }
@@ -126,7 +147,9 @@ namespace Workshell.PE.Annotations
             var annotations = new FieldAnnotations(annotatedObj);
 
             if (nullEmpty && annotations.Count == 0)
+            {
                 return null;
+            }
 
             return annotations;
         }

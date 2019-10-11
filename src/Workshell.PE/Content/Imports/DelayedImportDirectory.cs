@@ -90,7 +90,7 @@ namespace Workshell.PE.Content
 
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var totalSize = (descriptors.Count + 1) * size;
-            var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, totalSize.ToUInt32(), totalSize.ToUInt32(), section);
+            var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, totalSize.ToUInt32(), totalSize.ToUInt32(), section);
             var entries = new DelayedImportDirectoryEntry[descriptors.Count];
 
             for (var i = 0; i < descriptors.Count; i++)
@@ -100,7 +100,7 @@ namespace Workshell.PE.Content
                     var entryOffset = fileOffset + descriptors[i].Item1;
                     var entryRVA = calc.OffsetToRVA(entryOffset);
                     var entryVA = imageBase + entryRVA;
-                    var entryLocation = new Location(calc, entryOffset, entryRVA, entryVA, size.ToUInt32(), size.ToUInt32());
+                    var entryLocation = new Location(image, entryOffset, entryRVA, entryVA, size.ToUInt32(), size.ToUInt32());
                     var name = await GetNameAsync(calc, stream, descriptors[i].Item2.Name).ConfigureAwait(false);
 
                     entries[i] = new DelayedImportDirectoryEntry(image, entryLocation, descriptors[i].Item2, name);

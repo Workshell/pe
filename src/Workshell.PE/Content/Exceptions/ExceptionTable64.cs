@@ -58,7 +58,7 @@ namespace Workshell.PE.Content
                 if (entryData.StartAddress == 0 && entryData.EndAddress == 0)
                     break;
 
-                var entryLocation = new Location(calc, offset, rva, image.NTHeaders.OptionalHeader.ImageBase + rva, entrySize.ToUInt32(), entrySize.ToUInt32());
+                var entryLocation = new Location(image, offset, rva, image.NTHeaders.OptionalHeader.ImageBase + rva, entrySize.ToUInt32(), entrySize.ToUInt32());
                 var entry = new ExceptionTableEntry64(image, entryLocation, entryData);
 
                 entries.Add(entry);

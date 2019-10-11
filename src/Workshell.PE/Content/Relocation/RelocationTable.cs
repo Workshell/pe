@@ -63,7 +63,7 @@ namespace Workshell.PE.Content
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
-            var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
+            var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
             var stream = image.GetStream();
 
             stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
@@ -103,7 +103,7 @@ namespace Workshell.PE.Content
                 }
 
                 var blockRVA = calc.OffsetToRVA(blockOffset);
-                var blockLocation = new Location(calc, blockOffset, blockRVA, imageBase + blockRVA, blockSize, blockSize);
+                var blockLocation = new Location(image, blockOffset, blockRVA, imageBase + blockRVA, blockSize, blockSize);
                 var block = new RelocationBlock(image, blockLocation, baseRelocation.VirtualAddress, baseRelocation.SizeOfBlock, baseRelocations);
 
                 blocks.Add(block);

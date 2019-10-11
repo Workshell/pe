@@ -56,7 +56,7 @@ namespace Workshell.PE.Content
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;         
-            var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
+            var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
             var header = await CLRHeader.GetAsync(image, location).ConfigureAwait(false);
             var metaData = await CLRMetaData.GetAsync(image, header).ConfigureAwait(false);
 

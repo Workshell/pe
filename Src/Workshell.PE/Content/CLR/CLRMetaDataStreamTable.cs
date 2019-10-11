@@ -60,10 +60,12 @@ namespace Workshell.PE.Content
                 ulong size = 0;
 
                 foreach (var strm in entries)
+                {
                     size += strm.Location.FileSize;
+                }
 
                 var section = calc.RVAToSection(rva);
-                var location = new Location(offset,rva,va,size,size,section);
+                var location = new Location(image, offset, rva, va, size, size, section);
 
                 return new CLRMetaDataStreamTable(image, location, entries);
             }
@@ -124,7 +126,7 @@ namespace Workshell.PE.Content
                 var rva = calc.OffsetToRVA(offset);
                 var va = imageBase + rva;
                 var section = calc.RVAToSection(rva);
-                var location = new Location(offset, rva, va, size, size, section);
+                var location = new Location(image, offset, rva, va, size, size, section);
                 var entry = new CLRMetaDataStreamTableEntry(image, location, streamOffset, streamSize, streamName.ToString());
 
                 entries.Add(entry);

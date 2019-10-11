@@ -124,13 +124,13 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        [FieldAnnotation("Start Address")]
+        [FieldAnnotation("Start Address", Order = 1)]
         public uint StartAddress { get; }
 
-        [FieldAnnotation("End Address")]
+        [FieldAnnotation("End Address", Order = 2)]
         public uint EndAddress { get; }
 
-        [FieldAnnotation("Unwind Info Address")]
+        [FieldAnnotation("Unwind Info Address", Order = 3)]
         public uint UnwindInfoAddress { get; }
 
         #endregion

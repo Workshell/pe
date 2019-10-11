@@ -100,7 +100,7 @@ namespace Workshell.PE.Content
         internal static async Task<CLRHeader> GetAsync(PortableExecutableImage image, Location clrLocation)
         {
             var size = Utils.SizeOf<IMAGE_COR20_HEADER>();
-            var location = new Location(clrLocation.FileOffset, clrLocation.RelativeVirtualAddress, clrLocation.VirtualAddress, size.ToUInt32(), size.ToUInt32(), clrLocation.Section);
+            var location = new Location(image, clrLocation.FileOffset, clrLocation.RelativeVirtualAddress, clrLocation.VirtualAddress, size.ToUInt32(), size.ToUInt32(), clrLocation.Section);
             var stream = image.GetStream();
 
             stream.Seek(clrLocation.FileOffset.ToInt64(), SeekOrigin.Begin);
@@ -198,61 +198,61 @@ namespace Workshell.PE.Content
 
         public Location Location { get; }
 
-        [FieldAnnotation("Header Size")]
+        [FieldAnnotation("Header Size", Order = 1)]
         public uint HeaderSize { get; }
 
-        [FieldAnnotation("Major Runtime Version")]
+        [FieldAnnotation("Major Runtime Version", Order = 2)]
         public ushort MajorRuntimeVersion { get; }
 
-        [FieldAnnotation("Minor Runtime Version")]
+        [FieldAnnotation("Minor Runtime Version", Order = 3)]
         public ushort MinorRuntimeVersion { get; }
 
-        [FieldAnnotation("MetaData Virtual Address")]
+        [FieldAnnotation("MetaData Virtual Address", Order = 4)]
         public uint MetaDataAddress { get; }
 
-        [FieldAnnotation("MetaData Size")]
+        [FieldAnnotation("MetaData Size", Order = 5)]
         public uint MetaDataSize { get; }
 
-        [FieldAnnotation("Flags")]
+        [FieldAnnotation("Flags", Order = 6)]
         public uint Flags { get; }
 
-        [FieldAnnotation("EntryPoint Token/Virtual Address")]
+        [FieldAnnotation("EntryPoint Token/Virtual Address", Order = 7)]
         public uint EntryPointTokenOrVirtualAddress { get; }
 
-        [FieldAnnotation("Resources Virtual Address")]
+        [FieldAnnotation("Resources Virtual Address", Order = 8)]
         public uint ResourcesAddress { get; }
 
-        [FieldAnnotation("Resources Size")]
+        [FieldAnnotation("Resources Size", Order = 9)]
         public uint ResourcesSize { get; }
 
-        [FieldAnnotation("Strongname Signature Virtual Address")]
+        [FieldAnnotation("Strongname Signature Virtual Address", Order = 10)]
         public uint StrongNameSignatureAddress { get; }
 
-        [FieldAnnotation("Strongname Signature Size")]
+        [FieldAnnotation("Strongname Signature Size", Order = 11)]
         public uint StrongNameSignatureSize { get; }
 
-        [FieldAnnotation("Code Manager Table Virtual Address")]
+        [FieldAnnotation("Code Manager Table Virtual Address", Order = 12)]
         public uint CodeManagerTableAddress { get; }
 
-        [FieldAnnotation("Code Manager Table Size")]
+        [FieldAnnotation("Code Manager Table Size", Order = 13)]
         public uint CodeManagerTableSize { get; }
 
-        [FieldAnnotation("VTable Fixups Virtual Address")]
+        [FieldAnnotation("VTable Fixups Virtual Address", Order = 14)]
         public uint VTableFixupsAddress { get; }
 
-        [FieldAnnotation("VTable Fixups Size")]
+        [FieldAnnotation("VTable Fixups Size", Order = 15)]
         public uint VTableFixupsSize { get; }
 
-        [FieldAnnotation("Export Address Table Jumps Virtual Address")]
+        [FieldAnnotation("Export Address Table Jumps Virtual Address", Order = 16)]
         public uint ExportAddressTableJumpsAddress { get; }
 
-        [FieldAnnotation("Export Address Table Jumps Size")]
+        [FieldAnnotation("Export Address Table Jumps Size", Order = 17)]
         public uint ExportAddressTableJumpsSize { get; }
 
-        [FieldAnnotation("Managed Native Header Virtual Address")]
+        [FieldAnnotation("Managed Native Header Virtual Address", Order = 18)]
         public uint ManagedNativeHeaderAddress { get; }
 
-        [FieldAnnotation("Managed Native Header Size")]
+        [FieldAnnotation("Managed Native Header Size", Order = 19)]
         public uint ManagedNativeHeaderSize { get; }
 
         #endregion

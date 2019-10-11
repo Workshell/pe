@@ -51,9 +51,9 @@ namespace Workshell.PE.Content
         [EnumAnnotation("IMAGE_DEBUG_TYPE_OMAP_FROM_SRC")]
         OMAPFromSrc = 8,
         [EnumAnnotation("IMAGE_DEBUG_TYPE_BORLAND")]
-        Bolrand = 9,
-        [EnumAnnotation("IMAGE_DEBUG_TYPE_RESERVED10")]
-        Reserved = 10,
+        Borland = 9,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_BBT")]
+        BBT = 10,
         [EnumAnnotation("IMAGE_DEBUG_TYPE_CLSID")]
         CLSID = 11,
         [EnumAnnotation("IMAGE_DEBUG_TYPE_VC_FEATURE")]
@@ -63,7 +63,11 @@ namespace Workshell.PE.Content
         [EnumAnnotation("IMAGE_DEBUG_TYPE_ILTCG")]
         ILTCG = 14,
         [EnumAnnotation("IMAGE_DEBUG_TYPE_MPX")]
-        MPX = 15
+        MPX = 15,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_REPRO")]
+        Repro = 16,
+        [EnumAnnotation("IMAGE_DEBUG_TYPE_EX_DLLCHARACTERISTICS")]
+        ExtendedDllCharacteristics = 20
     }
 
     public sealed class DebugDirectoryEntry : ISupportsLocation, ISupportsBytes
@@ -126,12 +130,14 @@ namespace Workshell.PE.Content
             if (_data == null)
             {
                 if (PointerToRawData == 0 && SizeOfData == 0)
+                {
                     return null;
+                }
 
                 var calc = _image.GetCalculator();
                 var rva = AddressOfRawData;
                 var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
-                var location = new Location(calc, PointerToRawData, rva, imageBase + rva, SizeOfData, SizeOfData);
+                var location = new Location(_image, PointerToRawData, rva, imageBase + rva, SizeOfData, SizeOfData);
 
                 _data = new DebugData(_image, location, this);
             }
@@ -145,28 +151,28 @@ namespace Workshell.PE.Content
 
         public Location Location { get; }
 
-        [FieldAnnotation("Characteristics")]
+        [FieldAnnotation("Characteristics", Order = 1)]
         public uint Characteristics { get; }
 
-        [FieldAnnotation("Date/Time Stamp")]
+        [FieldAnnotation("Date/Time Stamp", Order = 2)]
         public uint TimeDateStamp { get; }
 
-        [FieldAnnotation("Major Version")]
+        [FieldAnnotation("Major Version", Order = 3)]
         public ushort MajorVersion { get; }
 
-        [FieldAnnotation("Minor Version")]
+        [FieldAnnotation("Minor Version", Order = 4)]
         public ushort MinorVersion { get; }
 
-        [FieldAnnotation("Type")]
+        [FieldAnnotation("Type", Order = 5)]
         public uint Type { get; }
 
-        [FieldAnnotation("Size of Data")]
+        [FieldAnnotation("Size of Data", Order = 6)]
         public uint SizeOfData { get; }
 
-        [FieldAnnotation("Address of Raw Data")]
+        [FieldAnnotation("Address of Raw Data", Order = 7)]
         public uint AddressOfRawData { get; }
 
-        [FieldAnnotation("Pointer to Raw Data")]
+        [FieldAnnotation("Pointer to Raw Data", Order = 8)]
         public uint PointerToRawData { get; }
 
         #endregion

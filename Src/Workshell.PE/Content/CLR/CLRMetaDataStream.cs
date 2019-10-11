@@ -44,7 +44,7 @@ namespace Workshell.PE.Content
             var rva = calc.OffsetToRVA(offset);
             var va = imageBase + rva;
 
-            Location = new Location(calc, offset, rva, va, tableEntry.Size, tableEntry.Size);
+            Location = new Location(image, offset, rva, va, tableEntry.Size, tableEntry.Size);
             TableEntry = tableEntry;
             Name = tableEntry.Name;
         }

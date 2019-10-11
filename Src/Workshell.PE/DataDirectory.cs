@@ -138,7 +138,7 @@ namespace Workshell.PE
                 {
                     var calc = _image.GetCalculator();
                     var fileOffset = calc.VAToOffset(VirtualAddress);
-                    var location = new Location(calc, fileOffset, calc.OffsetToRVA(fileOffset), VirtualAddress, Size, Size);
+                    var location = new Location(_image, fileOffset, calc.OffsetToRVA(fileOffset), VirtualAddress, Size, Size);
 
                     return new DataContent(_image, this, location);
                 }

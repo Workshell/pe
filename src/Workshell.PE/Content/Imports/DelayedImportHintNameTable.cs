@@ -108,11 +108,11 @@ namespace Workshell.PE.Content
                 var tableVA = image.NTHeaders.OptionalHeader.ImageBase + tableRVA;
                 var tableSection = calc.RVAToSection(tableRVA);
 
-                location = new Location(tableOffset, tableRVA, tableVA, tableSize, tableSize, tableSection);
+                location = new Location(image, tableOffset, tableRVA, tableVA, tableSize, tableSize, tableSection);
             }
             else
             {
-                location = new Location(0, 0, 0, 0, 0, null);
+                location = new Location(image, 0, 0, 0, 0, 0, null);
             }
 
             var result = new DelayedImportHintNameTable(image, directory.DataDirectory, location, entries.Values.ToArray());

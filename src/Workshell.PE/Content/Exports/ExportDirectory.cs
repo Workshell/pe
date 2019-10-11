@@ -70,12 +70,16 @@ namespace Workshell.PE.Content
         public static async Task<ExportDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ExportTable))
+            {
                 return null;
+            }
 
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ExportTable];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             try
             {
@@ -86,7 +90,7 @@ namespace Workshell.PE.Content
                 var section = calc.RVAToSection(rva);
                 var offset = calc.RVAToOffset(section, rva);
                 var size = Utils.SizeOf<IMAGE_EXPORT_DIRECTORY>();
-                var location = new Location(offset, rva, va, size.ToUInt32(), size.ToUInt32(), section);
+                var location = new Location(image, offset, rva, va, size.ToUInt32(), size.ToUInt32(), section);
                 var stream = image.GetStream();
 
                 stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
@@ -207,37 +211,37 @@ namespace Workshell.PE.Content
 
         #region Properties
 
-        [FieldAnnotation("Characteristics")]
+        [FieldAnnotation("Characteristics", Order = 1)]
         public uint Characteristics { get; private set; }
 
-        [FieldAnnotation("Date/Time Stamp")]
+        [FieldAnnotation("Date/Time Stamp", Order = 2)]
         public uint TimeDateStamp { get; private set; }
 
-        [FieldAnnotation("Major Version")]
+        [FieldAnnotation("Major Version", Order = 3)]
         public ushort MajorVersion { get; private set; }
 
-        [FieldAnnotation("Minor Version")]
+        [FieldAnnotation("Minor Version", Order = 4)]
         public ushort MinorVersion { get; private set; }
 
-        [FieldAnnotation("Name")]
+        [FieldAnnotation("Name", Order = 5)]
         public uint Name { get; private set; }
 
-        [FieldAnnotation("Base")]
+        [FieldAnnotation("Base", Order = 6)]
         public uint Base { get; private set; }
 
-        [FieldAnnotation("Number of Functions")]
+        [FieldAnnotation("Number of Functions", Order = 7)]
         public uint NumberOfFunctions { get; private set; }
 
-        [FieldAnnotation("Number of Names")]
+        [FieldAnnotation("Number of Names", Order = 8)]
         public uint NumberOfNames { get; private set; }
 
-        [FieldAnnotation("Address of Functions")]
+        [FieldAnnotation("Address of Functions", Order = 9)]
         public uint AddressOfFunctions { get; private set; }
 
-        [FieldAnnotation("Address of Names")]
+        [FieldAnnotation("Address of Names", Order = 10)]
         public uint AddressOfNames { get; private set; }
 
-        [FieldAnnotation("Address of Name Ordinals")]
+        [FieldAnnotation("Address of Name Ordinals", Order = 11)]
         public uint AddressOfNameOrdinals { get; private set; }
 
         #endregion

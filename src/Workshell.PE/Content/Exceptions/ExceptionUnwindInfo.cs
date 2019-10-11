@@ -80,7 +80,7 @@ namespace Workshell.PE.Content.Exceptions
                 size += (sizeof(uint) * 3);
             }
 
-            Location = new Location(calc, offset, rva, va, size.ToUInt32(), size.ToUInt32());
+            Location = new Location(image, offset, rva, va, size.ToUInt32(), size.ToUInt32());
         }
 
         #region Methods

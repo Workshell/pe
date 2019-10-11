@@ -69,7 +69,7 @@ namespace Workshell.PE.Resources
             var offset = calc.RVAToOffset(rva);
             var size = Utils.SizeOf<IMAGE_RESOURCE_DIRECTORY>().ToUInt32();
             var section = calc.RVAToSection(rva);
-            var location = new Location(offset, rva, va, size, size, section);
+            var location = new Location(image, offset, rva, va, size, size, section);
             var directory = new ResourceDirectory(image, dataDirectory, location, null);
 
             await directory.LoadAsync().ConfigureAwait(false);
@@ -135,7 +135,7 @@ namespace Workshell.PE.Resources
                 var rva = calc.OffsetToRVA(offset);
                 var va = Image.NTHeaders.OptionalHeader.ImageBase + rva;
                 var section = calc.RVAToSection(rva);
-                var location = new Location(offset, rva, va, entrySize.ToUInt32(), entrySize.ToUInt32(), section);
+                var location = new Location(Image, offset, rva, va, entrySize.ToUInt32(), entrySize.ToUInt32(), section);
                 var directoryEntry = new ResourceDirectoryEntry(Image, DataDirectory, location, this, entry);
 
                 entries.Add(directoryEntry);
@@ -161,22 +161,22 @@ namespace Workshell.PE.Resources
         public int Count => _entries.Length;
         public ResourceDirectoryEntry this[int index] => _entries[index];
 
-        [FieldAnnotation("Characteristics")]
+        [FieldAnnotation("Characteristics", Order = 1)]
         public uint Characteristics { get; private set; }
 
-        [FieldAnnotation("Date/Time Stamp")]
+        [FieldAnnotation("Date/Time Stamp", Order = 2)]
         public uint TimeDateStamp { get; private set; }
 
-        [FieldAnnotation("Major Version")]
+        [FieldAnnotation("Major Version", Order = 3)]
         public ushort MajorVersion { get; private set; }
 
-        [FieldAnnotation("Minor Version")]
+        [FieldAnnotation("Minor Version", Order = 4)]
         public ushort MinorVersion { get; private set; }
 
-        [FieldAnnotation("Number of Named Entries")]
+        [FieldAnnotation("Number of Named Entries", Order = 5)]
         public ushort NumberOfNamedEntries { get; private set; }
 
-        [FieldAnnotation("Number of ID Entries")]
+        [FieldAnnotation("Number of ID Entries", Order = 6)]
         public ushort NumberOfIdEntries { get; private set; }
 
 

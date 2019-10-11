@@ -78,7 +78,7 @@ namespace Workshell.PE.Content
                 foreach (var stream in streams)
                     size += stream.Location.FileSize;
 
-                var location = new Location(image.GetCalculator(), offset, rva, va, size, size);
+                var location = new Location(image, offset, rva, va, size, size);
                 var result = new CLRMetaDataStreams(image, location, streams);
 
                 return Task.FromResult(result);

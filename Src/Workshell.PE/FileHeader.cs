@@ -36,11 +36,17 @@ namespace Workshell.PE
     {
         Native = 0,
         [EnumAnnotation("IMAGE_FILE_MACHINE_I386")]
-        x86 = 0x014c,
+        x86 = 0x014C,
         [EnumAnnotation("IMAGE_FILE_MACHINE_IA64")]
         Itanium = 0x0200,
         [EnumAnnotation("IMAGE_FILE_MACHINE_AMD64")]
-        x64 = 0x8664
+        x64 = 0x8664,
+        [EnumAnnotation("IMAGE_FILE_MACHINE_ARM")]
+        ARM = 0x1C0,
+        [EnumAnnotation("IMAGE_FILE_MACHINE_ARMT")]
+        ARMT = 0x1C2,
+        [EnumAnnotation("IMAGE_FILE_MACHINE_ARM64")]
+        ARM64 = 0xAA64
     }
 
     [Flags]
@@ -90,7 +96,7 @@ namespace Workshell.PE
             _image = image;
             _header = fileHeader;
 
-            Location = new Location(image.GetCalculator(), headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, Size.ToUInt32(), Size.ToUInt32());
+            Location = new Location(image, headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, Size.ToUInt32(), Size.ToUInt32());
         }
 
         #region Methods
@@ -141,25 +147,25 @@ namespace Workshell.PE
 
         public Location Location { get; }
 
-        [FieldAnnotation("Machine Type",Flags = true,FlagType = typeof(MachineType))]
+        [FieldAnnotation("Machine Type", Flags = true, FlagType = typeof(MachineType), Order = 1)]
         public ushort Machine => _header.Machine;
 
-        [FieldAnnotation("Number of Sections")]
+        [FieldAnnotation("Number of Sections", Order = 2)]
         public ushort NumberOfSections => _header.NumberOfSections;
 
-        [FieldAnnotation("Date/Time Stamp")]
+        [FieldAnnotation("Date/Time Stamp", Order = 3)]
         public uint TimeDateStamp => _header.TimeDateStamp;
 
-        [FieldAnnotation("Pointer to Symbol Table")]
+        [FieldAnnotation("Pointer to Symbol Table", Order = 4)]
         public uint PointerToSymbolTable => _header.PointerToSymbolTable;
 
-        [FieldAnnotation("Number of Symbols")]
+        [FieldAnnotation("Number of Symbols", Order = 5)]
         public uint NumberOfSymbols => _header.NumberOfSymbols;
 
-        [FieldAnnotation("Size of Optional Header")]
+        [FieldAnnotation("Size of Optional Header", Order = 6)]
         public ushort SizeOfOptionalHeader => _header.SizeOfOptionalHeader;
 
-        [FieldAnnotation("Characteristics",Flags = true,FlagType = typeof(CharacteristicsType))]
+        [FieldAnnotation("Characteristics", Flags = true, FlagType = typeof(CharacteristicsType), Order = 7)]
         public ushort Characteristics => _header.Characteristics;
 
         #endregion

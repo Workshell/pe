@@ -35,6 +35,7 @@ namespace Workshell.PE.Annotations
             ArrayLength = 0;
             Flags = false;
             FlagType = null;
+            Order = int.MinValue;
         }
 
         #region Properties
@@ -43,6 +44,7 @@ namespace Workshell.PE.Annotations
         public int ArrayLength { get; set; }
         public bool Flags { get; set; }
         public Type FlagType { get; set; }
+        public int Order { get; set; }
 
         #endregion
     }

@@ -37,7 +37,7 @@ namespace Workshell.PE
     {
         private readonly Stream _stream;
         private readonly bool _ownStream;
-        private bool _disposed;
+        private volatile bool _disposed;
         private LocationCalculator _calc;
 
         private PortableExecutableImage(Stream stream, bool ownStream)
@@ -121,7 +121,9 @@ namespace Workshell.PE
             if (!_disposed)
             {
                 if (_ownStream)
+                {
                     _stream.Dispose();
+                }
 
                 _disposed = true;
             }
@@ -130,7 +132,9 @@ namespace Workshell.PE
         public LocationCalculator GetCalculator()
         {
             if (_calc == null)
+            {
                 _calc = new LocationCalculator(this);
+            }
 
             return _calc;
         }
@@ -143,10 +147,14 @@ namespace Workshell.PE
         private async Task LoadAsync()
         {
             if (!_stream.CanSeek)
+            {
                 throw new PortableExecutableImageException(this, "Cannot seek in stream.");
+            }
 
             if (!_stream.CanRead)
+            {
                 throw new PortableExecutableImageException(this, "Cannot read from stream.");
+            }
 
             IMAGE_DOS_HEADER dosHeader;
 
@@ -160,26 +168,38 @@ namespace Workshell.PE
             }
 
             if (dosHeader.e_magic != DOSHeader.DOS_MAGIC_MZ)
+            {
                 throw new PortableExecutableImageException(this, "Incorrect magic number specified in DOS header.");
+            }
 
             if (dosHeader.e_lfanew == 0)
+            {
                 throw new PortableExecutableImageException(this, "No new header location specified in DOS header, most likely a 16-bit executable.");
+            }
 
             if (dosHeader.e_lfanew >= (256 * (1024 * 1024)))
+            { 
                 throw new PortableExecutableImageException(this, "New header location specified in MS-DOS header is beyond 256mb boundary (see RtlImageNtHeaderEx).");
+            }
 
             if (dosHeader.e_lfanew % 4 != 0)
+            { 
                 throw new PortableExecutableImageException(this, "New header location specified in MS-DOS header is not properly aligned.");
+            }
 
             if (dosHeader.e_lfanew < DOSHeader.Size)
+            {
                 throw new PortableExecutableImageException(this, "New header location specified is invalid.");
+            }
 
             var stubOffset = DOSHeader.Size;
             var stubSize = dosHeader.e_lfanew - DOSHeader.Size;
             var stubRead = await _stream.SkipBytesAsync(stubSize).ConfigureAwait(false);
 
             if (stubRead < stubSize)
+            {
                 throw new PortableExecutableImageException(this, "Could not read DOS stub from stream.");
+            }
 
             _stream.Seek(dosHeader.e_lfanew, SeekOrigin.Begin);
 
@@ -196,7 +216,9 @@ namespace Workshell.PE
             }
 
             if (peSig != NTHeaders.PE_MAGIC_MZ)
+            {
                 throw new PortableExecutableImageException(this, "Incorrect PE signature found in NT Header.");
+            }
 
             IMAGE_FILE_HEADER fileHdr;
 
@@ -224,7 +246,9 @@ namespace Workshell.PE
             Is64Bit = (magic == (ushort)MagicType.PE32plus);
 
             if (!Is32Bit && !Is64Bit)
+            {
                 throw new PortableExecutableImageException(this, "Unknown PE type.");
+            }
 
             byte[] optionalHeaderBytes;
 
@@ -295,7 +319,9 @@ namespace Workshell.PE
                 var clrDirectory = dataDirs[clrIndex];
 
                 if (clrDirectory.VirtualAddress > 0 && clrDirectory.Size > 0)
+                {
                     IsCLR = true;
+                }
             }
 
             IsSigned = false;
@@ -307,7 +333,9 @@ namespace Workshell.PE
                 var certDirectory = dataDirs[certIndex];
 
                 if (certDirectory.VirtualAddress > 0 && certDirectory.Size > 0)
+                {
                     IsSigned = true;
+                }
             }
 
             var imageBase = (Is32Bit ? optionalHeader32.ImageBase : optionalHeader64.ImageBase);

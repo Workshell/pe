@@ -70,7 +70,7 @@ namespace Workshell.PE.Content
                 var flags = await stream.ReadUInt16Async().ConfigureAwait(false);
                 var streams = await stream.ReadUInt16Async().ConfigureAwait(false);
                 var size = sizeof(uint) + sizeof(ushort) + sizeof(ushort) + sizeof(uint) + sizeof(uint) + versionLength + sizeof(ushort) + sizeof(ushort);
-                var location = new Location(offset, rva, va, size.ToUInt32(), size.ToUInt32(), section);
+                var location = new Location(image, offset, rva, va, size.ToUInt32(), size.ToUInt32(), section);
                 var header = new CLRMetaDataHeader(image, location)
                 {
                     Signature = signature,
@@ -117,28 +117,28 @@ namespace Workshell.PE.Content
 
         public Location Location { get; }
 
-        [FieldAnnotation("Signature")]
+        [FieldAnnotation("Signature", Order = 1)]
         public uint Signature { get; private set; }
 
-        [FieldAnnotation("Major Version")]
+        [FieldAnnotation("Major Version", Order = 2)]
         public ushort MajorVersion { get; private set; }
 
-        [FieldAnnotation("Minor Version")]
+        [FieldAnnotation("Minor Version", Order = 3)]
         public ushort MinorVersion { get; private set; }
 
-        [FieldAnnotation("Reserved")]
+        [FieldAnnotation("Reserved", Order = 4)]
         public uint Reserved { get; private set; }
 
-        [FieldAnnotation("Version String Length")]
+        [FieldAnnotation("Version String Length", Order = 5)]
         public int VersionLength { get; private set; }
 
-        [FieldAnnotation("Version String")]
+        [FieldAnnotation("Version String", Order = 6)]
         public string Version { get; private set; }
 
-        [FieldAnnotation("Flags")]
+        [FieldAnnotation("Flags", Order = 7)]
         public ushort Flags { get; private set; }
 
-        [FieldAnnotation("Number of Streams")]
+        [FieldAnnotation("Number of Streams", Order = 8)]
         public ushort Streams { get; private set; }
 
         #endregion

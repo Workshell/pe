@@ -75,9 +75,7 @@ namespace Workshell.PE.Content
                     break;
                 case RelocationType.Dir64:
                     ComputedRVA += Offset;
-                    break;      
-                case RelocationType.High:
-                case RelocationType.Low:
+                    break;
                 default:
                     ComputedRVA = 0;
                     break;

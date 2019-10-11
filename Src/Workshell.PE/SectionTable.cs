@@ -135,7 +135,7 @@ namespace Workshell.PE
             _header = entryHeader;
 
             Table = sectionTable;
-            Location = new Location(image.GetCalculator(), entryOffset, entryOffset.ToUInt32(), imageBase + entryOffset, _headerSize, _headerSize);
+            Location = new Location(image, entryOffset, entryOffset.ToUInt32(), imageBase + entryOffset, _headerSize, _headerSize);
             Name = GetName();
         }
 
@@ -282,7 +282,7 @@ namespace Workshell.PE
 
             var size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
-            Location = new Location(image.GetCalculator(), tableOffset, tableOffset.ToUInt32(), imageBase + tableOffset, size, size);
+            Location = new Location(image, tableOffset, tableOffset.ToUInt32(), imageBase + tableOffset, size, size);
 
             var offset = tableOffset;
 

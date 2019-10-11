@@ -107,7 +107,9 @@ namespace Workshell.PE
         {
             _image = image;
 
-            Location = new Location(image.GetCalculator(), headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, headerSize, headerSize);
+            var headerSizeWithMagic = sizeof(ushort) + headerSize;
+
+            Location = new Location(image, headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, headerSizeWithMagic, headerSizeWithMagic);
             Magic = magic;
         }
 
@@ -174,94 +176,94 @@ namespace Workshell.PE
 
         public Location Location { get; }
 
-        [FieldAnnotation("Magic")]
+        [FieldAnnotation("Magic", Order = 1)]
         public ushort Magic { get; }
 
-        [FieldAnnotation("Major Linker Version")]
+        [FieldAnnotation("Major Linker Version", Order = 2)]
         public abstract byte MajorLinkerVersion { get; }
 
-        [FieldAnnotation("Minor Linker Version")]
+        [FieldAnnotation("Minor Linker Version", Order = 3)]
         public abstract byte MinorLinkerVersion { get; }
 
-        [FieldAnnotation("Size of Code")]
+        [FieldAnnotation("Size of Code", Order = 4)]
         public abstract uint SizeOfCode { get; }
 
-        [FieldAnnotation("Size of Initialized Data")]
+        [FieldAnnotation("Size of Initialized Data", Order = 5)]
         public abstract uint SizeOfInitializedData { get; }
 
-        [FieldAnnotation("Size of Uninitialized Data")]
+        [FieldAnnotation("Size of Uninitialized Data", Order = 6)]
         public abstract uint SizeOfUninitializedData { get; }
 
-        [FieldAnnotation("Address of Entry Point")]
+        [FieldAnnotation("Address of Entry Point", Order = 7)]
         public abstract uint AddressOfEntryPoint { get; }
 
-        [FieldAnnotation("Base of Code")]
+        [FieldAnnotation("Base of Code", Order = 8)]
         public abstract uint BaseOfCode { get; }
 
-        [FieldAnnotation("Base of Data")]
+        [FieldAnnotation("Base of Data", Order = 9)]
         public abstract uint BaseOfData { get; }
 
-        [FieldAnnotation("Image Base")]
+        [FieldAnnotation("Image Base", Order = 10)]
         public abstract ulong ImageBase { get; }
 
-        [FieldAnnotation("Section Alignment")]
+        [FieldAnnotation("Section Alignment", Order = 11)]
         public abstract uint SectionAlignment { get; }
 
-        [FieldAnnotation("File Alignment")]
+        [FieldAnnotation("File Alignment", Order = 12)]
         public abstract uint FileAlignment { get; }
 
-        [FieldAnnotation("Major Operating System Version")]
+        [FieldAnnotation("Major Operating System Version", Order = 13)]
         public abstract ushort MajorOperatingSystemVersion { get; }
 
-        [FieldAnnotation("Minor Operating System Version")]
+        [FieldAnnotation("Minor Operating System Version", Order = 14)]
         public abstract ushort MinorOperatingSystemVersion { get; }
 
-        [FieldAnnotation("Major Image Version")]
+        [FieldAnnotation("Major Image Version", Order = 15)]
         public abstract ushort MajorImageVersion { get; }
 
-        [FieldAnnotation("Minor Image Version")]
+        [FieldAnnotation("Minor Image Version", Order = 16)]
         public abstract ushort MinorImageVersion { get; }
 
-        [FieldAnnotation("Major Sub-System Version")]
+        [FieldAnnotation("Major Sub-System Version", Order = 17)]
         public abstract ushort MajorSubsystemVersion { get; }
 
-        [FieldAnnotation("Minor Sub-System Version")]
+        [FieldAnnotation("Minor Sub-System Version", Order = 18)]
         public abstract ushort MinorSubsystemVersion { get; }
 
-        [FieldAnnotation("Win32 Version Value")]
+        [FieldAnnotation("Win32 Version Value", Order = 19)]
         public abstract uint Win32VersionValue { get; }
 
-        [FieldAnnotation("Size of Image")]
+        [FieldAnnotation("Size of Image", Order = 20)]
         public abstract uint SizeOfImage { get; }
 
-        [FieldAnnotation("Size of Headers")]
+        [FieldAnnotation("Size of Headers", Order = 21)]
         public abstract uint SizeOfHeaders { get; }
 
-        [FieldAnnotation("Checksum")]
+        [FieldAnnotation("Checksum", Order = 22)]
         public abstract uint CheckSum { get; }
 
-        [FieldAnnotation("Sub-System",Flags = true,FlagType = typeof(SubSystemType))]
+        [FieldAnnotation("Sub-System", Flags = true, FlagType = typeof(SubSystemType), Order = 23)]
         public abstract ushort Subsystem { get; }
 
-        [FieldAnnotation("DLL Characteristics",Flags = true,FlagType = typeof(DllCharacteristicsType))]
+        [FieldAnnotation("DLL Characteristics", Flags = true, FlagType = typeof(DllCharacteristicsType), Order = 24)]
         public abstract ushort DllCharacteristics { get; }
 
-        [FieldAnnotation("Size of Stack Reserve")]
+        [FieldAnnotation("Size of Stack Reserve", Order = 25)]
         public abstract ulong SizeOfStackReserve { get; }
 
-        [FieldAnnotation("Size of Stack Commit")]
+        [FieldAnnotation("Size of Stack Commit", Order = 26)]
         public abstract ulong SizeOfStackCommit { get; }
 
-        [FieldAnnotation("Size of Heap Reserve")]
+        [FieldAnnotation("Size of Heap Reserve", Order = 27)]
         public abstract ulong SizeOfHeapReserve { get; }
 
-        [FieldAnnotation("Size of Heap Commit")]
+        [FieldAnnotation("Size of Heap Commit", Order = 28)]
         public abstract ulong SizeOfHeapCommit { get; }
 
-        [FieldAnnotation("Loader Flags")]
+        [FieldAnnotation("Loader Flags", Order = 29)]
         public abstract uint LoaderFlags { get; }
 
-        [FieldAnnotation("Number of RVA and Sizes")]
+        [FieldAnnotation("Number of RVA and Sizes", Order = 30)]
         public abstract uint NumberOfRvaAndSizes { get; }
 
         #endregion
@@ -271,7 +273,7 @@ namespace Workshell.PE
     {
         private readonly IMAGE_OPTIONAL_HEADER32 _header;
 
-        internal OptionalHeader32(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size32.ToUInt32(), imageBase,magic)
+        internal OptionalHeader32(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size32.ToUInt32(), imageBase, magic)
         {
             _header = optHeader;
         }

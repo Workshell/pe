@@ -44,7 +44,7 @@ namespace Workshell.PE
             _image = image;
             _header = dosHeader;
 
-            Location = new Location(image.GetCalculator(), 0, 0, imageBase, Size.ToUInt32(), Size.ToUInt32());
+            Location = new Location(image, 0, 0, imageBase, Size.ToUInt32(), Size.ToUInt32());
         }
 
         #region Methods
@@ -79,61 +79,61 @@ namespace Workshell.PE
 
         public Location Location { get; }
 
-        [FieldAnnotation("Signature")]
+        [FieldAnnotation("Signature", Order = 1)]
         public ushort Magic => _header.e_magic;
 
-        [FieldAnnotation("Bytes on last page of file")]
+        [FieldAnnotation("Bytes on last page of file", Order = 2)]
         public ushort BytesOnLastPage => _header.e_cblp;
 
-        [FieldAnnotation("Pages in file")]
+        [FieldAnnotation("Pages in file", Order = 3)]
         public ushort PagesInFile => _header.e_cp;
 
-        [FieldAnnotation("Relocations")]
+        [FieldAnnotation("Relocations", Order = 4)]
         public ushort Relocations => _header.e_crlc;
 
-        [FieldAnnotation("Size of header in paragraphs")]
+        [FieldAnnotation("Size of header in paragraphs", Order = 5)]
         public ushort SizeHeaderParagraphs => _header.e_cparhdr;
 
-        [FieldAnnotation("Minimum extra paragraphs needed")]
+        [FieldAnnotation("Minimum extra paragraphs needed", Order = 6)]
         public ushort MinExtraParagraphs => _header.e_minalloc;
 
-        [FieldAnnotation("Maximum extra paragraphs needed")]
+        [FieldAnnotation("Maximum extra paragraphs needed", Order = 7)]
         public ushort MaxExtraParagraphs => _header.e_maxalloc;
 
-        [FieldAnnotation("Initial (relative) CS value")]
+        [FieldAnnotation("Initial (relative) CS value", Order = 8)]
         public ushort InitialSSValue => _header.e_ss;
 
-        [FieldAnnotation("Initial SP value")]
+        [FieldAnnotation("Initial SP value", Order = 9)]
         public ushort InitialSPValue => _header.e_sp;
 
-        [FieldAnnotation("Checksum")]
+        [FieldAnnotation("Checksum", Order = 10)]
         public ushort Checksum => _header.e_csum;
 
-        [FieldAnnotation("Initial SP value")]
+        [FieldAnnotation("Initial SP value", Order = 11)]
         public ushort InitialIPValue => _header.e_ip;
 
-        [FieldAnnotation("Initial (relative) CS value")]
+        [FieldAnnotation("Initial (relative) CS value", Order = 12)]
         public ushort InitialCSValue => _header.e_cs;
 
-        [FieldAnnotation("File address of relocation table")]
+        [FieldAnnotation("File address of relocation table", Order = 13)]
         public ushort FileAddressRelocationTable => _header.e_lfarlc;
 
-        [FieldAnnotation("Overlay number")]
+        [FieldAnnotation("Overlay number", Order = 14)]
         public ushort OverlayNumber => _header.e_ovno;
 
-        [FieldAnnotation("Reserved",ArrayLength = 4)]
+        [FieldAnnotation("Reserved", ArrayLength = 4, Order = 15)]
         public ushort[] Reserved1 => _header.e_res_1;
 
-        [FieldAnnotation("OEM identifier")]
+        [FieldAnnotation("OEM identifier", Order = 16)]
         public ushort OEMIdentifier => _header.e_oemid;
 
-        [FieldAnnotation("OEM information")]
+        [FieldAnnotation("OEM information", Order = 17)]
         public ushort OEMInformation => _header.e_oeminfo;
 
-        [FieldAnnotation("Reserved",ArrayLength = 10)]
+        [FieldAnnotation("Reserved", ArrayLength = 10, Order = 18)]
         public ushort[] Reserved2 => _header.e_res_2;
 
-        [FieldAnnotation("File address of new header")]
+        [FieldAnnotation("File address of new header", Order = 19)]
         public int FileAddressNewHeader => _header.e_lfanew;
 
         #endregion

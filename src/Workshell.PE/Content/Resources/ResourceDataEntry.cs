@@ -56,7 +56,7 @@ namespace Workshell.PE.Resources
                 var offset = calc.RVAToOffset(rva);
                 var size = Size;
                 var section = calc.RVAToSection(rva);
-                var location = new Location(offset, rva, va, size, size, section);
+                var location = new Location(Image, offset, rva, va, size, size, section);
 
                 _data = new ResourceData(Image, DataDirectory, location, this);
             }
@@ -91,16 +91,16 @@ namespace Workshell.PE.Resources
 
         public ResourceDirectoryEntry DirectoryEntry { get; }
 
-        [FieldAnnotation("Offset to Data")]
+        [FieldAnnotation("Offset to Data", Order = 1)]
         public uint OffsetToData { get; private set; }
 
-        [FieldAnnotation("Size")]
+        [FieldAnnotation("Size", Order = 2)]
         public uint Size { get; private set; }
 
-        [FieldAnnotation("Code Page")]
+        [FieldAnnotation("Code Page", Order = 3)]
         public uint CodePage { get; private set; }
 
-        [FieldAnnotation("Reserved")]
+        [FieldAnnotation("Reserved", Order = 4)]
         public uint Reserved { get; private set; }
 
         #endregion

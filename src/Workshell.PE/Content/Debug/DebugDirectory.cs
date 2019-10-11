@@ -46,7 +46,7 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public DebugDirectory Get(PortableExecutableImage image)
+        public static DebugDirectory Get(PortableExecutableImage image)
         {
             return GetAsync(image).GetAwaiter().GetResult();
         }
@@ -54,12 +54,16 @@ namespace Workshell.PE.Content
         public static async Task<DebugDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.Debug))
+            {
                 return null;
+            }
 
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.Debug];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             try
             {
@@ -67,7 +71,7 @@ namespace Workshell.PE.Content
                 var section = calc.RVAToSection(dataDirectory.VirtualAddress);
                 var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);
                 var imageBase = image.NTHeaders.OptionalHeader.ImageBase;         
-                var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
+                var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
                 var stream = image.GetStream();
 
                 stream.Seek(fileOffset.ToInt32(), SeekOrigin.Begin);
@@ -105,7 +109,7 @@ namespace Workshell.PE.Content
                 var tuple = entries[i];
                 var rva = calc.OffsetToRVA(tuple.Item1);
                 var va = imageBase + rva;
-                var location = new Location(calc, tuple.Item1, rva, va, entrySize.ToUInt32(), entrySize.ToUInt32());
+                var location = new Location(image, tuple.Item1, rva, va, entrySize.ToUInt32(), entrySize.ToUInt32());
                 var entry = new DebugDirectoryEntry(image, location, tuple.Item2);
 
                 results[i] = entry;
@@ -121,7 +125,9 @@ namespace Workshell.PE.Content
         public IEnumerator<DebugDirectoryEntry> GetEnumerator()
         {
             foreach (var entry in _entries)
+            {
                 yield return entry;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

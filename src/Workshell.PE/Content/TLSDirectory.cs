@@ -64,18 +64,22 @@ namespace Workshell.PE.Content
         public static async Task<TLSDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.TLSTable))
+            {
                 return null;
+            }
 
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.TLSTable];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;           
-            var location = new Location(fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
+            var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
             var stream = image.GetStream();
 
             stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
@@ -118,24 +122,33 @@ namespace Workshell.PE.Content
 
         #endregion
 
+        #region Methods
+
+        public SectionCharacteristicsType GetCharacteristics()
+        {
+            return (SectionCharacteristicsType)Characteristics;
+        }
+
+        #endregion
+
         #region Properties
 
-        [FieldAnnotation("Start Address of Raw Data")]
+        [FieldAnnotation("Start Address of Raw Data", Order = 1)]
         public ulong StartAddress { get; }
 
-        [FieldAnnotation("End Address of Raw Data")]
+        [FieldAnnotation("End Address of Raw Data", Order = 2)]
         public ulong EndAddress { get; }
 
-        [FieldAnnotation("Address of Index")]
+        [FieldAnnotation("Address of Index", Order = 3)]
         public ulong AddressOfIndex { get; }
 
-        [FieldAnnotation("Address of Callbacks")]
+        [FieldAnnotation("Address of Callbacks", Order = 4)]
         public ulong AddressOfCallbacks { get; }
 
-        [FieldAnnotation("Size of Zero Fill")]
+        [FieldAnnotation("Size of Zero Fill", Order = 5)]
         public uint SizeOfZeroFill { get; }
 
-        [FieldAnnotation("Characteristics")]
+        [FieldAnnotation("Characteristics", Order = 6)]
         public uint Characteristics { get; }
 
         #endregion

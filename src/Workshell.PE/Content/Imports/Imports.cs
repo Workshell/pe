@@ -39,22 +39,38 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
+        public static Imports Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
+        public static Imports Get(PortableExecutableImage image, ImportAddressTables ilt, ImportHintNameTable hnt)
+        {
+            return GetAsync(image, ilt, hnt).GetAwaiter().GetResult();
+        }
+
         public static async Task<Imports> GetAsync(PortableExecutableImage image)
         {
             var directory = await ImportDirectory.GetAsync(image).ConfigureAwait(false);
 
             if (directory == null)
+            {
                 return null;
+            }
 
             var ilt = await ImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
 
             if (ilt == null)
+            {
                 return null;
+            }
 
             var hnt = await ImportHintNameTable.GetAsync(image, directory).ConfigureAwait(false);
 
             if (hnt == null)
+            {
                 return null;
+            }
 
             return await GetAsync(image, ilt, hnt).ConfigureAwait(false);
         }
@@ -77,7 +93,9 @@ namespace Workshell.PE.Content
                     var b = await stream.ReadByteAsync().ConfigureAwait(false);
 
                     if (b <= 0)
+                    {
                         break;
+                    }
 
                     builder.Append((char)b);
                 }
@@ -98,11 +116,15 @@ namespace Workshell.PE.Content
                         var hintEntry = hnt.FirstOrDefault(e => e.Location.RelativeVirtualAddress == entry.Address);
 
                         if (hintEntry != null)
+                        {
                             function = new ImportLibraryNamedFunction(entry, hintEntry);
+                        }
                     }
 
                     if (function != null)
+                    {
                         functions.Add(function);
+                    }
                 }
 
                 var library = new ImportLibrary(functions.ToArray(), name);

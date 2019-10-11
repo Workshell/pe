@@ -52,7 +52,7 @@ namespace Workshell.PE
                 Marshal.Copy(bytes,0,ptr,bytes.Length);
 
                 #pragma warning disable CS0618 // Type or member is obsolete
-                T result = (T)Marshal.PtrToStructure(ptr,typeof(T));
+                var result = (T)Marshal.PtrToStructure(ptr,typeof(T));
                 #pragma warning restore CS0618 // Type or member is obsolete
 
                 return result;
@@ -219,39 +219,39 @@ namespace Workshell.PE
 
         public static string IntToHex(object value)
         {
-            var result = String.Empty;
+            var result = string.Empty;
 
             switch (Type.GetTypeCode(value.GetType()))
             {
                 case TypeCode.Byte:
-                    result = "0x" + ((byte)value).ToString("X2");
+                    result = ((byte)value).ToString("X2");
                     break;
                 case TypeCode.SByte:
-                    result = "0x" + ((sbyte)value).ToString("X2");
+                    result = ((sbyte)value).ToString("X2");
                     break;
                 case TypeCode.UInt16:
-                    result = "0x" + ((ushort)value).ToString("X4");
+                    result = ((ushort)value).ToString("X4");
                     break;
                 case TypeCode.Int16:
-                    result = "0x" + ((short)value).ToString("X4");
+                    result = ((short)value).ToString("X4");
                     break;
                 case TypeCode.UInt32:
-                    result = "0x" + ((uint)value).ToString("X8");
+                    result = ((uint)value).ToString("X8");
                     break;
                 case TypeCode.Int32:
-                    result = "0x" + ((int)value).ToString("X8");
+                    result = ((int)value).ToString("X8");
                     break;
                 case TypeCode.UInt64:
-                    result = "0x" + ((ulong)value).ToString("X16");
+                    result = ((ulong)value).ToString("X16");
                     break;
                 case TypeCode.Int64:
-                    result = "0x" + ((long)value).ToString("X16");
+                    result = ((long)value).ToString("X16");
                     break;
                 default:
                     throw new FormatException("Unknown integer value type.");
             }
 
-            return result;
+            return $"0x{result}";
         }
 
         public static byte HiByte(ushort value)
@@ -294,7 +294,9 @@ namespace Workshell.PE
         public static async Task<long> CopyStreamAsync(Stream from, Stream to, int bufferSize = 4096)
         {
             if (bufferSize < 1)
+            {
                 bufferSize = 4096;
+            }
 
             var count = 0L;
             var buffer = new byte[bufferSize];

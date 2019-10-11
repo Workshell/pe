@@ -48,7 +48,7 @@ namespace Workshell.PE.Content
             var fileOffset = calc.RVAToOffset(section, directory.AddressOfFunctions);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var size = directory.NumberOfFunctions * sizeof(uint);
-            var location = new Location(fileOffset, directory.AddressOfFunctions, imageBase + directory.AddressOfFunctions, size, size, section);
+            var location = new Location(image, fileOffset, directory.AddressOfFunctions, imageBase + directory.AddressOfFunctions, size, size, section);
             var stream = image.GetStream();
 
             stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
@@ -82,7 +82,7 @@ namespace Workshell.PE.Content
             var fileOffset = calc.RVAToOffset(section, directory.AddressOfNames);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var size = directory.NumberOfNames * sizeof(uint);
-            var location = new Location(fileOffset, directory.AddressOfNames, imageBase + directory.AddressOfNames, size, size, section);
+            var location = new Location(image, fileOffset, directory.AddressOfNames, imageBase + directory.AddressOfNames, size, size, section);
             var stream = image.GetStream();
 
             stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
@@ -116,7 +116,7 @@ namespace Workshell.PE.Content
             var fileOffset = calc.RVAToOffset(section, directory.AddressOfNameOrdinals);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var size = directory.NumberOfNames * sizeof(ushort);
-            var location = new Location(fileOffset, directory.AddressOfNameOrdinals, imageBase + directory.AddressOfNameOrdinals, size, size, section);
+            var location = new Location(image, fileOffset, directory.AddressOfNameOrdinals, imageBase + directory.AddressOfNameOrdinals, size, size, section);
             var stream = image.GetStream();
 
             stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);

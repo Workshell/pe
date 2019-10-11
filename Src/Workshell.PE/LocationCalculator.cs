@@ -38,6 +38,14 @@ namespace Workshell.PE
 
         #region Methods
 
+        public Location OffsetToLocation(ulong offset, ulong size)
+        {
+            var rva = OffsetToRVA(offset);
+            var va = OffsetToVA(offset);
+
+            return new Location(_image, offset, rva, va, size, size);
+        }
+
         /* VA */
 
         public Section VAToSection(ulong va)
@@ -114,13 +122,20 @@ namespace Workshell.PE
             var entry = RVAToSectionTableEntry(rva);
 
             if (entry == null)
+            {
                 return null;
+            }
 
             return _image.Sections[entry];
         }
 
         public SectionTableEntry RVAToSectionTableEntry(uint rva)
         {
+            if (_image.SectionTable == null)
+            {
+                return null;
+            }
+
             var entries = _image.SectionTable.OrderBy(e => e.VirtualAddress).ToArray();
             SectionTableEntry entry = null;
 
@@ -129,10 +144,14 @@ namespace Workshell.PE
                 var maxRVA = entries[i].VirtualAddress + entries[i].SizeOfRawData;
 
                 if (i != (entries.Length - 1))
+                {
                     maxRVA = entries[i + 1].VirtualAddress;
+                }
 
                 if (rva >= entries[i].VirtualAddress && rva < maxRVA)
+                {
                     entry = entries[i];
+                }
             }
 
             return entry;

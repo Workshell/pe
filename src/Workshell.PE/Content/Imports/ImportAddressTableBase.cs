@@ -50,7 +50,7 @@ namespace Workshell.PE.Content
             _image = image;
             _entries = BuildEntries(image, offset, entries);
 
-            Location = new Location(offset, rva, va, size, size, section);
+            Location = new Location(image, offset, rva, va, size, size, section);
             Count = _entries.Length;
             DirectoryEntry = directoryEntry;
             IsDelayed = isDelayed;
