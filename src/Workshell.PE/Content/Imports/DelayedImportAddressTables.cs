@@ -32,7 +32,7 @@ namespace Workshell.PE.Content
 {
     public sealed class DelayedImportAddressTables: ImportAddressTablesBase<DelayedImportAddressTable, DelayedImportAddressTableEntry>
     {
-        internal DelayedImportAddressTables(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables) : base(image, dataDirectory, location, tables, false)
+        internal DelayedImportAddressTables(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IEnumerable<Tuple<uint, ulong[], ImportDirectoryEntryBase>> tables) : base(image, dataDirectory, location, tables, false)
         {
         }
 
@@ -67,7 +67,7 @@ namespace Workshell.PE.Content
                 var entries = new List<ulong>();
                 var offset = calc.RVAToOffset(thunk);
 
-                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                stream.Seek(offset, SeekOrigin.Begin);
 
                 while (true)
                 {
@@ -92,18 +92,18 @@ namespace Workshell.PE.Content
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
             var fileOffset = calc.RVAToOffset(rva);
-            var fileSize = 0ul;
+            var fileSize = 0L;
 
             foreach (var table in tables)
             {
                 var size = (table.Item2.Length + 1) * (!image.Is64Bit ? sizeof(uint) : sizeof(ulong));
 
-                fileSize += size.ToUInt32();
+                fileSize += size;
             }
 
             var section = calc.RVAToSection(rva);
             var location = new Location(image, fileOffset, rva, va, fileSize, fileSize, section);
-            var result = new DelayedImportAddressTables(image, directory.DataDirectory, location, tables.ToArray());
+            var result = new DelayedImportAddressTables(image, directory.DataDirectory, location, tables);
 
             return result;
         }

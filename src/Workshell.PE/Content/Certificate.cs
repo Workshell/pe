@@ -107,13 +107,15 @@ namespace Workshell.PE.Content
             var offset = Location.FileOffset + Utils.SizeOf<WIN_CERTIFICATE>().ToUInt32();
             var stream = Image.GetStream();
 
-            stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
             var buffer = new byte[Length];         
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead == 0)
+            {
                 throw new PortableExecutableImageException(Image, "Could not read certificate data from stream.");
+            }
 
             return buffer;
         }

@@ -32,7 +32,7 @@ namespace Workshell.PE.Content
     {
         private readonly PortableExecutableImage _image;
 
-        protected internal ImportAddressTableEntryBase(PortableExecutableImage image, ulong entryOffset, ulong entryValue, uint entryAddress, ushort entryOrdinal, bool isOrdinal, bool isDelayed)
+        protected internal ImportAddressTableEntryBase(PortableExecutableImage image, long entryOffset, ulong entryValue, uint entryAddress, ushort entryOrdinal, bool isOrdinal, bool isDelayed)
         {
             _image = image;
 
@@ -40,7 +40,7 @@ namespace Workshell.PE.Content
             var rva = calc.OffsetToRVA(entryOffset);
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
-            var size = (image.Is64Bit ? sizeof(ulong) : sizeof(uint)).ToUInt64();
+            var size = (image.Is64Bit ? sizeof(ulong) : sizeof(uint));
 
             Location = new Location(image, entryOffset, rva, va, size, size);
             Value = entryValue;

@@ -103,13 +103,13 @@ namespace Workshell.PE
     {
         private readonly PortableExecutableImage _image;
 
-        internal OptionalHeader(PortableExecutableImage image, ulong headerOffset, uint headerSize, ulong imageBase, ushort magic)
+        internal OptionalHeader(PortableExecutableImage image, uint headerOffset, uint headerSize, ulong imageBase, ushort magic)
         {
             _image = image;
 
             var headerSizeWithMagic = sizeof(ushort) + headerSize;
 
-            Location = new Location(image, headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, headerSizeWithMagic, headerSizeWithMagic);
+            Location = new Location(image, headerOffset, headerOffset, imageBase + headerOffset, headerSizeWithMagic, headerSizeWithMagic);
             Magic = magic;
         }
 
@@ -273,7 +273,7 @@ namespace Workshell.PE
     {
         private readonly IMAGE_OPTIONAL_HEADER32 _header;
 
-        internal OptionalHeader32(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER32 optHeader, ulong headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size32.ToUInt32(), imageBase, magic)
+        internal OptionalHeader32(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER32 optHeader, uint headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size32.ToUInt32(), imageBase, magic)
         {
             _header = optHeader;
         }
@@ -317,7 +317,7 @@ namespace Workshell.PE
     {
         private readonly IMAGE_OPTIONAL_HEADER64 _header;
 
-        internal OptionalHeader64(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER64 optHeader, ulong headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size64.ToUInt32(), imageBase, magic)
+        internal OptionalHeader64(PortableExecutableImage image, IMAGE_OPTIONAL_HEADER64 optHeader, uint headerOffset, ulong imageBase, ushort magic) : base(image, headerOffset, OptionalHeader.Size64.ToUInt32(), imageBase, magic)
         {
             _header = optHeader;
         }

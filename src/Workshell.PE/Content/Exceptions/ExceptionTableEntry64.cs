@@ -69,7 +69,7 @@ namespace Workshell.PE.Content
                 {
                     var offset = calc.RVAToOffset(UnwindInfoAddress);
 
-                    stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                    stream.Seek(offset, SeekOrigin.Begin);
 
                     var versionFlags = await stream.ReadByteAsync().ConfigureAwait(false);
                     var sizeOfProlog = await stream.ReadByteAsync().ConfigureAwait(false);

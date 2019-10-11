@@ -103,7 +103,7 @@ namespace Workshell.PE.Content
             var location = new Location(image, clrLocation.FileOffset, clrLocation.RelativeVirtualAddress, clrLocation.VirtualAddress, size.ToUInt32(), size.ToUInt32(), clrLocation.Section);
             var stream = image.GetStream();
 
-            stream.Seek(clrLocation.FileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(clrLocation.FileOffset, SeekOrigin.Begin);
 
             IMAGE_COR20_HEADER header;
 

@@ -48,37 +48,43 @@ namespace Workshell.PE.Content
         public static async Task<ImportDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ImportTable))
+            {
                 return null;
+            }
 
             DataDirectory dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ImportTable];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);          
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var size = Utils.SizeOf<IMAGE_IMPORT_DESCRIPTOR>();
-            var descriptors = new List<Tuple<ulong, IMAGE_IMPORT_DESCRIPTOR>>();
+            var descriptors = new List<Tuple<long, IMAGE_IMPORT_DESCRIPTOR>>();
 
             try
             {
-                ulong offset = 0;
+                var offset = 0L;
 
                 while (true)
                 {
                     var descriptor = await stream.ReadStructAsync<IMAGE_IMPORT_DESCRIPTOR>(size).ConfigureAwait(false);
 
                     if (descriptor.OriginalFirstThunk == 0 && descriptor.FirstThunk == 0)
+                    {
                         break;
+                    }
 
-                    var tuple = new Tuple<ulong, IMAGE_IMPORT_DESCRIPTOR>(offset, descriptor);
+                    var tuple = new Tuple<long, IMAGE_IMPORT_DESCRIPTOR>(offset, descriptor);
 
-                    offset += size.ToUInt32();
+                    offset += size;
 
                     descriptors.Add(tuple);
                 }

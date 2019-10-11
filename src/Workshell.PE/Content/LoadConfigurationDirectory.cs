@@ -179,7 +179,7 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, dataDirectory.VirtualAddress, imageBase + dataDirectory.VirtualAddress, dataDirectory.Size, dataDirectory.Size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             LoadConfigurationDirectory directory = null;
 

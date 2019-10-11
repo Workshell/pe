@@ -32,7 +32,7 @@ namespace Workshell.PE.Content
 {
     public sealed class DelayedImportHintNameTable : ImportHintNameTableBase<DelayedImportHintNameEntry>
     {
-        internal DelayedImportHintNameTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<ulong, uint, ushort, string, bool>[] entries) : base(image, dataDirectory, location, entries, true)
+        internal DelayedImportHintNameTable(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IEnumerable<Tuple<long, uint, ushort, string, bool>> entries) : base(image, dataDirectory, location, entries, true)
         {
         }
 
@@ -43,7 +43,7 @@ namespace Workshell.PE.Content
             if (directory == null)
                 directory = await DelayedImportDirectory.GetAsync(image).ConfigureAwait(false);
 
-            var entries = new Dictionary<uint, Tuple<ulong, uint, ushort, string, bool>>();
+            var entries = new Dictionary<uint, Tuple<long, uint, ushort, string, bool>>();
             var ilt = await DelayedImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
             var calc = image.GetCalculator();
             var stream = image.GetStream();
@@ -52,11 +52,10 @@ namespace Workshell.PE.Content
             {
                 foreach (var entry in table)
                 {
-                    if (entry.Address == 0)
+                    if (entry.Address == 0 || entries.ContainsKey(entry.Address))
+                    {
                         continue;
-
-                    if (entries.ContainsKey(entry.Address))
-                        continue;
+                    }
 
                     if (!entry.IsOrdinal)
                     {
@@ -66,7 +65,7 @@ namespace Workshell.PE.Content
                         ushort hint = 0;
                         var name = new StringBuilder(256);
 
-                        stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                        stream.Seek(offset, SeekOrigin.Begin);
 
                         hint = await stream.ReadUInt16Async().ConfigureAwait(false);
                         size += sizeof(ushort);
@@ -78,7 +77,9 @@ namespace Workshell.PE.Content
                             size++;
 
                             if (b <= 0)
+                            {
                                 break;
+                            }
 
                             name.Append((char)b);
                         }
@@ -89,7 +90,7 @@ namespace Workshell.PE.Content
                             size++;
                         }
 
-                        var tuple = new Tuple<ulong, uint, ushort, string, bool>(offset, size, hint, name.ToString(), isPadded);
+                        var tuple = new Tuple<long, uint, ushort, string, bool>(offset, size, hint, name.ToString(), isPadded);
 
                         entries.Add(entry.Address, tuple);
                     }
@@ -115,7 +116,7 @@ namespace Workshell.PE.Content
                 location = new Location(image, 0, 0, 0, 0, 0, null);
             }
 
-            var result = new DelayedImportHintNameTable(image, directory.DataDirectory, location, entries.Values.ToArray());
+            var result = new DelayedImportHintNameTable(image, directory.DataDirectory, location, entries.Values);
 
             return result;
         }

@@ -28,7 +28,7 @@ namespace Workshell.PE.Content
 {
     public sealed class ImportHintNameEntry : ImportHintNameEntryBase
     {
-        internal ImportHintNameEntry(PortableExecutableImage image, ulong offset, uint size, ushort entryHint, string entryName, bool isPadded) : base(image, offset, size, entryHint, entryName, isPadded, false)
+        internal ImportHintNameEntry(PortableExecutableImage image, long offset, uint size, ushort entryHint, string entryName, bool isPadded) : base(image, offset, size, entryHint, entryName, isPadded, false)
         {
         }
     }

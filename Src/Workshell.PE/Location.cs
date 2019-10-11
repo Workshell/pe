@@ -31,24 +31,12 @@ namespace Workshell.PE
         private readonly PortableExecutableImage _image;
         private Section _section;
 
-        internal Location(PortableExecutableImage image, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) 
+        internal Location(PortableExecutableImage image, long fileOffset, uint rva, ulong va, long fileSize, long virtualSize) 
             : this(image, fileOffset, rva, va, fileSize, virtualSize, null)
         {
         }
 
-        /*
-        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize) 
-            : this(null, fileOffset, rva, va, fileSize, virtualSize, ?)
-        {
-        }
-
-        public Location(ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section) 
-            : this(null, fileOffset, rva, va, fileSize, virtualSize, section)
-        {
-        }
-        */
-
-        internal Location(PortableExecutableImage image, ulong fileOffset, uint rva, ulong va, ulong fileSize, ulong virtualSize, Section section)
+        internal Location(PortableExecutableImage image, long fileOffset, uint rva, ulong va, long fileSize, long virtualSize, Section section)
         {
             _image = image;
             _section = section;
@@ -132,11 +120,11 @@ namespace Workshell.PE
 
         #region Properties
 
-        public ulong FileOffset { get; }
-        public ulong FileSize { get; }
+        public long FileOffset { get; }
+        public long FileSize { get; }
         public uint RelativeVirtualAddress { get; }
         public ulong VirtualAddress { get; }
-        public ulong VirtualSize { get; }
+        public long VirtualSize { get; }
 
         public Section Section
         {

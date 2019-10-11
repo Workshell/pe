@@ -86,7 +86,7 @@ namespace Workshell.PE.Content
                 var builder = new StringBuilder(256);
                 var offset = calc.RVAToOffset(table.DirectoryEntry.Name);
 
-                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                stream.Seek(offset, SeekOrigin.Begin);
 
                 while (true)
                 {

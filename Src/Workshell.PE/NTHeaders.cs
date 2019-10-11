@@ -34,13 +34,13 @@ namespace Workshell.PE
 
         private readonly PortableExecutableImage _image;
 
-        internal NTHeaders(PortableExecutableImage image, ulong headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectories dataDirs)
+        internal NTHeaders(PortableExecutableImage image, uint headerOffset, ulong imageBase, FileHeader fileHeader, OptionalHeader optHeader, DataDirectories dataDirs)
         {
             _image = image;
 
-            var size = (4U + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize).ToUInt32();
+            var size = (4 + fileHeader.Location.FileSize + optHeader.Location.FileSize + dataDirs.Location.FileSize).ToUInt32();
 
-            Location = new Location(image, headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, size, size);
+            Location = new Location(image, headerOffset, headerOffset, imageBase + headerOffset, size, size);
             FileHeader = fileHeader;
             OptionalHeader = optHeader;
             DataDirectories = dataDirs;

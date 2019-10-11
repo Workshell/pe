@@ -55,12 +55,14 @@ namespace Workshell.PE.Content
                 var offset = mdLocation.FileOffset;
                 var section = mdLocation.Section;
 
-                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                stream.Seek(offset, SeekOrigin.Begin);
 
                 var signature = await stream.ReadUInt32Async().ConfigureAwait(false);
 
                 if (signature != CLR_METADATA_SIGNATURE)
+                { 
                     throw new PortableExecutableImageException(image, "Incorrect signature found in CLR meta-data header.");
+                }
 
                 var majorVersion = await stream.ReadUInt16Async().ConfigureAwait(false);
                 var minorVersion = await stream.ReadUInt16Async().ConfigureAwait(false);

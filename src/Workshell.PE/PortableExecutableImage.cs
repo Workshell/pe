@@ -160,7 +160,7 @@ namespace Workshell.PE
 
             try
             {
-                dosHeader = await _stream.ReadStructAsync<IMAGE_DOS_HEADER>(DOSHeader.Size).ConfigureAwait(false);
+                dosHeader = await _stream.ReadStructAsync<IMAGE_DOS_HEADER>(DOSHeader.Size.ToInt32()).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -194,7 +194,7 @@ namespace Workshell.PE
 
             var stubOffset = DOSHeader.Size;
             var stubSize = dosHeader.e_lfanew - DOSHeader.Size;
-            var stubRead = await _stream.SkipBytesAsync(stubSize).ConfigureAwait(false);
+            var stubRead = await _stream.SkipBytesAsync(stubSize.ToInt32()).ConfigureAwait(false);
 
             if (stubRead < stubSize)
             {
@@ -203,7 +203,7 @@ namespace Workshell.PE
 
             _stream.Seek(dosHeader.e_lfanew, SeekOrigin.Begin);
 
-            var ntOffset = _stream.Position;
+            var ntOffset = _stream.Position.ToUInt32();
             uint peSig;
 
             try
@@ -265,18 +265,16 @@ namespace Workshell.PE
 
             IMAGE_OPTIONAL_HEADER32 optionalHeader32 = new IMAGE_OPTIONAL_HEADER32();
             IMAGE_OPTIONAL_HEADER64 optionalHeader64 = new IMAGE_OPTIONAL_HEADER64();
-            var dirCount = 0;
+            int dirCount;
 
             if (Is32Bit)
             {
                 optionalHeader32 = Utils.Read<IMAGE_OPTIONAL_HEADER32>(optionalHeaderBytes);
-
                 dirCount = optionalHeader32.NumberOfRvaAndSizes.ToInt32();
             }
             else
             {
                 optionalHeader64 = Utils.Read<IMAGE_OPTIONAL_HEADER64>(optionalHeaderBytes);
-
                 dirCount = optionalHeader64.NumberOfRvaAndSizes.ToInt32();
             }
 
@@ -341,24 +339,24 @@ namespace Workshell.PE
             var imageBase = (Is32Bit ? optionalHeader32.ImageBase : optionalHeader64.ImageBase);
 
             DOSHeader = new DOSHeader(this, dosHeader, imageBase);
-            DOSStub = new DOSStub(this, stubOffset.ToUInt64(), stubSize.ToUInt32(), imageBase);
+            DOSStub = new DOSStub(this, stubOffset, stubSize, imageBase);
 
-            var fileHeader = new FileHeader(this, fileHdr, DOSStub.Location.FileOffset + DOSStub.Location.FileSize + 4, imageBase);
+            var fileHeader = new FileHeader(this, fileHdr, (DOSStub.Location.FileOffset + DOSStub.Location.FileSize + 4).ToUInt32(), imageBase);
             OptionalHeader optionalHeader;
 
             if (Is32Bit)
             {
-                optionalHeader = new OptionalHeader32(this, optionalHeader32, fileHeader.Location.FileOffset + fileHeader.Location.FileSize, imageBase, magic);
+                optionalHeader = new OptionalHeader32(this, optionalHeader32, (fileHeader.Location.FileOffset + fileHeader.Location.FileSize).ToUInt32(), imageBase, magic);
             }
             else
             {
-                optionalHeader = new OptionalHeader64(this, optionalHeader64, fileHeader.Location.FileOffset + fileHeader.Location.FileSize, imageBase, magic);
+                optionalHeader = new OptionalHeader64(this, optionalHeader64, (fileHeader.Location.FileOffset + fileHeader.Location.FileSize).ToUInt32(), imageBase, magic);
             }
 
             var dataDirectories = new DataDirectories(this, optionalHeader, dataDirs);
 
-            NTHeaders = new NTHeaders(this, ntOffset.ToUInt64(), imageBase, fileHeader, optionalHeader, dataDirectories);
-            SectionTable = new SectionTable(this, sectionTable, NTHeaders.Location.FileOffset + NTHeaders.Location.FileSize, imageBase);
+            NTHeaders = new NTHeaders(this, ntOffset, imageBase, fileHeader, optionalHeader, dataDirectories);
+            SectionTable = new SectionTable(this, sectionTable, (NTHeaders.Location.FileOffset + NTHeaders.Location.FileSize).ToUInt32(), imageBase);
             Sections = new Sections(this, SectionTable);
         }
 

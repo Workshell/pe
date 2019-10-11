@@ -68,7 +68,7 @@ namespace Workshell.PE.Resources
         {
             var stream = Image.GetStream();
 
-            stream.Seek(Location.FileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(Location.FileOffset, SeekOrigin.Begin);
 
             try
             {

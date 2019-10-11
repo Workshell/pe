@@ -51,7 +51,7 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, directory.AddressOfFunctions, imageBase + directory.AddressOfFunctions, size, size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var addresses = new uint[directory.NumberOfFunctions];
 
@@ -85,7 +85,7 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, directory.AddressOfNames, imageBase + directory.AddressOfNames, size, size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var addresses = new uint[directory.NumberOfNames];
 
@@ -119,7 +119,7 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, directory.AddressOfNameOrdinals, imageBase + directory.AddressOfNameOrdinals, size, size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var ordinals = new ushort[directory.NumberOfNames];
 

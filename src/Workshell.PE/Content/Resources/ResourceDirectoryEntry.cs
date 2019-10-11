@@ -93,7 +93,7 @@ namespace Workshell.PE.Resources
                     var rva = DataDirectory.VirtualAddress + offset;
                     var fileOffset = calc.RVAToOffset(rva);
 
-                    stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+                    stream.Seek(fileOffset, SeekOrigin.Begin);
 
                     var count = await stream.ReadUInt16Async().ConfigureAwait(false);
                     var builder = new StringBuilder(count);

@@ -67,7 +67,7 @@ namespace Workshell.PE.Content
                 var entries = new List<ulong>();
                 var offset = calc.RVAToOffset(thunk);
 
-                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                stream.Seek(offset, SeekOrigin.Begin);
 
                 while (true)
                 {
@@ -76,7 +76,9 @@ namespace Workshell.PE.Content
                     entries.Add(entry);
 
                     if (entry == 0)
+                    {
                         break;
+                    }
                 }
 
                 var table = new Tuple<uint, ulong[], ImportDirectoryEntryBase>(thunk, entries.ToArray(), dirEntry);
@@ -92,13 +94,13 @@ namespace Workshell.PE.Content
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
             var fileOffset = calc.RVAToOffset(rva);
-            var fileSize = 0ul;
+            var fileSize = 0L;
 
             foreach (var table in tables)
             {
                 var size = table.Item2.Length * (!image.Is64Bit ? sizeof(uint) : sizeof(ulong));
 
-                fileSize += size.ToUInt32();
+                fileSize += size;
             }
 
             var section = calc.RVAToSection(rva);
