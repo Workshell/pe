@@ -31,9 +31,9 @@ namespace Workshell.PE.Content
         internal Export(uint entryPoint, string name, uint ord, string forwardName)
         {
             EntryPoint = entryPoint;
-            Name = name;
+            Name = name ?? string.Empty;
             Ordinal = ord;
-            ForwardName = forwardName;
+            ForwardName = forwardName ?? string.Empty;
         }
 
         #region Methods
