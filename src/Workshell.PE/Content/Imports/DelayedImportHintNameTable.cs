@@ -38,13 +38,20 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
+        public static DelayedImportHintNameTable Get(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return GetAsync(image, directory).GetAwaiter().GetResult();
+        }
+
         public static async Task<DelayedImportHintNameTable> GetAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
         {
             if (directory == null)
+            {
                 directory = await DelayedImportDirectory.GetAsync(image).ConfigureAwait(false);
+            }
 
             var entries = new Dictionary<uint, Tuple<long, uint, ushort, string, bool>>();
-            var ilt = await DelayedImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
+            var ilt = await DelayedImportAddressTables.GetLookupTablesAsync(image, directory).ConfigureAwait(false);
             var calc = image.GetCalculator();
             var stream = image.GetStream();
 

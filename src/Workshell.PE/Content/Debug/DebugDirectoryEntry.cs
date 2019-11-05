@@ -134,7 +134,6 @@ namespace Workshell.PE.Content
                     return null;
                 }
 
-                var calc = _image.GetCalculator();
                 var rva = AddressOfRawData;
                 var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
                 var location = new Location(_image, PointerToRawData, rva, imageBase + rva, SizeOfData, SizeOfData);

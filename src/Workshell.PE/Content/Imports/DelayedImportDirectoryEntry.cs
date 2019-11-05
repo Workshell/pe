@@ -41,8 +41,8 @@ namespace Workshell.PE.Content
             ModuleHandle = descriptor.ModuleHandle;
             DelayAddressTable = descriptor.DelayAddressTable;
             DelayNameTable = descriptor.DelayNameTable;
-            BoundDelayIAT = descriptor.BoundDelayIAT;
-            UnloadDelayIAT = descriptor.UnloadDelayIAT;
+            BoundDelayAddressTable = descriptor.BoundDelayIAT;
+            UnloadDelayAddressTable = descriptor.UnloadDelayIAT;
             TimeDateStamp = descriptor.TimeDateStamp;
         }
 
@@ -78,10 +78,10 @@ namespace Workshell.PE.Content
         public uint DelayNameTable { get; }
 
         [FieldAnnotation("Bound Delay Import Address Table", Order = 6)]
-        public uint BoundDelayIAT { get; }
+        public uint BoundDelayAddressTable { get; }
 
         [FieldAnnotation("Unload Delay Import Address Table", Order = 7)]
-        public uint UnloadDelayIAT { get; }
+        public uint UnloadDelayAddressTable { get; }
 
         [FieldAnnotation("Date/Time Stamp", Order = 8)]
         public uint TimeDateStamp { get; }

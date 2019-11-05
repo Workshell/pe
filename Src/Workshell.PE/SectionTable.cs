@@ -232,6 +232,19 @@ namespace Workshell.PE
             return (SectionCharacteristicsType)_header.Characteristics;
         }
 
+        public Section GetSection()
+        {
+            foreach(var section in _image.Sections)
+            {
+                if (section.TableEntry == this)
+                {
+                    return section;
+                }
+            }
+
+            return null;
+        }
+
         private string GetName()
         {
             var builder = new StringBuilder(16);
@@ -256,6 +269,8 @@ namespace Workshell.PE
         public Location Location { get; }
 
         public string Name { get; }
+
+        public bool IsEmpty => (_header.SizeOfRawData == 0);
 
         public uint VirtualSizeOrPhysicalAddress => _header.VirtualSize;
         public uint VirtualAddress => _header.VirtualAddress;

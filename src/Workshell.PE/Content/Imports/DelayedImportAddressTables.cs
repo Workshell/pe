@@ -38,17 +38,47 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static async Task<DelayedImportAddressTables> GetLookupTableAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        public static DelayedImportAddressTables GetLookupTables(PortableExecutableImage image, DelayedImportDirectory directory = null)
         {
-            return await GetTableAsync(image, directory, (entry) => entry.DelayNameTable).ConfigureAwait(false);
+            return GetLookupTablesAsync(image, directory).GetAwaiter().GetResult();
         }
 
-        public static async Task<DelayedImportAddressTables> GetAddressTableAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        public static DelayedImportAddressTables GetAddressTables(PortableExecutableImage image, DelayedImportDirectory directory = null)
         {
-            return await GetTableAsync(image, directory, (entry) => entry.DelayAddressTable).ConfigureAwait(false);
+            return GetAddressTablesAsync(image, directory).GetAwaiter().GetResult();
         }
 
-        private static async Task<DelayedImportAddressTables> GetTableAsync(PortableExecutableImage image, DelayedImportDirectory directory, Func<DelayedImportDirectoryEntry, uint> thunkHandler)
+        public static DelayedImportAddressTables GetBoundAddressTables(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return GetBoundAddressTablesAsync(image, directory).GetAwaiter().GetResult();
+        }
+
+        public static DelayedImportAddressTables GetUnloadAddressTables(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return GetUnloadAddressTablesAsync(image, directory).GetAwaiter().GetResult();
+        }
+
+        public static async Task<DelayedImportAddressTables> GetLookupTablesAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.DelayNameTable).ConfigureAwait(false);
+        }
+
+        public static async Task<DelayedImportAddressTables> GetAddressTablesAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.DelayAddressTable).ConfigureAwait(false);
+        }
+
+        public static async Task<DelayedImportAddressTables> GetBoundAddressTablesAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.BoundDelayAddressTable).ConfigureAwait(false);
+        }
+
+        public static async Task<DelayedImportAddressTables> GetUnloadAddressTablesAsync(PortableExecutableImage image, DelayedImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.UnloadDelayAddressTable).ConfigureAwait(false);
+        }
+
+        private static async Task<DelayedImportAddressTables> GetTablesAsync(PortableExecutableImage image, DelayedImportDirectory directory, Func<DelayedImportDirectoryEntry, uint> thunkHandler)
         {
             if (directory == null)
                 directory = await DelayedImportDirectory.GetAsync(image).ConfigureAwait(false);

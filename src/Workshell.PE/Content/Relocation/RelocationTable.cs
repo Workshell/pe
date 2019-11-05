@@ -52,12 +52,16 @@ namespace Workshell.PE.Content
         public static async Task<RelocationTable> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.BaseRelocationTable))
+            {
                 return null;
+            }
 
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.BaseRelocationTable];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
@@ -109,7 +113,9 @@ namespace Workshell.PE.Content
                 blocks.Add(block);
 
                 if (blockSize >= dataDirectory.Size)
+                {
                     break;
+                }
 
                 blockOffset += sizeof(ulong);
                 blockOffset += sizeof(ushort) * count;
@@ -125,7 +131,9 @@ namespace Workshell.PE.Content
         public IEnumerator<RelocationBlock> GetEnumerator()
         {
             foreach (var block in _blocks)
+            {
                 yield return block;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

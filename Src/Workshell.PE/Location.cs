@@ -48,7 +48,6 @@ namespace Workshell.PE
             VirtualSize = virtualSize;
         }
 
-
         #region Methods
 
         public override string ToString()
