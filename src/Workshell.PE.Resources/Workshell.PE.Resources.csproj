@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
@@ -21,7 +21,7 @@
     <Version>0.0.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\license.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
+    <None Include="..\..\license.txt" Pack="true" PackagePath="$(PackageLicenseFile)" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
