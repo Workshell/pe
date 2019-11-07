@@ -2,18 +2,27 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
-
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Workshell.PE.Resources</PackageId>
+    <PackageDescription>A set of classes that extends the Workshell.PE class library to help deal with the standard resource types within an executable such as bitmaps, icons, cursors etc.</PackageDescription>
+    <PackageProjectUrl>https://github.com/Workshell/pe</PackageProjectUrl>
+    <PackageIconUrl>http://img.workshell.co.uk/logo_128.png</PackageIconUrl>
+    <PackageTags>workshell pe executable native resources</PackageTags>
+    <PackageLicenseFile>license.txt</PackageLicenseFile>
+    <Copyright>Workshell Ltd</Copyright>
+    <Authors>Workshell Ltd</Authors>
+    <RepositoryUrl>https://github.com/Workshell/pe</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Version>0.0.0.1</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\license.txt" Pack="true" PackagePath="$(PackageLicenseFile)"/>
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\bin\debug</OutputPath>
@@ -30,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Drawing.Common" Version="4.5.0" />
+    <PackageReference Include="System.Drawing.Common" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
