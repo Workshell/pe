@@ -303,7 +303,6 @@ namespace Workshell.PE.Tests
             }
         }
 
-
         private static void DataDirectory_Exists(string fileName, DataDirectoryType type, bool expectedValue)
         {
             var file = Utils.GetFileFromResources(fileName);
