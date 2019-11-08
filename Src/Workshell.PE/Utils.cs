@@ -98,6 +98,7 @@ namespace Workshell.PE
             return BitConverter.ToUInt64(bytes,0);
         }
 
+        /*
         public static void Write(sbyte value, Stream stream)
         {
             var buffer = BitConverter.GetBytes(value);
@@ -153,6 +154,7 @@ namespace Workshell.PE
 
             Write(buffer, stream);
         }
+        */
 
         public static void Write(byte[] bytes, Stream stream)
         {
@@ -165,8 +167,8 @@ namespace Workshell.PE
 
             try
             {
-                Marshal.StructureToPtr(structure,ptr,false);
-                Marshal.Copy(ptr,buffer,startIndex,count);
+                Marshal.StructureToPtr(structure, ptr, false);
+                Marshal.Copy(ptr, buffer, startIndex, count);
             }
             finally
             {
@@ -178,7 +180,7 @@ namespace Workshell.PE
         {
             var size = Utils.SizeOf<T>();
             
-            Write<T>(structure,stream,size);
+            Write<T>(structure, stream, size);
         }
 
         public static void Write<T>(T structure, Stream stream, int size) where T : struct

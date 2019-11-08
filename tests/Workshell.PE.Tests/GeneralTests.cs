@@ -13,7 +13,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void IsValid_With_Text_File_Returns_False()
         {
-            var file = Utils.GetFileFromResources("license.txt");
+            var file = TestingUtils.GetFileFromResources("license.txt");
             var isValid = PortableExecutableImage.IsValid(file);
 
             isValid.Should().BeFalse();
@@ -22,7 +22,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void IsValid_With_Executable_File_Returns_True()
         {
-            var file = Utils.GetFileFromResources("clrtest.any.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.any.dll");
             var isValid = PortableExecutableImage.IsValid(file);
 
             isValid.Should().BeTrue();
@@ -31,7 +31,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void GetStream_Returns_Successfully()
         {
-            var file = Utils.GetFileFromResources("clrtest.any.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.any.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -44,7 +44,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void GetCalculator_Returns_Successfully()
         {
-            var file = Utils.GetFileFromResources("clrtest.any.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.any.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -57,7 +57,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void Is32Bit_With_32Bit_Image_Returns_True()
         {
-            var file = Utils.GetFileFromResources("clrtest.x86.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.x86.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -68,7 +68,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void Is32Bit_With_64Bit_Image_Returns_False()
         {
-            var file = Utils.GetFileFromResources("clrtest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -79,7 +79,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void Is64Bit_With_64Bit_Image_Returns_True()
         {
-            var file = Utils.GetFileFromResources("clrtest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -90,7 +90,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void Is64Bit_With_32Bit_Image_Returns_False()
         {
-            var file = Utils.GetFileFromResources("clrtest.x86.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.x86.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -101,7 +101,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void IsCLR_With_CLR_Image_Returns_True()
         {
-            var file = Utils.GetFileFromResources("clrtest.any.dll");
+            var file = TestingUtils.GetFileFromResources("clrtest.any.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -112,7 +112,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void IsCLR_With_Native_Image_Returns_False()
         {
-            var file = Utils.GetFileFromResources("nativetest.x86.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x86.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -123,7 +123,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void IsSigned_Returns_False()
         {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+            var file = TestingUtils.GetFileFromResources(TestingUtils.GetRandomTestFilename());
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -134,7 +134,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DOSStub_Is_Not_Null()
         {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+            var file = TestingUtils.GetFileFromResources(TestingUtils.GetRandomTestFilename());
 
             using (var image = PortableExecutableImage.FromStream(file))
             {

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Workshell.PE.Tests
 {
-    internal static class Utils
+    internal static class TestingUtils
     {
         private static readonly string[] _testFilenames = new string[]
         {

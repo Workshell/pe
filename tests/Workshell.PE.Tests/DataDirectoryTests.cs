@@ -14,7 +14,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_Is_Not_Null()
         {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+            var file = TestingUtils.GetFileFromResources(TestingUtils.GetRandomTestFilename());
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -25,7 +25,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_Is_Not_Empty()
         {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+            var file = TestingUtils.GetFileFromResources(TestingUtils.GetRandomTestFilename());
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -186,7 +186,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_ExportTable_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -201,7 +201,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_ImportTable_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -216,7 +216,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_ResourceTable_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -231,7 +231,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_ExceptionTable_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -246,7 +246,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_RelocationTable_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -261,7 +261,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_DebugDirectory_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -276,7 +276,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_ImportAddressTable_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -291,7 +291,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DataDirectory_DelayImportDescriptors_RVA_And_Size_Is_Correct()
         {
-            var file = Utils.GetFileFromResources("nativetest.x64.dll");
+            var file = TestingUtils.GetFileFromResources("nativetest.x64.dll");
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -305,7 +305,7 @@ namespace Workshell.PE.Tests
 
         private static void DataDirectory_Exists(string fileName, DataDirectoryType type, bool expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {

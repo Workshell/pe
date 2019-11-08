@@ -13,7 +13,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void DOSHeader_Is_Not_Null()
         {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+            var file = TestingUtils.GetFileFromResources(TestingUtils.GetRandomTestFilename());
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -28,7 +28,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x0050)]
         public void Bytes_On_Last_Page_Of_File_Is_Correct(string fileName, int expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -45,7 +45,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x0040)]
         public void File_Address_Relocation_Table_Is_Correct(string fileName, int expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -62,7 +62,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x00000100)]
         public void File_Address_New_Header_Is_Correct(string fileName, int expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {

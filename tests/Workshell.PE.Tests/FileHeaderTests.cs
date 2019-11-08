@@ -13,7 +13,7 @@ namespace Workshell.PE.Tests
         [Test]
         public void FileHeader_Is_Not_Null()
         {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+            var file = TestingUtils.GetFileFromResources(TestingUtils.GetRandomTestFilename());
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -28,7 +28,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x8664)]
         public void Machine_Is_Correct(string fileName, int expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -45,7 +45,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x000B)]
         public void NumberOfSections_Is_Correct(string fileName, int expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -62,7 +62,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x5DC4AD3D)]
         public void TimeDateStamp_Is_Correct(string fileName, long expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -79,7 +79,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x00F0)]
         public void SizeOfOptionalHeader_Is_Correct(string fileName, long expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
@@ -96,7 +96,7 @@ namespace Workshell.PE.Tests
         [TestCase("nativetest.x64.dll", 0x2022)]
         public void Characteristics_Is_Correct(string fileName, long expectedValue)
         {
-            var file = Utils.GetFileFromResources(fileName);
+            var file = TestingUtils.GetFileFromResources(fileName);
 
             using (var image = PortableExecutableImage.FromStream(file))
             {
