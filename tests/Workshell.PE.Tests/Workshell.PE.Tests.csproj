@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;SIGNED</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Files\clrtest.any.dll" />
+    <None Remove="Files\clrtest.x64.dll" />
+    <None Remove="Files\clrtest.x86.dll" />
+    <None Remove="Files\license.txt" />
+    <None Remove="Files\nativetest.x64.dll" />
+    <None Remove="Files\nativetest.x86.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Files\clrtest.any.dll" />
+    <EmbeddedResource Include="Files\clrtest.x64.dll" />
+    <EmbeddedResource Include="Files\clrtest.x86.dll" />
+    <EmbeddedResource Include="Files\license.txt" />
+    <EmbeddedResource Include="Files\nativetest.x64.dll" />
+    <EmbeddedResource Include="Files\nativetest.x86.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.9.0" />
+    <PackageReference Include="nunit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Workshell.PE\Workshell.PE.csproj" />
+  </ItemGroup>
+
+</Project>
