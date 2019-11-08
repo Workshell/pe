@@ -10,6 +10,17 @@ namespace Workshell.PE.Tests
     [TestFixture]
     public sealed class FileHeaderTests
     {
+        [Test]
+        public void FileHeader_Is_Not_Null()
+        {
+            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+
+            using (var image = PortableExecutableImage.FromStream(file))
+            {
+                image.NTHeaders.FileHeader.Should().NotBeNull();
+            }
+        }
+
         [TestCase("clrtest.any.dll", 0x014C)]
         [TestCase("clrtest.x86.dll", 0x014C)]
         [TestCase("clrtest.x64.dll", 0x8664)]

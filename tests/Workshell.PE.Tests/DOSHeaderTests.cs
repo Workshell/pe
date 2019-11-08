@@ -10,6 +10,17 @@ namespace Workshell.PE.Tests
     [TestFixture]
     public sealed class DOSHeaderTests
     {
+        [Test]
+        public void DOSHeader_Is_Not_Null()
+        {
+            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
+
+            using (var image = PortableExecutableImage.FromStream(file))
+            {
+                image.DOSHeader.Should().NotBeNull();
+            }
+        }
+
         [TestCase("clrtest.any.dll", 0x0090)]
         [TestCase("clrtest.x86.dll", 0x0090)]
         [TestCase("clrtest.x64.dll", 0x0090)]

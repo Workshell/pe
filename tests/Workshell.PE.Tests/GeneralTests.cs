@@ -132,17 +132,6 @@ namespace Workshell.PE.Tests
         }
 
         [Test]
-        public void DOSHeader_Is_Not_Null()
-        {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
-
-            using (var image = PortableExecutableImage.FromStream(file))
-            {
-                image.DOSHeader.Should().NotBeNull();
-            }
-        }
-
-        [Test]
         public void DOSStub_Is_Not_Null()
         {
             var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
@@ -150,39 +139,6 @@ namespace Workshell.PE.Tests
             using (var image = PortableExecutableImage.FromStream(file))
             {
                 image.DOSStub.Should().NotBeNull();
-            }
-        }
-
-        [Test]
-        public void NTHeaders_Is_Not_Null()
-        {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
-
-            using (var image = PortableExecutableImage.FromStream(file))
-            {
-                image.NTHeaders.Should().NotBeNull();
-            }
-        }
-
-        [Test]
-        public void FileHeader_Is_Not_Null()
-        {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
-
-            using (var image = PortableExecutableImage.FromStream(file))
-            {
-                image.NTHeaders.FileHeader.Should().NotBeNull();
-            }
-        }
-
-        [Test]
-        public void OptionalHeader_Is_Not_Null()
-        {
-            var file = Utils.GetFileFromResources(Utils.GetRandomTestFilename());
-
-            using (var image = PortableExecutableImage.FromStream(file))
-            {
-                image.NTHeaders.OptionalHeader.Should().NotBeNull();
             }
         }
     }
