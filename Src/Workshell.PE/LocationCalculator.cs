@@ -31,7 +31,7 @@ namespace Workshell.PE
 {
     public sealed class LocationCalculator
     {
-        private PortableExecutableImage _image;
+        private readonly PortableExecutableImage _image;
 
         internal LocationCalculator(PortableExecutableImage image)
         {
@@ -52,18 +52,32 @@ namespace Workshell.PE
 
         public Section VAToSection(ulong va)
         {
-            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
-            var rva = (va - imageBase).ToUInt32();
+            try
+            {
+                var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+                var rva = (va - imageBase).ToUInt32();
 
-            return RVAToSection(rva);
+                return RVAToSection(rva);
+            }
+            catch (OverflowException)
+            {
+                return null;
+            }
         }
 
         public SectionTableEntry VAToSectionTableEntry(ulong va)
         {
-            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
-            var rva = (va - imageBase).ToUInt32();
+            try
+            {
+                var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
+                var rva = (va - imageBase).ToUInt32();
 
-            return RVAToSectionTableEntry(rva);
+                return RVAToSectionTableEntry(rva);
+            }
+            catch (OverflowException)
+            {
+                return null;
+            }
         }
 
         public long VAToOffset(ulong va)
@@ -72,19 +86,6 @@ namespace Workshell.PE
             var rva = (va - imageBase).ToUInt32();
 
             return RVAToOffset(rva);
-        }
-
-        public long VAToOffset(Section section, ulong va)
-        {
-            return VAToOffset(section.TableEntry, va);
-        }
-
-        public long VAToOffset(SectionTableEntry section, ulong va)
-        {
-            var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
-            var rva = (va - imageBase).ToUInt32();
-
-            return RVAToOffset(section, rva);
         }
 
         public ulong OffsetToVA(long offset)
@@ -109,12 +110,7 @@ namespace Workshell.PE
             return 0;
         }
 
-        public ulong OffsetToVA(Section section, long offset)
-        {
-            return OffsetToVA(section.TableEntry, offset);
-        }
-
-        public ulong OffsetToVA(SectionTableEntry section, long offset)
+        private ulong OffsetToVA(SectionTableEntry section, long offset)
         {
             var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
             var rva = ((offset + section.VirtualAddress) - section.PointerToRawData).ToUInt32();
@@ -220,12 +216,7 @@ namespace Workshell.PE
             return 0;
         }
 
-        public uint OffsetToRVA(Section section, long offset)
-        {
-            return OffsetToRVA(section.TableEntry, offset);
-        }
-
-        public uint OffsetToRVA(SectionTableEntry section, long offset)
+        private uint OffsetToRVA(SectionTableEntry section, long offset)
         {
             var rva = ((offset + section.VirtualAddress) - section.PointerToRawData).ToUInt32();
 
