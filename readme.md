@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Workshell/pe/blob/master/license.txt)
 [![NuGet](https://img.shields.io/nuget/v/Workshell.PE.svg)](https://www.nuget.org/packages/Workshell.PE/)
-[![Build Status](https://dev.azure.com/Workshell-DevOps/Workshell%20PE/_apis/build/status/Build%20Master?branchName=master)](https://dev.azure.com/Workshell-DevOps/Workshell%20PE/_build/latest?definitionId=2&branchName=master)
+[![Build Status](https://dev.azure.com/Workshell-DevOps/pe/_apis/build/status/Build%20Master?branchName=master)](https://dev.azure.com/Workshell-DevOps/pe/_build/latest?definitionId=2&branchName=master)
 
 This is a class library for reading the Portable Executable file format convering all the major data sections including:
 
