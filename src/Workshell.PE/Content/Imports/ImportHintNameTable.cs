@@ -38,6 +38,11 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
+        public static ImportHintNameTable Get(PortableExecutableImage image, ImportDirectory directory = null)
+        {
+            return GetAsync(image, directory).GetAwaiter().GetResult();
+        }
+
         public static async Task<ImportHintNameTable> GetAsync(PortableExecutableImage image, ImportDirectory directory = null)
         {
             if (directory == null)
@@ -46,7 +51,7 @@ namespace Workshell.PE.Content
             }
 
             var entries = new Dictionary<uint, Tuple<long, uint, ushort, string, bool>>();
-            var ilt = await ImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
+            var ilt = await ImportAddressTables.GetLookupTablesAsync(image, directory).ConfigureAwait(false);
             var calc = image.GetCalculator();
             var stream = image.GetStream();
 

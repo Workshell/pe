@@ -174,6 +174,8 @@ namespace Workshell.PE.Content
         [FieldAnnotation("Pointer to Raw Data", Order = 8)]
         public uint PointerToRawData { get; }
 
+        public bool IsEmpty => (PointerToRawData == 0 && SizeOfData == 0);
+
         #endregion
     }
 }

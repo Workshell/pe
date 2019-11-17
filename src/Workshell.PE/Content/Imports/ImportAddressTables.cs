@@ -38,17 +38,27 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static async Task<ImportAddressTables> GetLookupTableAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        public static ImportAddressTables GetLookupTables(PortableExecutableImage image, ImportDirectory directory = null)
         {
-            return await GetTableAsync(image, directory, (entry) => entry.OriginalFirstThunk).ConfigureAwait(false);
+            return GetLookupTablesAsync(image, directory).GetAwaiter().GetResult();
         }
 
-        public static async Task<ImportAddressTables> GetAddressTableAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        public static ImportAddressTables GetAddressTables(PortableExecutableImage image, ImportDirectory directory = null)
         {
-            return await GetTableAsync(image, directory, (entry) => entry.FirstThunk).ConfigureAwait(false);
+            return GetAddressTablesAsync(image, directory).GetAwaiter().GetResult();
         }
 
-        private static async Task<ImportAddressTables> GetTableAsync(PortableExecutableImage image, ImportDirectory directory, Func<ImportDirectoryEntry, uint> thunkHandler)
+        public static async Task<ImportAddressTables> GetLookupTablesAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.OriginalFirstThunk).ConfigureAwait(false);
+        }
+
+        public static async Task<ImportAddressTables> GetAddressTablesAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.FirstThunk).ConfigureAwait(false);
+        }
+
+        private static async Task<ImportAddressTables> GetTablesAsync(PortableExecutableImage image, ImportDirectory directory, Func<ImportDirectoryEntry, uint> thunkHandler)
         {
             if (directory == null)
                 directory = await ImportDirectory.GetAsync(image).ConfigureAwait(false);

@@ -58,7 +58,7 @@ namespace Workshell.PE.Content
                 return null;
             }
 
-            var ilt = await ImportAddressTables.GetLookupTableAsync(image, directory).ConfigureAwait(false);
+            var ilt = await ImportAddressTables.GetLookupTablesAsync(image, directory).ConfigureAwait(false);
 
             if (ilt == null)
             {
