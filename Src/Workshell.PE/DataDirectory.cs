@@ -107,8 +107,10 @@ namespace Workshell.PE
 
         public async Task<DataContent> GetContentAsync()
         {
-            if (VirtualAddress == 0)
+            if (VirtualAddress == 0 || Size == 0)
+            {
                 return null;
+            }
 
             switch (DirectoryType)
             {
@@ -137,56 +139,13 @@ namespace Workshell.PE
                 default:
                 {
                     var calc = _image.GetCalculator();
-                    var fileOffset = calc.VAToOffset(VirtualAddress);
-                    var location = new Location(_image, fileOffset, calc.OffsetToRVA(fileOffset), VirtualAddress, Size, Size);
+                    var fileOffset = calc.RVAToOffset(VirtualAddress);
+                    var va = _imageBase + VirtualAddress;
+                    var location = new Location(_image, fileOffset, VirtualAddress, va, Size, Size);
 
                     return new DataContent(_image, this, location);
                 }
             }
-
-            /*
-            if (data_dir.VirtualAddress == 0) // No content so no point...
-                return null;
-
-            if (dir_content == null)
-            {
-                switch (dir_type)
-                {
-                    case DataDirectoryType.ExportTable:
-                        dir_content = new ExportTableContent(this,image_base);
-                        break;
-                    case DataDirectoryType.ImportTable:
-                        dir_content = new ImportTableContent(this,image_base);
-                        break;
-                    case DataDirectoryType.Debug:
-                        dir_content = new DebugContent(this,image_base);
-                        break;
-                    case DataDirectoryType.LoadConfigTable:
-                        dir_content = new LoadConfigTableContent(this,image_base);
-                        break;
-                    case DataDirectoryType.TLSTable:
-                        dir_content = new TLSTableContent(this,image_base);
-                        break;
-                    case DataDirectoryType.BaseRelocationTable:
-                        dir_content = new RelocationTableContent(this,image_base);
-                        break;
-                    case DataDirectoryType.CLRRuntimeHeader:
-                        dir_content = new CLRContent(this,image_base);
-                        break;
-                    case DataDirectoryType.ResourceTable:
-                        dir_content = new ResourceTableContent(this,image_base);
-                        break;
-                    case DataDirectoryType.CertificateTable:
-                        dir_content = new CertificateTableContent(this,image_base);
-                        break;
-                    default:
-                        dir_content = null;
-                        break;
-                }
-            }
-
-            return dir_content;
-            */
         }
 
         public string GetSectionName()
