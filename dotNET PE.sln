@@ -18,18 +18,25 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Workshell.PE.Tests", "tests
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		CI|Any CPU = CI|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2DF6E85A-7269-46C6-9032-1C3A8F029AE3}.CI|Any CPU.ActiveCfg = CI|Any CPU
+		{2DF6E85A-7269-46C6-9032-1C3A8F029AE3}.CI|Any CPU.Build.0 = CI|Any CPU
 		{2DF6E85A-7269-46C6-9032-1C3A8F029AE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2DF6E85A-7269-46C6-9032-1C3A8F029AE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DF6E85A-7269-46C6-9032-1C3A8F029AE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DF6E85A-7269-46C6-9032-1C3A8F029AE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}.CI|Any CPU.ActiveCfg = CI|Any CPU
+		{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}.CI|Any CPU.Build.0 = CI|Any CPU
 		{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBED9C9E-0B8C-46B5-AE1D-865722B68E44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A5FC684-11D6-4902-B0E0-7FEBC36BA21F}.CI|Any CPU.ActiveCfg = CI|Any CPU
+		{8A5FC684-11D6-4902-B0E0-7FEBC36BA21F}.CI|Any CPU.Build.0 = CI|Any CPU
 		{8A5FC684-11D6-4902-B0E0-7FEBC36BA21F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8A5FC684-11D6-4902-B0E0-7FEBC36BA21F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A5FC684-11D6-4902-B0E0-7FEBC36BA21F}.Release|Any CPU.ActiveCfg = Release|Any CPU

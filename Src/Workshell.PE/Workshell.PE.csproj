@@ -5,6 +5,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
+    <Configurations>Debug;Release;CI</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -31,6 +32,11 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\..\bin\release</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CI|AnyCPU'">
+    <OutputPath>..\..\bin\ci</OutputPath>
     <DefineConstants>TRACE;SIGNED</DefineConstants>
   </PropertyGroup>
 
@@ -43,11 +49,5 @@
     <PackageReference Include="System.Reflection.Extensions" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.0" />
   </ItemGroup>
-
-  <!--
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-    <PackageReference Include="System.Net.Http" Version="4.3.3" />
-  </ItemGroup>
-  -->
 
 </Project>
