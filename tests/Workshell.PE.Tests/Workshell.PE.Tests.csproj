@@ -5,10 +5,21 @@
     <IsPackable>false</IsPackable>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
+    <Configurations>Debug;Release;CI</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;SIGNED</DefineConstants>
+    <OutputPath>..\..\bin\release</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CI|AnyCPU'">
+    <DefineConstants>TRACE;SIGNED</DefineConstants>
+    <OutputPath>..\..\bin\ci</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\..\bin\debug</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
