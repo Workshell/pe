@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Workshell.snk</AssemblyOriginatorKeyFile>
     <Configurations>Debug;Release;CI</Configurations>
   </PropertyGroup>
 

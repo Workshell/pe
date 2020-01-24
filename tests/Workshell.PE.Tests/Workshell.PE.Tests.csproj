@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>Workshell.PE.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Workshell.snk</AssemblyOriginatorKeyFile>
     <Configurations>Debug;Release;CI</Configurations>
   </PropertyGroup>
 
