@@ -71,8 +71,10 @@ namespace Workshell.PE.Resources
         public uint GetId()
         {
             if ((Name & 0x80000000) == 0x80000000)
+            {
                 return 0;
-            
+            }
+
             return Name;
         }
 
@@ -98,7 +100,7 @@ namespace Workshell.PE.Resources
                     var count = await stream.ReadUInt16Async().ConfigureAwait(false);
                     var builder = new StringBuilder(count);
 
-                    for(int i = 0; i < count; i++)
+                    for(var i = 0; i < count; i++)
                     {
                         var value = await stream.ReadUInt16Async().ConfigureAwait(false);
                         var chr = Convert.ToChar(value);

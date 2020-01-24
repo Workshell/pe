@@ -32,6 +32,11 @@ namespace Workshell.PE.Content
     {
         private readonly string _name;
 
+        static DelayedImportDirectoryEntry()
+        {
+            Size = Utils.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
+        }
+
         internal DelayedImportDirectoryEntry(PortableExecutableImage image, Location location, IMAGE_DELAY_IMPORT_DESCRIPTOR descriptor, string name) : base(image, location, true)
         {
             _name = name;
@@ -57,6 +62,12 @@ namespace Workshell.PE.Content
         {
             return _name;
         }
+
+        #endregion
+
+        #region Static Properties
+
+        public static int Size { get; }
 
         #endregion
 

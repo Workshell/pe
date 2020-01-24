@@ -38,10 +38,12 @@ namespace Workshell.PE.Resources
     public sealed class ResourceDirectory : DataContent, IEnumerable<ResourceDirectoryEntry>
     {
         private ResourceDirectoryEntry[] _entries;
+        private ResourceDirectory _root;
 
         internal ResourceDirectory(PortableExecutableImage image, DataDirectory dataDirectory, Location location, ResourceDirectoryEntry directoryEntry) : base(image, dataDirectory, location)
         {
             _entries = new ResourceDirectoryEntry[0];
+            _root = null;
 
             DirectoryEntry = directoryEntry;
         }
@@ -178,8 +180,6 @@ namespace Workshell.PE.Resources
 
         [FieldAnnotation("Number of ID Entries", Order = 6)]
         public ushort NumberOfIdEntries { get; private set; }
-
-
 
         #endregion
     }
