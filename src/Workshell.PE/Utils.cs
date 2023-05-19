@@ -193,7 +193,14 @@ namespace Workshell.PE
 
         public static DateTime ConvertTimeDateStamp(uint timeDateStamp)
         {
-            var result = UnixEpoch.AddSeconds(timeDateStamp).Add(DateTimeOffset.Now.Offset);
+            var result = UnixEpoch.AddSeconds(timeDateStamp);
+
+            if (result.Kind == DateTimeKind.Utc)
+            {
+                return result;
+            }
+
+            result = new DateTime(result.Year, result.Month, result.Day, result.Hour, result.Minute, result.Second, DateTimeKind.Utc);
 
             return result;
         }

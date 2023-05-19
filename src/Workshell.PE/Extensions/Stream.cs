@@ -46,10 +46,14 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (!allowSmaller && numRead < size)
+            {
                 throw new IOException("Could not read all of structure from stream.");
+            }
 
             if (numRead < size)
+            {
                 return default(T);
+            }
 
             return Utils.Read<T>(buffer);
         }
@@ -73,7 +77,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < buffer.Length)
+            {
                 throw new IOException("Could not read int16 from stream.");
+            }
 
             return Utils.ReadInt16(buffer);
         }
@@ -84,7 +90,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < buffer.Length)
+            {
                 throw new IOException("Could not read int32 from stream.");
+            }
 
             return Utils.ReadInt32(buffer);
         }
@@ -95,7 +103,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < buffer.Length)
+            {
                 throw new IOException("Could not read int64 from stream.");
+            }
 
             return Utils.ReadInt64(buffer);
         }
@@ -106,7 +116,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < buffer.Length)
+            {
                 throw new IOException("Could not read uint16 from stream.");
+            }
 
             return Utils.ReadUInt16(buffer);
         }
@@ -117,7 +129,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < buffer.Length)
+            {
                 throw new IOException("Could not read uint32 from stream.");
+            }
 
             return Utils.ReadUInt32(buffer);
         }
@@ -128,7 +142,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < buffer.Length)
+            {
                 throw new IOException("Could not read uint64 from stream.");
+            }
 
             return Utils.ReadUInt64(buffer);
         }
@@ -143,7 +159,9 @@ namespace Workshell.PE.Extensions
                 var numRead = await stream.ReadAsync(buffer, 0, buffer.Length);
 
                 if (numRead < 1 || buffer[0] == 0)
+                {
                     break;
+                }
 
                 builder.Append((char) buffer[0]);
             }
@@ -157,14 +175,18 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length);
 
             if (!allowSmaller && numRead < buffer.Length)
+            {
                 throw new IOException("Could not read string from stream.");
-            
+            }
+
             var builder = new StringBuilder(256);
 
             foreach(var b in buffer)
             {
                 if (b == 0)
+                {
                     break;
+                }
 
                 builder.Append((char)b);
             }
@@ -181,7 +203,9 @@ namespace Workshell.PE.Extensions
                 var value = await ReadUInt16Async(stream).ConfigureAwait(false);
 
                 if (value == 0)
+                {
                     break;
+                }
 
                 builder.Append((char)value);
             }
@@ -198,7 +222,9 @@ namespace Workshell.PE.Extensions
                 var value = await ReadUInt16Async(stream).ConfigureAwait(false);
 
                 if (value == 0)
+                {
                     break;
+                }
 
                 builder.Append((char)value);
             }
@@ -209,7 +235,9 @@ namespace Workshell.PE.Extensions
         public static async Task<byte[]> ReadBytesAsync(this Stream stream, int count, long offset = -1)
         {
             if (offset >= 0)
+            {
                 stream.Seek(offset, SeekOrigin.Begin);
+            }
 
             var buffer = new byte[count];
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
