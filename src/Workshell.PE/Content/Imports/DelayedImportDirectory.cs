@@ -48,37 +48,43 @@ namespace Workshell.PE.Content
         public static async Task<DelayedImportDirectory> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.DelayImportDescriptor))
+            {
                 return null;
+            }
 
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.DelayImportDescriptor];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);
             var fileOffset = calc.RVAToOffset(section, dataDirectory.VirtualAddress);          
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var size = Utils.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
-            var descriptors = new List<Tuple<ulong, IMAGE_DELAY_IMPORT_DESCRIPTOR>>();
+            var descriptors = new List<Tuple<long, IMAGE_DELAY_IMPORT_DESCRIPTOR>>();
 
             try
             {
-                ulong offset = 0;
+                var offset = 0L;
 
                 while (true)
                 {
                     var descriptor = await stream.ReadStructAsync<IMAGE_DELAY_IMPORT_DESCRIPTOR>(size).ConfigureAwait(false);
 
                     if (descriptor.Name == 0 && descriptor.ModuleHandle == 0)
+                    {
                         break;
+                    }
 
-                    var tuple = new Tuple<ulong, IMAGE_DELAY_IMPORT_DESCRIPTOR>(offset, descriptor);
+                    var tuple = new Tuple<long, IMAGE_DELAY_IMPORT_DESCRIPTOR>(offset, descriptor);
 
-                    offset += size.ToUInt32();
+                    offset += size;
 
                     descriptors.Add(tuple);
                 }

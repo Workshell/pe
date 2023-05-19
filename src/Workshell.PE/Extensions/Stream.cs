@@ -60,7 +60,9 @@ namespace Workshell.PE.Extensions
             var numRead = await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
 
             if (numRead < 1)
+            {
                 throw new IOException("Could not read byte from stream.");
+            }
 
             return buffer[0];
         }
@@ -220,7 +222,7 @@ namespace Workshell.PE.Extensions
 
         public static async Task<byte[]> ReadBytesAsync(this Stream stream, Location location)
         {
-            return await ReadBytesAsync(stream, location.FileSize.ToInt32(), location.FileOffset.ToInt64())
+            return await ReadBytesAsync(stream, location.FileSize.ToInt32(), location.FileOffset)
                 .ConfigureAwait(false);
         }
 

@@ -61,10 +61,10 @@ namespace Workshell.PE.Content
                     streams[i] = stream;
                 }
 
-                uint rva = 0;
-                ulong va = 0;
-                ulong offset = 0;
-                ulong size = 0;
+                var rva = 0U;
+                var va = 0UL;
+                var offset = 0L;
+                var size = 0L;
 
                 if (streams.Length > 0)
                 {
@@ -76,7 +76,9 @@ namespace Workshell.PE.Content
                 }
 
                 foreach (var stream in streams)
+                {
                     size += stream.Location.FileSize;
+                }
 
                 var location = new Location(image, offset, rva, va, size, size);
                 var result = new CLRMetaDataStreams(image, location, streams);

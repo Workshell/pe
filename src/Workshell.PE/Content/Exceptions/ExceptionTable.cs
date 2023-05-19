@@ -41,15 +41,24 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
+        public static ExceptionTable Get(PortableExecutableImage image)
+        {
+            return GetAsync(image).GetAwaiter().GetResult();
+        }
+
         public static async Task<ExceptionTable> GetAsync(PortableExecutableImage image)
         {
             if (!image.NTHeaders.DataDirectories.Exists(DataDirectoryType.ExceptionTable))
+            {
                 return null;
+            }
 
             var dataDirectory = image.NTHeaders.DataDirectories[DataDirectoryType.ExceptionTable];
 
             if (DataDirectory.IsNullOrEmpty(dataDirectory))
+            {
                 return null;
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(dataDirectory.VirtualAddress);

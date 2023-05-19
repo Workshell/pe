@@ -48,7 +48,7 @@ namespace Workshell.PE.Content
         {
             var fileOffset = calc.RVAToOffset(nameRVA);
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var result = await stream.ReadStringAsync().ConfigureAwait(false);
 

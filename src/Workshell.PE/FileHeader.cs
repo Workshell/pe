@@ -91,12 +91,12 @@ namespace Workshell.PE
         private readonly PortableExecutableImage _image;
         private readonly IMAGE_FILE_HEADER _header;
 
-        internal FileHeader(PortableExecutableImage image, IMAGE_FILE_HEADER fileHeader, ulong headerOffset, ulong imageBase)
+        internal FileHeader(PortableExecutableImage image, IMAGE_FILE_HEADER fileHeader, uint headerOffset, ulong imageBase)
         {
             _image = image;
             _header = fileHeader;
 
-            Location = new Location(image, headerOffset, headerOffset.ToUInt32(), imageBase + headerOffset, Size.ToUInt32(), Size.ToUInt32());
+            Location = new Location(image, headerOffset, headerOffset, imageBase + headerOffset, Size.ToUInt32(), Size.ToUInt32());
         }
 
         #region Methods

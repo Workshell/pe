@@ -32,7 +32,7 @@ namespace Workshell.PE.Content
     {
         private readonly PortableExecutableImage _image;
 
-        protected internal ImportHintNameEntryBase(PortableExecutableImage image, ulong offset, uint size, ushort entryHint, string entryName, bool isPadded, bool isDelayed)
+        protected internal ImportHintNameEntryBase(PortableExecutableImage image, long offset, uint size, ushort entryHint, string entryName, bool isPadded, bool isDelayed)
         {
             _image = image;
 

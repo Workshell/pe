@@ -28,7 +28,7 @@ namespace Workshell.PE.Extensions
 {
     internal static class ConversionExtensions
     {
-        #region int16
+        #region Int16
 
         public static short ToInt16(this int value)
         {
@@ -57,7 +57,7 @@ namespace Workshell.PE.Extensions
 
         #endregion
 
-        #region int32
+        #region Int32
 
         public static int ToInt32(this short value)
         {
@@ -86,7 +86,7 @@ namespace Workshell.PE.Extensions
 
         #endregion
 
-        #region int64
+        #region Int64
 
         public static long ToInt64(this short value)
         {
@@ -115,7 +115,7 @@ namespace Workshell.PE.Extensions
 
         #endregion
 
-        #region uint16
+        #region UInt16
 
         public static ushort ToUInt16(this short value)
         {
@@ -144,7 +144,7 @@ namespace Workshell.PE.Extensions
 
         #endregion
 
-        #region uint32
+        #region UInt32
 
         public static uint ToUInt32(this short value)
         {
@@ -173,7 +173,7 @@ namespace Workshell.PE.Extensions
 
         #endregion
 
-        #region uint64
+        #region UInt64
 
         public static ulong ToUInt64(this short value)
         {

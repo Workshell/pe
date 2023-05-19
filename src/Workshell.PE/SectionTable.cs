@@ -129,13 +129,13 @@ namespace Workshell.PE
         private readonly PortableExecutableImage _image;
         private readonly IMAGE_SECTION_HEADER _header;
 
-        internal SectionTableEntry(PortableExecutableImage image, SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, ulong entryOffset, ulong imageBase)
+        internal SectionTableEntry(PortableExecutableImage image, SectionTable sectionTable, IMAGE_SECTION_HEADER entryHeader, uint entryOffset, ulong imageBase)
         {
             _image = image;
             _header = entryHeader;
 
             Table = sectionTable;
-            Location = new Location(image, entryOffset, entryOffset.ToUInt32(), imageBase + entryOffset, _headerSize, _headerSize);
+            Location = new Location(image, entryOffset, entryOffset, imageBase + entryOffset, _headerSize, _headerSize);
             Name = GetName();
         }
 
@@ -232,6 +232,19 @@ namespace Workshell.PE
             return (SectionCharacteristicsType)_header.Characteristics;
         }
 
+        public Section GetSection()
+        {
+            foreach(var section in _image.Sections)
+            {
+                if (section.TableEntry == this)
+                {
+                    return section;
+                }
+            }
+
+            return null;
+        }
+
         private string GetName()
         {
             var builder = new StringBuilder(16);
@@ -257,6 +270,8 @@ namespace Workshell.PE
 
         public string Name { get; }
 
+        public bool IsEmpty => (_header.SizeOfRawData == 0);
+
         public uint VirtualSizeOrPhysicalAddress => _header.VirtualSize;
         public uint VirtualAddress => _header.VirtualAddress;
         public uint SizeOfRawData => _header.SizeOfRawData;
@@ -275,14 +290,14 @@ namespace Workshell.PE
         private readonly PortableExecutableImage _image;
         private readonly SectionTableEntry[] _table;
 
-        internal SectionTable(PortableExecutableImage image, IMAGE_SECTION_HEADER[] sectionHeaders, ulong tableOffset, ulong imageBase)
+        internal SectionTable(PortableExecutableImage image, IMAGE_SECTION_HEADER[] sectionHeaders, uint tableOffset, ulong imageBase)
         {
             _image = image;
             _table = new SectionTableEntry[sectionHeaders.Length];
 
             var size = (Utils.SizeOf<IMAGE_SECTION_HEADER>() * sectionHeaders.Length).ToUInt32();
 
-            Location = new Location(image, tableOffset, tableOffset.ToUInt32(), imageBase + tableOffset, size, size);
+            Location = new Location(image, tableOffset, tableOffset, imageBase + tableOffset, size, size);
 
             var offset = tableOffset;
 

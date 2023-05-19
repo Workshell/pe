@@ -38,10 +38,27 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
+        public static ExportTable<uint> GetFunctionAddressTable(PortableExecutableImage image, ExportDirectory directory = null)
+        {
+            return GetFunctionAddressTableAsync(image, directory).GetAwaiter().GetResult();
+        }
+
+        public static ExportTable<uint> GetNameAddressTable(PortableExecutableImage image, ExportDirectory directory = null)
+        {
+            return GetNameAddressTableAsync(image, directory).GetAwaiter().GetResult();
+        }
+
+        public static ExportTable<ushort> GetOrdinalTable(PortableExecutableImage image, ExportDirectory directory = null)
+        {
+            return GetOrdinalTableAsync(image, directory).GetAwaiter().GetResult();
+        }
+
         public static async Task<ExportTable<uint>> GetFunctionAddressTableAsync(PortableExecutableImage image, ExportDirectory directory = null)
         {
             if (directory == null)
+            {
                 directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(directory.AddressOfFunctions);
@@ -51,14 +68,16 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, directory.AddressOfFunctions, imageBase + directory.AddressOfFunctions, size, size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var addresses = new uint[directory.NumberOfFunctions];
 
             try
             {
                 for (var i = 0; i < directory.NumberOfFunctions; i++)
+                {
                     addresses[i] = await stream.ReadUInt32Async().ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
@@ -75,7 +94,9 @@ namespace Workshell.PE.Content
         public static async Task<ExportTable<uint>> GetNameAddressTableAsync(PortableExecutableImage image, ExportDirectory directory = null)
         {
             if (directory == null)
+            {
                 directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(directory.AddressOfNames);
@@ -85,14 +106,16 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, directory.AddressOfNames, imageBase + directory.AddressOfNames, size, size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var addresses = new uint[directory.NumberOfNames];
 
             try
             {
                 for (var i = 0; i < directory.NumberOfNames; i++)
+                {
                     addresses[i] = await stream.ReadUInt32Async().ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
@@ -109,7 +132,9 @@ namespace Workshell.PE.Content
         public static async Task<ExportTable<ushort>> GetOrdinalTableAsync(PortableExecutableImage image, ExportDirectory directory = null)
         {
             if (directory == null)
+            {
                 directory = await ExportDirectory.GetAsync(image).ConfigureAwait(false);
+            }
 
             var calc = image.GetCalculator();
             var section = calc.RVAToSection(directory.AddressOfNameOrdinals);
@@ -119,14 +144,16 @@ namespace Workshell.PE.Content
             var location = new Location(image, fileOffset, directory.AddressOfNameOrdinals, imageBase + directory.AddressOfNameOrdinals, size, size, section);
             var stream = image.GetStream();
 
-            stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(fileOffset, SeekOrigin.Begin);
 
             var ordinals = new ushort[directory.NumberOfNames];
 
             try
             {
                 for (var i = 0; i < directory.NumberOfNames; i++)
+                {
                     ordinals[i] = await stream.ReadUInt16Async().ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {

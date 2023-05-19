@@ -55,12 +55,12 @@ namespace Workshell.PE.Tests
             }
         }
 
-        [TestCase("clrtest.any.dll", 0x00000080)]
-        [TestCase("clrtest.x86.dll", 0x00000080)]
-        [TestCase("clrtest.x64.dll", 0x00000080)]
-        [TestCase("nativetest.x86.dll", 0x00000100)]
-        [TestCase("nativetest.x64.dll", 0x00000100)]
-        public void File_Address_New_Header_Is_Correct(string fileName, int expectedValue)
+        [TestCase("clrtest.any.dll", 0x00000080U)]
+        [TestCase("clrtest.x86.dll", 0x00000080U)]
+        [TestCase("clrtest.x64.dll", 0x00000080U)]
+        [TestCase("nativetest.x86.dll", 0x00000100U)]
+        [TestCase("nativetest.x64.dll", 0x00000100U)]
+        public void File_Address_New_Header_Is_Correct(string fileName, uint expectedValue)
         {
             var file = TestingUtils.GetFileFromResources(fileName);
 

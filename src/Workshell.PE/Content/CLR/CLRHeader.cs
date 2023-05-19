@@ -103,7 +103,7 @@ namespace Workshell.PE.Content
             var location = new Location(image, clrLocation.FileOffset, clrLocation.RelativeVirtualAddress, clrLocation.VirtualAddress, size.ToUInt32(), size.ToUInt32(), clrLocation.Section);
             var stream = image.GetStream();
 
-            stream.Seek(clrLocation.FileOffset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(clrLocation.FileOffset, SeekOrigin.Begin);
 
             IMAGE_COR20_HEADER header;
 
@@ -207,10 +207,10 @@ namespace Workshell.PE.Content
         [FieldAnnotation("Minor Runtime Version", Order = 3)]
         public ushort MinorRuntimeVersion { get; }
 
-        [FieldAnnotation("MetaData Virtual Address", Order = 4)]
+        [FieldAnnotation("Meta-data Virtual Address", Order = 4)]
         public uint MetaDataAddress { get; }
 
-        [FieldAnnotation("MetaData Size", Order = 5)]
+        [FieldAnnotation("Meta-data Size", Order = 5)]
         public uint MetaDataSize { get; }
 
         [FieldAnnotation("Flags", Order = 6)]
@@ -225,10 +225,10 @@ namespace Workshell.PE.Content
         [FieldAnnotation("Resources Size", Order = 9)]
         public uint ResourcesSize { get; }
 
-        [FieldAnnotation("Strongname Signature Virtual Address", Order = 10)]
+        [FieldAnnotation("Strong-name Signature Virtual Address", Order = 10)]
         public uint StrongNameSignatureAddress { get; }
 
-        [FieldAnnotation("Strongname Signature Size", Order = 11)]
+        [FieldAnnotation("Strong-name Signature Size", Order = 11)]
         public uint StrongNameSignatureSize { get; }
 
         [FieldAnnotation("Code Manager Table Virtual Address", Order = 12)]

@@ -44,7 +44,7 @@ namespace Workshell.PE
             _image = image;
             _header = dosHeader;
 
-            Location = new Location(image, 0, 0, imageBase, Size.ToUInt32(), Size.ToUInt32());
+            Location = new Location(image, 0, 0, imageBase, Size, Size);
         }
 
         #region Methods
@@ -71,7 +71,7 @@ namespace Workshell.PE
 
         #region Static Properties
 
-        public static int Size { get; } = Utils.SizeOf<IMAGE_DOS_HEADER>();
+        public static uint Size { get; } = Utils.SizeOf<IMAGE_DOS_HEADER>().ToUInt32();
 
         #endregion
 
@@ -134,7 +134,7 @@ namespace Workshell.PE
         public ushort[] Reserved2 => _header.e_res_2;
 
         [FieldAnnotation("File address of new header", Order = 19)]
-        public int FileAddressNewHeader => _header.e_lfanew;
+        public uint FileAddressNewHeader => _header.e_lfanew;
 
         #endregion
     }

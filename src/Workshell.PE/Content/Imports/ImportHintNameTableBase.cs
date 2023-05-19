@@ -24,6 +24,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 
 namespace Workshell.PE.Content
@@ -33,7 +34,7 @@ namespace Workshell.PE.Content
     {
         private readonly TEntry[] _entries;
 
-        protected internal ImportHintNameTableBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<ulong,uint,ushort,string,bool>[] entries, bool isDelayed) : base(image, dataDirectory, location)
+        protected internal ImportHintNameTableBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IEnumerable<Tuple<long, uint, ushort, string, bool>> entries, bool isDelayed) : base(image, dataDirectory, location)
         {
             _entries = BuildTable(entries);
 
@@ -51,7 +52,9 @@ namespace Workshell.PE.Content
         public IEnumerator<TEntry> GetEnumerator()
         {
             foreach (var entry in _entries)
+            {
                 yield return entry;
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -59,22 +62,22 @@ namespace Workshell.PE.Content
             return GetEnumerator();
         }
 
-        private TEntry[] BuildTable(Tuple<ulong, uint, ushort, string, bool>[] entries)
+        private TEntry[] BuildTable(IEnumerable<Tuple<long, uint, ushort, string, bool>> entries)
         {
-            TEntry[] results = new TEntry[entries.Length];
-
+            var results = new List<TEntry>(entries.Count());
             var type = typeof(TEntry);
             var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             var ctor = ctors.First();
 
-            for(var i = 0; i < entries.Length; i++)
+            foreach (var e in entries)
             {
-                var entry = (TEntry)ctor.Invoke(new object[] { Image, entries[i].Item1, entries[i].Item2, entries[i].Item3, entries[i].Item4, entries[i].Item5 });
+                var entry = (TEntry)ctor.Invoke(new object[] { Image, e.Item1, e.Item2, e.Item3, e.Item4, e.Item5 });
 
-                results[i] = entry;
+                results.Add(entry);
             }
 
-            return results.OrderBy(entry => entry.Location.FileOffset).ToArray();
+            return results.OrderBy(entry => entry.Location.FileOffset)
+                .ToArray();
         }
 
         #endregion
