@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -99,7 +100,9 @@ namespace Workshell.PE.Content
             var rva = 0u;
 
             if (tables.Count > 0)
+            {
                 rva = tables.MinBy(table => table.Item1).Item1;
+            }
 
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
