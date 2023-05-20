@@ -46,7 +46,7 @@ namespace Workshell.PE.Content
             var offset = calc.RVAToOffset(dataDirectory.VirtualAddress);
             var rva = dataDirectory.VirtualAddress;      
 
-            stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+            stream.Seek(offset, SeekOrigin.Begin);
 
             var entrySize = Utils.SizeOf<IMAGE_RUNTIME_FUNCTION_64>();
             var entries = new List<ExceptionTableEntry>();

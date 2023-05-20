@@ -57,7 +57,7 @@ namespace Workshell.PE.Content
                 var rva = calc.OffsetToRVA(offset);
                 var va = imageBase + rva;
                 var entries = await LoadTableAsync(image, header, offset, imageBase).ConfigureAwait(false);
-                ulong size = 0;
+                var size = 0L;
 
                 foreach (var strm in entries)
                 {
@@ -75,11 +75,11 @@ namespace Workshell.PE.Content
             }
         }
 
-        private static async Task<CLRMetaDataStreamTableEntry[]> LoadTableAsync(PortableExecutableImage image, CLRMetaDataHeader header, ulong baseOffset, ulong imageBase)
+        private static async Task<CLRMetaDataStreamTableEntry[]> LoadTableAsync(PortableExecutableImage image, CLRMetaDataHeader header, long baseOffset, ulong imageBase)
         {
             var stream = image.GetStream();
 
-            stream.Seek(baseOffset.ToInt64(),SeekOrigin.Begin);
+            stream.Seek(baseOffset,SeekOrigin.Begin);
 
             var entries = new List<CLRMetaDataStreamTableEntry>();
             var offset = baseOffset;
@@ -104,7 +104,9 @@ namespace Workshell.PE.Content
                     size += 1;
 
                     if (b <= 0)
+                    {
                         break;
+                    }
 
                     streamName.Append((char)b);
                 }

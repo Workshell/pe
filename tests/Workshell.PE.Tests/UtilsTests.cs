@@ -145,11 +145,11 @@ namespace Workshell.PE.Tests
             }
         }
 
-        [TestCase(0U, "1970-01-01T00:00:00")]
-        [TestCase(1573219373U, "2019-11-08T13:22:53")]
+        [TestCase(0U, "1970-01-01T00:00:00Z")]
+        [TestCase(1573219373U, "2019-11-08T13:22:53Z")]
         public void ConvertTimeDateStamp_Returns_Correct_DateTime(uint input, string expectedValue)
         {
-            var parsedExpectedValue = DateTime.ParseExact(expectedValue, "yyyy-MM-ddTHH:mm:ss", null);
+            var parsedExpectedValue = DateTime.ParseExact(expectedValue, "yyyy-MM-ddTHH:mm:ssZ", null);
             var output = Utils.ConvertTimeDateStamp(input);
 
             output.Should().Be(parsedExpectedValue);

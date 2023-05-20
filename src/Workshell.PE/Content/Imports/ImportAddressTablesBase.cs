@@ -35,20 +35,21 @@ namespace Workshell.PE.Content
     {
         private readonly TTable[] _tables;
 
-        protected internal ImportAddressTablesBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, Tuple<uint, ulong[], ImportDirectoryEntryBase>[] tables, bool isDelayed) : base(image, dataDirectory, location)
+        protected internal ImportAddressTablesBase(PortableExecutableImage image, DataDirectory dataDirectory, Location location, IEnumerable<Tuple<uint, ulong[], ImportDirectoryEntryBase>> tables, bool isDelayed) : base(image, dataDirectory, location)
         {
-            _tables = new TTable[tables.Length];
+            _tables = new TTable[tables.Count()];
 
             var type = typeof(TTable);
             var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             var ctor = ctors.First();
+            var idx = 0;
 
-            for (var i = 0; i < tables.Length; i++)
+            foreach (var t in tables)
             {
-                var tuple = tables[i];
-                var table = (TTable)ctor.Invoke(new object[] { image, tuple.Item1, tuple.Item2, tuple.Item3 });
+                var table = (TTable)ctor.Invoke(new object[] { image, t.Item1, t.Item2, t.Item3 });
 
-                _tables[i] = table;
+                _tables[idx] = table;
+                idx++;
             }
 
             Count = _tables.Length;

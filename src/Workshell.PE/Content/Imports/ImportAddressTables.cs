@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -38,17 +39,27 @@ namespace Workshell.PE.Content
 
         #region Static Methods
 
-        public static async Task<ImportAddressTables> GetLookupTableAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        public static ImportAddressTables GetLookupTables(PortableExecutableImage image, ImportDirectory directory = null)
         {
-            return await GetTableAsync(image, directory, (entry) => entry.OriginalFirstThunk).ConfigureAwait(false);
+            return GetLookupTablesAsync(image, directory).GetAwaiter().GetResult();
         }
 
-        public static async Task<ImportAddressTables> GetAddressTableAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        public static ImportAddressTables GetAddressTables(PortableExecutableImage image, ImportDirectory directory = null)
         {
-            return await GetTableAsync(image, directory, (entry) => entry.FirstThunk).ConfigureAwait(false);
+            return GetAddressTablesAsync(image, directory).GetAwaiter().GetResult();
         }
 
-        private static async Task<ImportAddressTables> GetTableAsync(PortableExecutableImage image, ImportDirectory directory, Func<ImportDirectoryEntry, uint> thunkHandler)
+        public static async Task<ImportAddressTables> GetLookupTablesAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.OriginalFirstThunk).ConfigureAwait(false);
+        }
+
+        public static async Task<ImportAddressTables> GetAddressTablesAsync(PortableExecutableImage image, ImportDirectory directory = null)
+        {
+            return await GetTablesAsync(image, directory, (entry) => entry.FirstThunk).ConfigureAwait(false);
+        }
+
+        private static async Task<ImportAddressTables> GetTablesAsync(PortableExecutableImage image, ImportDirectory directory, Func<ImportDirectoryEntry, uint> thunkHandler)
         {
             if (directory == null)
                 directory = await ImportDirectory.GetAsync(image).ConfigureAwait(false);
@@ -67,7 +78,7 @@ namespace Workshell.PE.Content
                 var entries = new List<ulong>();
                 var offset = calc.RVAToOffset(thunk);
 
-                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                stream.Seek(offset, SeekOrigin.Begin);
 
                 while (true)
                 {
@@ -76,7 +87,9 @@ namespace Workshell.PE.Content
                     entries.Add(entry);
 
                     if (entry == 0)
+                    {
                         break;
+                    }
                 }
 
                 var table = new Tuple<uint, ulong[], ImportDirectoryEntryBase>(thunk, entries.ToArray(), dirEntry);
@@ -87,18 +100,20 @@ namespace Workshell.PE.Content
             var rva = 0u;
 
             if (tables.Count > 0)
+            {
                 rva = tables.MinBy(table => table.Item1).Item1;
+            }
 
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
             var fileOffset = calc.RVAToOffset(rva);
-            var fileSize = 0ul;
+            var fileSize = 0L;
 
             foreach (var table in tables)
             {
                 var size = table.Item2.Length * (!image.Is64Bit ? sizeof(uint) : sizeof(ulong));
 
-                fileSize += size.ToUInt32();
+                fileSize += size;
             }
 
             var section = calc.RVAToSection(rva);

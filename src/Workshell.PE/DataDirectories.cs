@@ -44,7 +44,7 @@ namespace Workshell.PE
             var fileSize = optHeader.Location.FileSize;
             var fileOffset = optHeader.Location.FileOffset + fileSize;
             var rva = optHeader.Location.RelativeVirtualAddress + optHeader.Location.VirtualSize.ToUInt32();
-            var va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize;
+            var va = optHeader.Location.VirtualAddress + optHeader.Location.VirtualSize.ToUInt64();
 
             Location = new Location(image, fileOffset, rva, va, size, size);
 
@@ -55,7 +55,9 @@ namespace Workshell.PE
                 var type = DataDirectoryType.Unknown;
 
                 if (i >= 0 && i <= 14)
-                    type = (DataDirectoryType)i;
+                {
+                    type = (DataDirectoryType) i;
+                }
 
                 var dir = new DataDirectory(image,this,type,dataDirs[i],optHeader.ImageBase);
 

@@ -33,11 +33,11 @@ namespace Workshell.PE
     {
         private readonly PortableExecutableImage _image;
 
-        internal DOSStub(PortableExecutableImage image, ulong stubOffset, uint stubSize, ulong imageBase)
+        internal DOSStub(PortableExecutableImage image, uint stubOffset, uint stubSize, ulong imageBase)
         {
             _image = image;
 
-            Location = new Location(image, stubOffset, Convert.ToUInt32(stubOffset), imageBase + stubOffset, stubSize, stubSize);
+            Location = new Location(image, stubOffset, stubOffset, imageBase + stubOffset, stubSize, stubSize);
         }
 
         #region Methods

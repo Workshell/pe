@@ -134,7 +134,6 @@ namespace Workshell.PE.Content
                     return null;
                 }
 
-                var calc = _image.GetCalculator();
                 var rva = AddressOfRawData;
                 var imageBase = _image.NTHeaders.OptionalHeader.ImageBase;
                 var location = new Location(_image, PointerToRawData, rva, imageBase + rva, SizeOfData, SizeOfData);
@@ -174,6 +173,8 @@ namespace Workshell.PE.Content
 
         [FieldAnnotation("Pointer to Raw Data", Order = 8)]
         public uint PointerToRawData { get; }
+
+        public bool IsEmpty => (PointerToRawData == 0 && SizeOfData == 0);
 
         #endregion
     }

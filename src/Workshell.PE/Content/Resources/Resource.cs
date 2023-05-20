@@ -41,7 +41,7 @@ namespace Workshell.PE.Resources
             Type = type;
             Entry = entry;
             Id = id;
-            Languages = _languages.Keys.OrderBy(k => k).ToArray();
+            Languages = _languages.Keys.OrderBy(res => res.LCID).ToArray();
             Image = image;
         }
 

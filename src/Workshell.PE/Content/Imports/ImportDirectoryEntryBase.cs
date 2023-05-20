@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Workshell.PE.Extensions;
@@ -54,6 +55,35 @@ namespace Workshell.PE.Content
             var buffer = await stream.ReadBytesAsync(Location).ConfigureAwait(false);
 
             return buffer;
+        }
+
+        public string GetName()
+        {
+            return GetNameAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<string> GetNameAsync()
+        {
+            var stream = _image.GetStream();
+            var calc = _image.GetCalculator();
+            var builder = new StringBuilder(256);
+            var offset = calc.RVAToOffset(Name);
+
+            stream.Seek(offset, SeekOrigin.Begin);
+
+            while (true)
+            {
+                var b = await stream.ReadByteAsync().ConfigureAwait(false);
+
+                if (b <= 0)
+                {
+                    break;
+                }
+
+                builder.Append((char)b);
+            }
+
+            return builder.ToString();
         }
 
         #endregion

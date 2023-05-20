@@ -71,8 +71,10 @@ namespace Workshell.PE.Resources
         public uint GetId()
         {
             if ((Name & 0x80000000) == 0x80000000)
+            {
                 return 0;
-            
+            }
+
             return Name;
         }
 
@@ -93,12 +95,12 @@ namespace Workshell.PE.Resources
                     var rva = DataDirectory.VirtualAddress + offset;
                     var fileOffset = calc.RVAToOffset(rva);
 
-                    stream.Seek(fileOffset.ToInt64(), SeekOrigin.Begin);
+                    stream.Seek(fileOffset, SeekOrigin.Begin);
 
                     var count = await stream.ReadUInt16Async().ConfigureAwait(false);
                     var builder = new StringBuilder(count);
 
-                    for(int i = 0; i < count; i++)
+                    for(var i = 0; i < count; i++)
                     {
                         var value = await stream.ReadUInt16Async().ConfigureAwait(false);
                         var chr = Convert.ToChar(value);

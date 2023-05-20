@@ -44,7 +44,7 @@ namespace Workshell.PE.Content
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;
             var va = imageBase + rva;
             var offset = calc.RVAToOffset(rva);
-            var size = (entries.Length * (image.Is64Bit ? sizeof(ulong) : sizeof(uint))).ToUInt64();
+            var size = (entries.Length * (image.Is64Bit ? sizeof(ulong) : sizeof(uint)));
             var section = calc.RVAToSection(rva);
 
             _image = image;
@@ -82,7 +82,7 @@ namespace Workshell.PE.Content
             return buffer;
         }
 
-        private TEntry[] BuildEntries(PortableExecutableImage image, ulong tableOffset, ulong[] entries)
+        private TEntry[] BuildEntries(PortableExecutableImage image, long tableOffset, ulong[] entries)
         {
             var results = new TEntry[entries.Length];
             var ctors = typeof(TEntry).GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);

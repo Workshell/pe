@@ -78,13 +78,13 @@ namespace Workshell.PE.Content
 
                 var entrySize = Utils.SizeOf<IMAGE_DEBUG_DIRECTORY>();
                 var entryCount = dataDirectory.Size / entrySize;
-                var entries = new Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[entryCount];
+                var entries = new Tuple<long, IMAGE_DEBUG_DIRECTORY>[entryCount];
 
                 for (var i = 0; i < entryCount; i++)
                 {
                     var entry = await stream.ReadStructAsync<IMAGE_DEBUG_DIRECTORY>(entrySize).ConfigureAwait(false);
 
-                    entries[i] = new Tuple<ulong, IMAGE_DEBUG_DIRECTORY>(fileOffset, entry);
+                    entries[i] = new Tuple<long, IMAGE_DEBUG_DIRECTORY>(fileOffset, entry);
                 }
 
                 var directoryEntries = LoadEntries(image, entrySize, entries);
@@ -98,7 +98,7 @@ namespace Workshell.PE.Content
             }
         }
 
-        private static DebugDirectoryEntry[] LoadEntries(PortableExecutableImage image, int entrySize, Tuple<ulong, IMAGE_DEBUG_DIRECTORY>[] entries)
+        private static DebugDirectoryEntry[] LoadEntries(PortableExecutableImage image, int entrySize, Tuple<long, IMAGE_DEBUG_DIRECTORY>[] entries)
         {
             var calc = image.GetCalculator();
             var imageBase = image.NTHeaders.OptionalHeader.ImageBase;

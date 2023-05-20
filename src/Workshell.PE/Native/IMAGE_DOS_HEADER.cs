@@ -50,6 +50,6 @@ namespace Workshell.PE.Native
         public ushort e_oeminfo;            // OEM information; e_oemid specific
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public ushort[] e_res_2;             // Reserved words
-        public int e_lfanew;                // File address of new exe header
+        public uint e_lfanew;                // File address of new exe header
     }
 }

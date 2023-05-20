@@ -130,7 +130,7 @@ namespace Workshell.PE.Content
 
                 if (address >= dataDirectory.VirtualAddress && address <= (dataDirectory.VirtualAddress + dataDirectory.Size))
                 {
-                    var offset = calc.RVAToOffset(address).ToInt64();
+                    var offset = calc.RVAToOffset(address);
 
                     info.ForwardName = await GetStringAsync(stream, offset).ConfigureAwait(false);
                 }
@@ -144,7 +144,7 @@ namespace Workshell.PE.Content
             {
                 var nameAddress = nameAddresses[i];
                 var ordinal = ordinals[i];
-                var offset = calc.RVAToOffset(nameAddress).ToInt64();
+                var offset = calc.RVAToOffset(nameAddress);
                 var info = infos[ordinal];
 
                 info.NameAddress = nameAddress;

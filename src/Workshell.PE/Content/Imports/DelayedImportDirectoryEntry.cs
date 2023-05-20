@@ -32,6 +32,11 @@ namespace Workshell.PE.Content
     {
         private readonly string _name;
 
+        static DelayedImportDirectoryEntry()
+        {
+            Size = Utils.SizeOf<IMAGE_DELAY_IMPORT_DESCRIPTOR>();
+        }
+
         internal DelayedImportDirectoryEntry(PortableExecutableImage image, Location location, IMAGE_DELAY_IMPORT_DESCRIPTOR descriptor, string name) : base(image, location, true)
         {
             _name = name;
@@ -41,8 +46,8 @@ namespace Workshell.PE.Content
             ModuleHandle = descriptor.ModuleHandle;
             DelayAddressTable = descriptor.DelayAddressTable;
             DelayNameTable = descriptor.DelayNameTable;
-            BoundDelayIAT = descriptor.BoundDelayIAT;
-            UnloadDelayIAT = descriptor.UnloadDelayIAT;
+            BoundDelayAddressTable = descriptor.BoundDelayIAT;
+            UnloadDelayAddressTable = descriptor.UnloadDelayIAT;
             TimeDateStamp = descriptor.TimeDateStamp;
         }
 
@@ -57,6 +62,12 @@ namespace Workshell.PE.Content
         {
             return _name;
         }
+
+        #endregion
+
+        #region Static Properties
+
+        public static int Size { get; }
 
         #endregion
 
@@ -78,10 +89,10 @@ namespace Workshell.PE.Content
         public uint DelayNameTable { get; }
 
         [FieldAnnotation("Bound Delay Import Address Table", Order = 6)]
-        public uint BoundDelayIAT { get; }
+        public uint BoundDelayAddressTable { get; }
 
         [FieldAnnotation("Unload Delay Import Address Table", Order = 7)]
-        public uint UnloadDelayIAT { get; }
+        public uint UnloadDelayAddressTable { get; }
 
         [FieldAnnotation("Date/Time Stamp", Order = 8)]
         public uint TimeDateStamp { get; }

@@ -93,7 +93,7 @@ namespace Workshell.PE.Content
                 var location = new Location(image, offset, rva, va, size.ToUInt32(), size.ToUInt32(), section);
                 var stream = image.GetStream();
 
-                stream.Seek(offset.ToInt64(), SeekOrigin.Begin);
+                stream.Seek(offset, SeekOrigin.Begin);
 
                 var exportDirectory = await stream.ReadStructAsync<IMAGE_EXPORT_DIRECTORY>(size).ConfigureAwait(false);
                 var name = await BuildNameAsync(calc, stream, exportDirectory).ConfigureAwait(false);
@@ -112,16 +112,18 @@ namespace Workshell.PE.Content
         private static async Task<string> BuildNameAsync(LocationCalculator calc, Stream stream, IMAGE_EXPORT_DIRECTORY directory)
         {
             var builder = new StringBuilder(256);
-            var offset = calc.RVAToOffset(directory.Name).ToInt64();
+            var offset = calc.RVAToOffset(directory.Name);
 
             stream.Seek(offset, SeekOrigin.Begin);
 
             while (true)
             {
-                int value = await stream.ReadByteAsync().ConfigureAwait(false);
+                var value = await stream.ReadByteAsync().ConfigureAwait(false);
 
-                if (value <= 0)
+                if (value == 0)
+                {
                     break;
+                }
 
                 var c = (char)value;
 
@@ -133,42 +135,48 @@ namespace Workshell.PE.Content
 
         private static async Task<uint[]> BuildFunctionAddressesAsync(LocationCalculator calc, Stream stream, IMAGE_EXPORT_DIRECTORY directory)
         {
-            var offset = calc.RVAToOffset(directory.AddressOfFunctions).ToInt64();
+            var offset = calc.RVAToOffset(directory.AddressOfFunctions);
 
             stream.Seek(offset, SeekOrigin.Begin);
 
             var results = new uint[directory.NumberOfFunctions];
 
             for (var i = 0; i < directory.NumberOfFunctions; i++)
+            {
                 results[i] = await stream.ReadUInt32Async().ConfigureAwait(false);
+            }
 
             return results;
         }
 
         private static async Task<uint[]> BuildFunctionNameAddressesAsync(LocationCalculator calc, Stream stream, IMAGE_EXPORT_DIRECTORY directory)
         {
-            var offset = calc.RVAToOffset(directory.AddressOfNames).ToInt64();
+            var offset = calc.RVAToOffset(directory.AddressOfNames);
 
             stream.Seek(offset, SeekOrigin.Begin);
 
             var results = new uint[directory.NumberOfNames];
 
             for (var i = 0; i < directory.NumberOfNames; i++)
+            {
                 results[i] = await stream.ReadUInt32Async().ConfigureAwait(false);
+            }
 
             return results;
         }
 
         private static async Task<ushort[]> BuildFunctionOrdinalsAsync(LocationCalculator calc, Stream stream, IMAGE_EXPORT_DIRECTORY directory)
         {
-            var offset = calc.RVAToOffset(directory.AddressOfNameOrdinals).ToInt64();
+            var offset = calc.RVAToOffset(directory.AddressOfNameOrdinals);
 
             stream.Seek(offset, SeekOrigin.Begin);
 
             var results = new ushort[directory.NumberOfNames];
 
             for (var i = 0; i < directory.NumberOfNames; i++)
+            {
                 results[i] = await stream.ReadUInt16Async().ConfigureAwait(false);
+            }
 
             return results;
         }
