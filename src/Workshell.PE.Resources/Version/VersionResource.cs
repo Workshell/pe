@@ -123,7 +123,8 @@ namespace Workshell.PE.Resources.Version
                     throw new Exception("Invalid file version information.");
                 }
 
-                await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
+                await AlignWordBoundaryAsync(mem)
+                    .ConfigureAwait(false);
 
                 var ffiData = await mem.ReadStructAsync<VS_FIXEDFILEINFO>()
                     .ConfigureAwait(false);

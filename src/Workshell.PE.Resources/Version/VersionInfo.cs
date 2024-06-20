@@ -22,19 +22,23 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Workshell.PE.Resources.Version
 {
     public sealed class VersionInfo
     {
+        private readonly IReadOnlyCollection<StringFileInfo> _strings;
+        private readonly IReadOnlyCollection<VarFileInfo> _variables;
+
         internal VersionInfo(VersionResource resource, uint languageId, FixedFileInfo fixedInfo, IReadOnlyCollection<StringFileInfo> stringInfo, IReadOnlyCollection<VarFileInfo> varInfo)
         {
             Resource = resource;
             Language = languageId;
             Fixed = fixedInfo;
-            Strings = stringInfo;
-            Variables = varInfo;
+            _strings = stringInfo;
+            _variables = varInfo;
         }
 
         #region Properties
@@ -42,8 +46,8 @@ namespace Workshell.PE.Resources.Version
         public VersionResource Resource { get; }
         public ResourceLanguage Language { get; }
         public FixedFileInfo Fixed { get; }
-        public IReadOnlyCollection<StringFileInfo> Strings { get; }
-        public IReadOnlyCollection<VarFileInfo> Variables { get; }
+        public StringFileInfo Strings => _strings.FirstOrDefault();
+        public VarFileInfo Variables => _variables.FirstOrDefault();
 
         #endregion
     }
