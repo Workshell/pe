@@ -28,7 +28,7 @@ namespace Workshell.PE.Resources.Version
 {
     public sealed class VersionInfo
     {
-        internal VersionInfo(VersionResource resource, uint languageId, FixedFileInfo fixedInfo, StringFileInfo stringInfo, VarFileInfo varInfo)
+        internal VersionInfo(VersionResource resource, uint languageId, FixedFileInfo fixedInfo, IReadOnlyCollection<StringFileInfo> stringInfo, IReadOnlyCollection<VarFileInfo> varInfo)
         {
             Resource = resource;
             Language = languageId;
@@ -42,8 +42,8 @@ namespace Workshell.PE.Resources.Version
         public VersionResource Resource { get; }
         public ResourceLanguage Language { get; }
         public FixedFileInfo Fixed { get; }
-        public StringFileInfo Strings { get; }
-        public VarFileInfo Variables { get; }
+        public IReadOnlyCollection<StringFileInfo> Strings { get; }
+        public IReadOnlyCollection<VarFileInfo> Variables { get; }
 
         #endregion
     }

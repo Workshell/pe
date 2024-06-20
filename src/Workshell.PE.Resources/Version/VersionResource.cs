@@ -52,12 +52,33 @@ namespace Workshell.PE.Resources.Version
 
             while (stream.Position % 4 != 0)
             {
-                await stream.ReadUInt16Async().ConfigureAwait(false);
+                await stream.ReadUInt16Async()
+                    .ConfigureAwait(false);
 
                 count += sizeof(ushort);
             }
 
             return count;
+        }
+
+        internal static async Task<FileInfo> LoadBaseInfoAsync(Stream stream)
+        {
+            var len = await stream.ReadUInt16Async()
+                .ConfigureAwait(false);
+            var valLen = await stream.ReadUInt16Async()
+                .ConfigureAwait(false);
+            var type = await stream.ReadUInt16Async()
+                .ConfigureAwait(false);
+            var key = await stream.ReadUnicodeStringAsync()
+                .ConfigureAwait(false);
+
+            return new FileInfo()
+            {
+                Length = len,
+                ValueLength = valLen,
+                Type = type,
+                Key = key
+            };
         }
 
         #endregion
@@ -71,42 +92,78 @@ namespace Workshell.PE.Resources.Version
 
         public async Task<VersionInfo> GetInfoAsync()
         {
-            return await GetInfoAsync(ResourceLanguage.English.UnitedStates).ConfigureAwait(false);
+            return await GetInfoAsync(ResourceLanguage.English.UnitedStates)
+                .ConfigureAwait(false);
         }
 
         public VersionInfo GetInfo(ResourceLanguage language)
         {
-            return GetInfoAsync(language).GetAwaiter().GetResult();
+            return GetInfoAsync(language)
+                .GetAwaiter()
+                .GetResult();
         }
 
         public async Task<VersionInfo> GetInfoAsync(ResourceLanguage language)
         {
-            var buffer = await GetBytesAsync(language).ConfigureAwait(false);
+            var buffer = await GetBytesAsync(language)
+                .ConfigureAwait(false);
 
             using (var mem = new MemoryStream(buffer))
             {
                 var count = 3 * sizeof(ushort);
 
-                await mem.ReadBytesAsync(count).ConfigureAwait(false);
+                await mem.ReadBytesAsync(count)
+                    .ConfigureAwait(false);
 
-                var key = await mem.ReadUnicodeStringAsync().ConfigureAwait(false);
+                var key = await mem.ReadUnicodeStringAsync()
+                    .ConfigureAwait(false);
 
                 if (key != "VS_VERSION_INFO")
+                {
                     throw new Exception("Invalid file version information.");
+                }
 
                 await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
 
-                var ffiData = await mem.ReadStructAsync<VS_FIXEDFILEINFO>().ConfigureAwait(false);
+                var ffiData = await mem.ReadStructAsync<VS_FIXEDFILEINFO>()
+                    .ConfigureAwait(false);
                 var fixedFileInfo = new FixedFileInfo(ffiData);
 
-                await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
+                await AlignWordBoundaryAsync(mem)
+                    .ConfigureAwait(false);
 
-                var stringFileInfo = await StringFileInfo.LoadAsync(mem).ConfigureAwait(false);
+                var stringFileInfos = new List<StringFileInfo>();
+                var varFileInfos = new List<VarFileInfo>();
 
-                await AlignWordBoundaryAsync(mem).ConfigureAwait(false);
+                while ((mem.Position + count) < mem.Length)
+                {
+                    var baseInfo = await LoadBaseInfoAsync(mem)
+                        .ConfigureAwait(false);
 
-                var varFileInfo = await VarFileInfo.LoadAsync(mem).ConfigureAwait(false);
-                var info = new VersionInfo(this, language, fixedFileInfo, stringFileInfo, varFileInfo);
+                    if (baseInfo.Key == "StringFileInfo")
+                    {
+                        var stringFileInfo = await StringFileInfo.LoadAsync(mem, baseInfo.Length, baseInfo.ValueLength, baseInfo.Type, baseInfo.Key)
+                            .ConfigureAwait(false);
+
+                        stringFileInfos.Add(stringFileInfo);
+                    }
+                    else if (baseInfo.Key == "VarFileInfo")
+                    {
+                        var varFileInfo = await VarFileInfo.LoadAsync(mem, baseInfo.Length, baseInfo.ValueLength, baseInfo.Type, baseInfo.Key)
+                            .ConfigureAwait(false);
+
+                        varFileInfos.Add(varFileInfo);
+                    }
+                    else
+                    {
+                        throw new Exception("Unknown type - " + baseInfo.Key);
+                    }
+
+                    await AlignWordBoundaryAsync(mem)
+                        .ConfigureAwait(false);
+                }
+
+                var info = new VersionInfo(this, language, fixedFileInfo, stringFileInfos, varFileInfos);
 
                 return info;
             }
