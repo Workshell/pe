@@ -46,13 +46,9 @@ namespace Workshell.PE.Resources.Version
 
         #region Static Methods
 
-        internal static async Task<VarFileInfo> LoadAsync(Stream stream)
+        internal static async Task<VarFileInfo> LoadAsync(Stream stream, ushort len, ushort valLen, ushort type, string key)
         {
             var count = 3 * sizeof(ushort);
-            var len = await stream.ReadUInt16Async().ConfigureAwait(false);
-            var valLen = await stream.ReadUInt16Async().ConfigureAwait(false);
-            var type = await stream.ReadUInt16Async().ConfigureAwait(false);
-            var key = await stream.ReadUnicodeStringAsync().ConfigureAwait(false);
 
             count += (key.Length + 1) * sizeof(ushort);
             count += await VersionResource.AlignWordBoundaryAsync(stream).ConfigureAwait(false);
